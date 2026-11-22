@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Jendela Kinerja">
+  <title>Jendela Kinerja</title>
+  <rect width="64" height="64" rx="14" fill="#0a1220" />
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="13.25" fill="none" stroke="#0f6cb8" stroke-opacity="0.55" stroke-width="1.5" />
+  <g stroke="#45bf7c" fill="none" stroke-linecap="round">
+    <rect x="16" y="16" width="32" height="32" rx="4" stroke-width="3" />
+    <path d="M32 17.5v29" stroke-width="2.4" />
+    <path d="M17.5 32h29" stroke-width="2.4" />
+  </g>
+  <rect x="34" y="34" width="12" height="12" rx="1.5" fill="#0f6cb8" />
+</svg>

@@ -1,0 +1,246 @@
+/* ============================================================
+   JENDELA KINERJA - DESIGN SYSTEM
+   ------------------------------------------------------------
+   Bahasa visual: "executive cockpit".
+     - Latar   : kertas hangat (paper) + garis blueprint halus
+     - Tinta   : navy gelap (ink) untuk sidebar & mode gelap
+     - Aksen   : BIRU (accent) + HIJAU (hijau) — warna Badan POM — untuk aksi,
+                 penanda aktif, angka penting, dan gradien brand
+     - Bentuk  : permukaan DATAR, garis rambut 1px, radius kecil,
+                 TANPA blur/gradien kaca (beda dari tema sebelumnya)
+     - Angka   : tabular (tnum) supaya kolom metrik rata
+
+   Kelas lama (glass-card, glass-chip) tetap ada sebagai ALIAS supaya komponen
+   lama/modul berikutnya otomatis ikut tema baru.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+    scroll-behavior: smooth;
+    color-scheme: light;
+    background-color: #f6f5f1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html.dark {
+    color-scheme: dark;
+    background-color: #060a12;
+  }
+
+  body {
+    @apply antialiased;
+  }
+
+  ::selection {
+    background: rgba(15, 108, 184, 0.28);
+  }
+
+  :focus-visible {
+    outline: 2px solid rgba(15, 108, 184, 0.6);
+    outline-offset: 2px;
+  }
+
+  /* Scrollbar ramping */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-paper-400/70 dark:bg-ink-700;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-accent-500/70 dark:bg-ink-600;
+  }
+
+  /* Angka rata kolom di seluruh tabel */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* ===== Latar aplikasi: kertas + garis blueprint + semburat biru & hijau ===== */
+  .app-surface,
+  .app-gradient {
+    background-color: #f6f5f1;
+    background-image:
+      radial-gradient(52rem 32rem at 100% -14%, rgba(15, 108, 184, 0.15), transparent 62%),
+      radial-gradient(40rem 30rem at -12% 112%, rgba(31, 166, 95, 0.12), transparent 60%),
+      linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 46px 46px, 46px 46px;
+  }
+
+  .dark .app-surface,
+  .dark .app-gradient {
+    background-color: #060a12;
+    background-image:
+      radial-gradient(52rem 32rem at 100% -14%, rgba(42, 137, 221, 0.16), transparent 62%),
+      radial-gradient(40rem 30rem at -12% 112%, rgba(31, 166, 95, 0.10), transparent 60%),
+      linear-gradient(rgba(148, 163, 184, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.055) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 46px 46px, 46px 46px;
+  }
+
+  /* Motif jendela untuk panel hero gelap */
+  .window-pattern {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.075) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.075) 1px, transparent 1px);
+    background-size: 34px 34px;
+  }
+
+  /* ===== Teks gradien aksen ===== */
+  .text-gradient-accent,
+  .text-gradient-cyan {
+    background-image: linear-gradient(100deg, #0c5591 0%, #0f6cb8 48%, #148c4d 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .dark .text-gradient-accent,
+  .dark .text-gradient-cyan {
+    background-image: linear-gradient(100deg, #8ec6f7 0%, #58a8ee 45%, #45bf7c 100%);
+  }
+
+  /* Angka tabular */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* ===== Animasi masuk ===== */
+  @keyframes riseIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-rise { animation: riseIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .animate-rise-1 { animation: riseIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both; }
+  .animate-rise-2 { animation: riseIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both; }
+  .animate-rise-3 { animation: riseIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both; }
+  .animate-rise-4 { animation: riseIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both; }
+}
+
+@layer components {
+  /* ===== Permukaan ===== */
+  .panel,
+  .glass-card {
+    @apply rounded-xl border border-paper-300 bg-white shadow-panel dark:border-white/10 dark:bg-ink-850 dark:shadow-panel-dark;
+  }
+
+  .panel-hover,
+  .glass-card-hover {
+    @apply rounded-xl border border-paper-300 bg-white shadow-panel transition-all duration-300 hover:-translate-y-0.5 hover:border-accent-400/70 hover:shadow-accent dark:border-white/10 dark:bg-ink-850 dark:shadow-panel-dark dark:hover:border-accent-500/40;
+  }
+
+  .panel-sunken {
+    @apply rounded-lg border border-paper-200 bg-paper-50 dark:border-white/10 dark:bg-white/[0.03];
+  }
+
+  /* ===== Chip kecil ===== */
+  .chip,
+  .glass-chip {
+    @apply inline-flex items-center gap-1.5 rounded-md border border-paper-300 bg-paper-50 px-2.5 py-1 text-[11px] font-medium leading-none text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300;
+  }
+
+  .chip-accent {
+    @apply border-accent-400/60 bg-accent-500/10 text-accent-700 dark:border-accent-500/30 dark:bg-accent-500/10 dark:text-accent-300;
+  }
+
+  /* ===== Tombol ===== */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-accent-400 to-accent-500 px-5 py-3 text-sm font-bold text-white ring-1 ring-inset ring-accent-600/40 transition-all duration-200 hover:from-accent-300 hover:to-accent-400 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60;
+    box-shadow: 0 10px 22px -14px rgba(12, 85, 145, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-paper-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 transition-colors hover:border-accent-400/70 hover:text-accent-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-accent-500/40 dark:hover:text-accent-300;
+  }
+
+  /* Tombol aksen versi ringkas (kepala halaman publik) */
+  .btn-primary-sm {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-b from-accent-400 to-accent-500 px-3 py-1.5 text-[11.5px] font-bold text-white ring-1 ring-inset ring-accent-600/40 transition-all hover:from-accent-300 hover:to-accent-400 active:translate-y-px;
+  }
+
+  /* ===== Kontrol form (select/input) ===== */
+  .input {
+    @apply w-full rounded-lg border border-paper-300 bg-white px-2.5 py-2 text-[12.5px] font-medium text-slate-700 outline-none transition focus:border-accent-400/70 focus:ring-2 focus:ring-accent-400/25 dark:border-white/10 dark:bg-ink-900 dark:text-slate-100;
+  }
+
+  /* ===== Badge status ===== */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold;
+  }
+  .badge-primary {
+    @apply inline-flex items-center gap-1 rounded-md bg-accent-500/15 px-2 py-0.5 text-[11px] font-semibold text-accent-700 dark:bg-accent-500/15 dark:text-accent-300;
+  }
+  .badge-success {
+    @apply inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300;
+  }
+  .badge-warning {
+    @apply inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300;
+  }
+  .badge-danger {
+    @apply inline-flex items-center gap-1 rounded-md bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold text-red-700 dark:bg-red-500/15 dark:text-red-300;
+  }
+  .badge-rose {
+    @apply inline-flex items-center gap-1 rounded-md bg-rose-500/15 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300;
+  }
+}
+
+@layer components {
+  /* ===== Tipografi data ===== */
+  .section-label {
+    @apply text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500;
+  }
+
+  /* ===== Sel kepala tabel ===== */
+  /* Sebelumnya komponen tabel memakai className="th" padahal kelas ini tidak
+     pernah didefinisikan, sehingga header tampil tanpa padding/gaya sama
+     sekali (ikut default <th> peramban). Definisi di sini sekaligus
+     menyamakan gaya dengan tabel kab/kota di Container.js. */
+  .th {
+    @apply whitespace-nowrap px-4 py-2.5 text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400;
+  }
+
+  .stat-value {
+    @apply text-3xl font-extrabold leading-none tracking-tight text-slate-900 dark:text-white;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500;
+  }
+
+  /* ===== Baris data ringkas ===== */
+  .data-row {
+    @apply flex items-center justify-between gap-3 border-b border-paper-200 py-2.5 text-sm last:border-0 dark:border-white/5;
+  }
+
+  /* ===== Kerangka kosong (belum ada data) ===== */
+  .empty-track {
+    @apply rounded-md border border-dashed border-paper-300 bg-paper-100/60 dark:border-white/10 dark:bg-white/[0.02];
+  }
+
+  /* ===== Kunci jendela: bingkai tipis untuk header panel ===== */
+  .panel-head {
+    @apply flex items-center justify-between gap-3 border-b border-paper-200 px-4 py-3 dark:border-white/10;
+  }
+}
