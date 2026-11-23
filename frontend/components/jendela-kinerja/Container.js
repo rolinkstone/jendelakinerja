@@ -267,8 +267,10 @@ export default function Container() {
       <Navbar />
 
       {/* Tombol maskot Laura AI menempel di pojok kanan bawah, di luar <main>
-          supaya posisi fixed-nya tidak terpengaruh kontainer scroll. */}
-      <LauraAI />
+          supaya posisi fixed-nya tidak terpengaruh kontainer scroll.
+          `ringkasan` (data yang sedang tampil) dikirim agar narasi presentasi
+          LAURA memakai angka yang sama persis dengan layar. */}
+      <LauraAI dataDashboard={ringkasan} filterAktif={filter} />
 
       <main className="mx-auto max-w-7xl space-y-5 px-4 py-5">
         {/* ================= Judul ================= */}

@@ -1,30 +1,35 @@
 // middleware.js
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { authCookies } from "./utils/authCookies";
 
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
-    
-    console.log("🛡️ Middleware - Path:", path);
-    console.log("🛡️ Middleware - Hostname:", req.nextUrl.hostname);
-    console.log("🛡️ Middleware - Token present:", !!token);
-    
+
     if (token) {
-      console.log("🛡️ Middleware - User:", token.name);
-      console.log("🛡️ Middleware - Role:", token.role);
-      
       // You can add role-based access control here
       if (path.startsWith('/admin') && token.role !== 'admin') {
         const url = new URL('/unauthorized', req.url);
         return NextResponse.redirect(url);
       }
     }
-    
+
     return NextResponse.next();
   },
   {
+    // Halaman yang dituju saat sesi tidak ada — HARUS /login (halaman SSO
+    // aplikasi ini), bukan halaman bawaan NextAuth. Tanpa baris ini withAuth
+    // mengarahkan ke /api/auth/signin, yang menjawab dengan redirect HTML;
+    // fetch() di browser lalu menerima HTML, bukan JSON, dan muncul galat
+    // "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON".
+    pages: {
+      signIn: '/login',
+    },
+    // Nama cookie sesi dipakai middleware (withAuth) untuk membaca token —
+    // harus sama dengan authOptions.cookies supaya tidak selalu "tidak login".
+    cookies: authCookies,
     callbacks: {
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname;
@@ -43,13 +48,28 @@ export default withAuth(
           // (peta Kalteng + rekap pemeriksaan sarana). Proxy API-nya juga
           // publik karena backend route /api/publik tidak memakai token.
           '/jendela-kinerja',
+          // Proxy LAURA AI dari halaman publik /jendela-kinerja (presentasi
+          // bersuara + tanya jawab). Endpoint backend-nya publik, dan daftar
+          // rute yang diizinkan dijaga ketat di pages/api/laura/[[...path]].js.
+          '/api/laura',
+          // Proxy koreksi narasi presentasi (Beranda → Narasi Presentasi).
+          // Wajib masuk publicPaths: kalau tidak, middleware mengalihkan ke
+          // /login dan klien menerima HTML, bukan JSON. Otorisasi sesungguhnya
+          // ada DI DALAM proxy (utils/authCookies → ambilToken).
+          '/api/narasi',
           // Menu navbar publik lain — halaman "segera hadir" selama modulnya
           // belum selesai. Semuanya di luar SSO, sama seperti Jendela Kinerja.
           '/prestasi-unit-kerja',
           '/anggaran-realisasi',
           '/dokumen-pk-rapk',
           '/sumber-daya',
-          '/api/publik'
+          '/api/publik',
+          // Proxy Link API ikut dilewatkan: route ini SELALU membalas JSON
+          // (401 bila sesi tidak ada). Kalau middleware yang mencegatnya, ia
+          // membalas redirect ke halaman login berisi HTML — fetch() di
+          // browser lalu melempar "Unexpected token '<'". Penjagaan sesi
+          // tetap ada, tapi di dalam proxy (lihat pages/api/link-api/[...path].js).
+          '/api/link-api'
         ];
         
         // Akar aplikasi "/" SELALU publik: halaman itu hanya mengalihkan
@@ -67,7 +87,6 @@ export default withAuth(
         );
         
         if (isPublicPath) {
-          console.log("🛡️ Middleware - Public path:", path);
           return true;
         }
         
@@ -84,11 +103,9 @@ export default withAuth(
         // Dengan `false`, withAuth sendiri yang mengalihkan ke halaman
         // `signIn` (/login) beserta `callbackUrl`.
         if (!token) {
-          console.log("🛡️ Middleware - No token, redirecting to login");
           return false;
         }
         
-        console.log(`✅ Access granted for ${path} - User: ${token.name}, Role: ${token.role}`);
         return true;
       },
     },

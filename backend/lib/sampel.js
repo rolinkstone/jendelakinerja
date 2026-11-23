@@ -34,6 +34,8 @@
  * ============================================================
  */
 const express = require('express');
+// Akses baca sekarang publik → kolom pribadi dibuang di endpoint detail
+const { saringPribadi } = require('./saring-publik');
 const multer = require('multer');
 const XLSX = require('xlsx');
 const { pool } = require('../db');
@@ -1024,7 +1026,7 @@ function buatRouterSampel({ label, tabelImpor, tabelLaporan, kolomPaku = {} }) {
       if (!rows.length) {
         return res.status(404).json({ success: false, message: 'Sampel tidak ditemukan' });
       }
-      return res.json({ success: true, data: { ...rows[0], rincian: [] } });
+      return res.json({ success: true, data: saringPribadi({ ...rows[0], rincian: [] }) });
     } catch (e) {
       console.error(`Detail ${label} gagal:`, e);
       return res.status(500).json({ success: false, message: e.message });

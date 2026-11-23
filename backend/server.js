@@ -43,10 +43,60 @@ const httpsAgent = new https.Agent({ rejectUnauthorized: true });
 // - /api/login, /api/health : utilitas dasar
 // - /api/publik             : dashboard publik "Jendela Kinerja" (read-only,
 //                             hanya rekap angka + nama sarana; tanpa login)
-const publicRoutes = ['/api/login', '/api/health', '/api/publik'];
+const publicRoutes = ['/api/login', '/api/health', '/api/publik',
+    // Koreksi naskah presentasi 1 menit dibaca widget publik /jendela-kinerja.
+    // Hanya GET /aktif yang dibuka (lihat routes/narasi-presentasi.js);
+    // menyimpan/menghapus koreksi tetap wajib token.
+    '/api/narasi-presentasi/aktif'];
+
+// BACA PUBLIK — modul yang datanya memang publik (rekap sarana, sampel, PBF).
+// Hanya metode BACA (GET/HEAD) yang dibuka; impor/ubah/hapus tetap wajib token.
+// Kolom pribadi (operator, petugas, verifikator) dibuang oleh
+// lib/saring-publik.js di endpoint detail, jadi yang keluar hanya data teknis.
+const publicBacaRoutes = [
+    '/api/pbf',
+    '/api/produksi-ot',
+    '/api/produksi-irt',
+    '/api/sampel' // mencakup sampel-ot, -sk, -ob, -kos, -pp, -kp
+];
+
+/** Isi req.user bila klien mengirim Bearer sah; kembalikan false bila tidak. */
+const bacaBearer = (req) => {
+    const header = req.headers.authorization;
+    if (!header || !header.startsWith('Bearer ')) return false;
+    try {
+        const decoded = jwt.decode(header.slice(7));
+        if (decoded && (!decoded.exp || decoded.exp > Date.now() / 1000)) {
+            req.user = {
+                id: decoded.sub,
+                username: decoded.preferred_username || decoded.email,
+                email: decoded.email,
+                name: decoded.name,
+                roles: decoded.realm_access?.roles || []
+            };
+            return true;
+        }
+    } catch {
+        // Token rusak → diperlakukan sebagai tamu
+    }
+    return false;
+};
 
 const authMiddleware = async (req, res, next) => {
     if (publicRoutes.some(route => req.path.startsWith(route))) {
+        // Route publik tetap publik, TETAPI bila klien mengirim Bearer token yang
+        // sah, identitasnya dipakai. Diperlukan fitur Link API: link berlabel
+        // 'private' ditolak tanpa token, sedangkan link 'publik' tetap jalan
+        // tanpa token (lihat routes/link-api.js).
+        bacaBearer(req);
+        return next();
+    }
+
+    // Modul data publik: cukup untuk BACA. Menulis (impor/ubah/hapus) tetap
+    // harus lewat pemeriksaan token di bawah.
+    const bacaSaja = req.method === 'GET' || req.method === 'HEAD';
+    if (bacaSaja && publicBacaRoutes.some(route => req.path.startsWith(route))) {
+        bacaBearer(req);
         return next();
     }
 
@@ -159,6 +209,16 @@ app.use('/api/sampel-kos', require('./routes/sampel-kos'));   // Kosmetika
 app.use('/api/sampel-pp', require('./routes/sampel-pp'));     // Produk Pangan
 app.use('/api/sampel-kp', require('./routes/sampel-kp'));     // Kemasan Pangan
 app.use('/api/sampel-ok', require('./routes/sampel-ok'));     // Obat Kuasi
+
+// Router LINK API — penerbitan link publik per modul dengan FIELD PILIHAN.
+// Dipakai tombol "Link API" di dashboard JK; linknya ditempel ke LAURA AI.
+// Konsumsi link (publik) dipasang di routes/publik.js → /api/publik/link/:token
+app.use('/api/api-link', require('./routes/link-api'));
+
+// Router NARASI PRESENTASI — koreksi naskah 1 menit yang dibacakan widget
+// LAURA di halaman publik /jendela-kinerja. GET /aktif dibaca widget (publik),
+// POST/DELETE dipakai dashboard Beranda → Narasi Presentasi (wajib token).
+app.use('/api/narasi-presentasi', require('./routes/narasi-presentasi'));
 
 // Router publik — dashboard "Jendela Kinerja" di luar SSO (read-only).
 // Dipanggil frontend lewat proxy pages/api/publik/[...path].js.

@@ -29,6 +29,8 @@
  * ============================================================
  */
 const express = require('express');
+// Akses baca sekarang publik → kolom pribadi dibuang di endpoint detail
+const { saringPribadi } = require('../lib/saring-publik');
 const multer = require('multer');
 const XLSX = require('xlsx');
 const { pool } = require('../db');
@@ -481,7 +483,7 @@ router.get('/summary', async (req, res) => {
       success: true,
       data: {
         tahun,
-        impor_terakhir: imp[0] || null,
+        impor_terakhir: saringPribadi(imp[0]) || null,
         total: tot[0],
         sebaran_grading: grading,
         sebaran_hasil_balai: hasil,
@@ -558,7 +560,7 @@ router.get('/laporan/:id', async (req, res) => {
     }
     // Bentuk jawaban disamakan dengan modul PBF (`rincian` kosong) supaya modal
     // di frontend bisa memakai pola yang sama.
-    return res.json({ success: true, data: { ...rows[0], rincian: [] } });
+    return res.json({ success: true, data: saringPribadi({ ...rows[0], rincian: [] }) });
   } catch (e) {
     console.error('Detail laporan Produksi OT gagal:', e);
     return res.status(500).json({ success: false, message: e.message });

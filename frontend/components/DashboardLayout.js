@@ -43,8 +43,11 @@ import {
   FaCapsules,
   FaSprayCan,
   FaUtensils,
+  FaPlug,
+  FaFileAudio,
 } from 'react-icons/fa';
 import Brand, { BRAND, BrandMark } from './Brand';
+import TombolLinkApi from './beranda/TombolLinkApi';
 
 const NAV_GROUPS = [
   // PENTING: href-nya '/beranda', BUKAN '/'. Akar '/' sudah dipakai halaman
@@ -52,6 +55,11 @@ const NAV_GROUPS = [
   // jadi memakai '/' di sini membuat tombol Beranda melempar pengguna KELUAR
   // dari dashboard ke halaman publik.
   { label: 'Beranda', href: '/beranda', icon: FaThLarge },
+  // Integrasi knowledge: katalog link API modul untuk LAURA AI.
+  { label: 'Integrasi Laura AI', href: '/beranda/integrasi-laura', icon: FaPlug },
+  // Koreksi naskah presentasi 1 menit yang dibacakan widget LAURA di halaman
+  // publik /jendela-kinerja (lihat components/beranda/NarasiPresentasiContainer.js).
+  { label: 'Narasi Presentasi', href: '/beranda/narasi-presentasi', icon: FaFileAudio },
   {
     label: 'Distribusi',
     icon: FaTruck,
@@ -471,6 +479,9 @@ export default function DashboardLayout({ children, pageTitle = 'Beranda' }) {
           </div>
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+            {/* Tombol Link API modul aktif — untuk integrasi knowledge LAURA AI */}
+            <TombolLinkApi />
+
             {/* Tanggal */}
             <span className="chip tnum hidden text-slate-500 dark:text-slate-400 lg:inline-flex">
               <span className="h-1.5 w-1.5 rounded-full bg-accent-500" />

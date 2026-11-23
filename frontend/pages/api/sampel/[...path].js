@@ -20,7 +20,7 @@
  * Body multipart (unggah berkas Excel) diteruskan apa adanya sebagai buffer,
  * jadi boundary dari browser tidak perlu diurai ulang.
  */
-import { getToken } from 'next-auth/jwt';
+import { ambilToken } from '../../../utils/authCookies';
 
 export const config = { api: { bodyParser: false } };
 
@@ -36,7 +36,7 @@ const bacaBody = async (req) => {
 };
 
 export default async function handler(req, res) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await ambilToken(req);
 
   if (!token) {
     return res.status(401).json({ success: false, message: 'Sesi tidak ditemukan. Silakan login ulang.' });

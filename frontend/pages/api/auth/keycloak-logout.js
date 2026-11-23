@@ -22,7 +22,7 @@
  * Route ini publik (cookie sesi belum tentu ada) — middleware.js memang
  * mengecualikan seluruh path /api/auth.
  */
-import { getToken } from 'next-auth/jwt';
+import { ambilToken } from '../../../utils/authCookies';
 
 /**
  * Susun daftar Set-Cookie penghapus, nama mengikuti konvensi NextAuth.
@@ -87,7 +87,7 @@ export default async function handler(req, res) {
   // 1. Baca sesi dari cookie httpOnly (tidak menyentuh response body).
   let token = null;
   try {
-    token = await getToken({ req, secret });
+    token = await ambilToken(req);
   } catch (error) {
     console.error('❌ [keycloak-logout] Gagal membaca sesi:', error.message);
   }

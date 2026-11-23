@@ -25,6 +25,8 @@
 const express = require('express');
 const db = require('../db');
 const { BULAN_ID, namaBulan } = require('../lib/kinerja');
+const { daftarLinkApi, daftarModul } = require('../lib/modul-api');
+const linkApi = require('./link-api');
 
 const router = express.Router();
 
@@ -504,6 +506,40 @@ router.get('/kinerja/sampel', async (req, res) => {
     console.error('Rekap sampel publik gagal:', e);
     return res.status(500).json({ success: false, message: e.message });
   }
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/publik/kinerja/api-modul — katalog link API untuk integrasi LAURA AI
+// ---------------------------------------------------------------------------
+// Keluaran: daftar modul + `url_lengkap` yang bisa disalin lalu ditempel ke
+// menu Integrasi Jendela Kinerja di LAURA AI.
+// Konsumsi LINK API — link berisi token yang diterbitkan tombol "Link API"
+// di dashboard (field dipilih operator). Tanpa login, hanya kolom terpilih.
+router.get('/link/:token', linkApi.konsumsiLink);
+
+router.get('/kinerja/api-modul', (req, res) => {
+  // Host API bisa di-override lewat ?base= (mis. saat diakses lewat proxy),
+  // default: origin dari request ini.
+  const baseDiminta = String(req.query.base || '').trim();
+  const base = /^https?:\/\//.test(baseDiminta)
+    ? baseDiminta
+    : `${req.protocol}://${req.get('host')}`;
+
+  // ?modul=sampel/ot → hanya endpoint modul itu (dipakai tombol Link API
+  // di header tiap modul dashboard).
+  const modul = String(req.query.modul || '').trim() || null;
+  const modul_ = daftarLinkApi(base, modul);
+
+  res.json({
+    success: true,
+    data: {
+      base_url: base.replace(/\/+$/, ''),
+      modul_diminta: modul,
+      jumlah: modul_.length,
+      daftar_modul: daftarModul(),
+      modul: modul_,
+    },
+  });
 });
 
 module.exports = router;

@@ -1,6 +1,7 @@
 // pages/api/auth/[...nextauth].js
 import NextAuth from "next-auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
+import { authCookies, PAKAI_COOKIE_AMAN } from "../../../utils/authCookies";
 
 export const authOptions = {
   providers: [
@@ -116,6 +117,12 @@ export const authOptions = {
   debug: process.env.NODE_ENV === 'development',
   secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
+
+  // Nama cookie DIPISAH dari aplikasi lain di host yang sama (lihat
+  // utils/authCookies.js): cookie dipisah per host, bukan per port, sehingga
+  // nama default akan saling menimpa antar aplikasi NextAuth di localhost.
+  cookies: authCookies,
+  useSecureCookies: PAKAI_COOKIE_AMAN,
 };
 
 export default NextAuth(authOptions);
