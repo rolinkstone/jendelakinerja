@@ -367,7 +367,18 @@ router.get('/kinerja/sarana', async (req, res) => {
         LIMIT ? OFFSET ?`,
       [...params, limit, offset],
     );
-    const [jumlah] = await db.query(`SELECT COUNT(*) AS total FROM v_kinerja_sarana ${where}`, params);
+    const [jumlah] = await db.query(
+      // `total` = seluruh baris (sarana + sampel) karena modal sengaja
+      // menampilkan keduanya dengan kolom Produk. `total_sarana` dipisah supaya
+      // angkanya bisa dicocokkan dengan kartu "Total Sarana Diperiksa" (yang
+      // memang tidak menghitung sampel). Tanpa pemisahan ini, modal menulis
+      // "1.324" sementara KPI menulis "13" untuk tahun yang sama.
+      `SELECT COUNT(*) AS total,
+              SUM(kegiatan IN ('Produksi','Distribusi')) AS total_sarana,
+              SUM(kegiatan = 'Sampling') AS total_sampel
+         FROM v_kinerja_sarana ${where}`,
+      params,
+    );
 
     return res.json({
       success: true,
@@ -375,6 +386,8 @@ router.get('/kinerja/sarana', async (req, res) => {
         halaman,
         limit,
         total: jumlah[0].total,
+        total_sarana: Number(jumlah[0].total_sarana || 0),
+        total_sampel: Number(jumlah[0].total_sampel || 0),
         baris: baris.map((b) => ({ ...b, bulan_nama: namaBulan(b.bulan) })),
       },
     });
