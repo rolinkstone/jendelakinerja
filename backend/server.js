@@ -18,15 +18,106 @@ const https = require('https');
 const qs = require('qs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+// PENTING: dotenv HARUS dimuat sebelum modul lain yang membaca process.env.
+// lib/verifikasi-token.js menyusun issuer & alamat JWKS saat di-require; bila
+// dotenv dimuat setelahnya, issuer terbaca kosong dan SEMUA token asli ditolak
+// (gejala: "Token tidak sah atau kedaluwarsa" padahal token Keycloak valid).
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+
+const {
+    verifikasiToken,
+    penggunaDariPayload,
+    bolehMenulis,
+    ringkasan: ringkasanAuth,
+    PERAN_TULIS,
+} = require('./lib/verifikasi-token');
 
 const app = express();
 const PORT = process.env.PORT || 5006;
 
+// Alamat dengar. Bawaannya 127.0.0.1 supaya layanan tidak terbuka ke seluruh
+// jaringan lokal (temuan 3.7 laporan pentest). Set HOST=0.0.0.0 hanya bila
+// memang perlu diakses dari perangkat lain — dan pakai HTTPS bila begitu.
+const HOST = process.env.HOST || '127.0.0.1';
+
 // ========== MIDDLEWARE DASAR ==========
+// Matikan penanda teknologi (temuan 3.6).
+app.disable('x-powered-by');
+// Header keamanan. CSP tidak dipasang di API: seluruh respons di sini JSON,
+// tidak ada halaman yang perlu dilindungi; CSP ditangani di frontend.
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+
+// ========== CORS TERBATAS ==========
+// Sebelumnya `cors()` tanpa opsi = Access-Control-Allow-Origin: * (temuan 3.5).
+// Sekarang hanya asal yang terdaftar. Permintaan tanpa Origin (curl, server ke
+// server seperti LAURA memanggil API ini) tetap dilayani karena bukan
+// permintaan lintas-asal dari peramban.
+const ASAL_DIIZINKAN = String(process.env.CORS_ORIGIN || process.env.CORS_ASAL ||
+    'http://localhost:3007,http://localhost:3006,https://jendela-kinerja.bbpompky.id,https://laura-ai.bbpompky.id')
+    .split(',')
+    .map((s) => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+
+app.use(cors({
+    origin(origin, cb) {
+        if (!origin) return cb(null, true); // bukan permintaan peramban lintas-asal
+        const bersih = origin.replace(/\/+$/, '');
+        if (ASAL_DIIZINKAN.includes(bersih)) return cb(null, true);
+        return cb(new Error(`Asal ${bersih} tidak diizinkan`));
+    },
+    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: false,
+    maxAge: 600,
+}));
+
+// ========== PEMBATASAN LAJU ==========
+// Temuan 3.3: tidak ada pembatasan sama sekali sebelumnya.
+const pesanLaju = {
+    success: false,
+    message: 'Terlalu banyak permintaan. Coba lagi beberapa saat lagi.',
+};
+
+// Batas umum: cukup longgar untuk pemakaian normal, tetap menahan pengambilan
+// data massal otomatis.
+const lajuUmum = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 300,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: pesanLaju,
+});
+
+// Batas ketat: login (cegah tebak kata sandi), unggah & hapus (cegah penyalah-
+// gunaan sumber daya; unggah memakan CPU dan memori untuk mengurai Excel).
+const lajuLogin = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { success: false, message: 'Terlalu banyak percobaan masuk. Coba lagi dalam 15 menit.' },
+});
+
+const lajuTulis = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    limit: 30,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { success: false, message: 'Terlalu banyak operasi tulis. Coba lagi beberapa menit lagi.' },
+});
+
+app.use(lajuUmum);
+app.post('/api/login', lajuLogin);
+
 
 // ========== KEYCLOAK CONFIG ==========
 const KEYCLOAK_CONFIG = {
@@ -67,69 +158,96 @@ const publicBacaRoutes = [
     '/api/sampel' // mencakup sampel-ot, -sk, -ob, -kos, -pp, -kp
 ];
 
-/** Isi req.user bila klien mengirim Bearer sah; kembalikan false bila tidak. */
-const bacaBearer = (req) => {
+// PREFIX API YANG BENAR-BENAR TERPASANG.
+// Dipakai untuk membedakan dua hal yang sebelumnya tertukar:
+//   - alamat yang ADA tapi tidak berhak  → 401
+//   - alamat yang TIDAK ADA              → 404 (temuan 3.8)
+// Tambahkan entri di sini bila memasang router baru.
+const PREFIKS_API = [
+    '/api/login', '/api/health', '/api/keycloak', '/api/publik',
+    '/api/narasi-presentasi', '/api/api-link',
+    '/api/pbf', '/api/ifp',
+    '/api/distribusi-kos', '/api/distribusi-ot', '/api/distribusi-ipk',
+    '/api/distribusi-sk', '/api/distribusi-ifk',
+    '/api/produksi-ot', '/api/produksi-irt', '/api/produksi-pangan-md',
+    '/api/sampel-ot', '/api/sampel-sk', '/api/sampel-ob', '/api/sampel-kos',
+    '/api/sampel-pp', '/api/sampel-kp', '/api/sampel-ok',
+];
+
+const alamatDikenal = (path) => PREFIKS_API.some((p) => path.startsWith(p));
+
+/**
+ * Baca Bearer token dan VERIFIKASI tanda tangannya (lihat lib/verifikasi-token.js).
+ * Mengembalikan pengguna bila sah, atau null bila tidak ada/tidak sah.
+ * Sebelumnya fungsi ini memakai jwt.decode() sehingga token palsu diterima.
+ */
+const bacaBearer = async (req) => {
     const header = req.headers.authorization;
-    if (!header || !header.startsWith('Bearer ')) return false;
+    if (!header || !header.startsWith('Bearer ')) return null;
     try {
-        const decoded = jwt.decode(header.slice(7));
-        if (decoded && (!decoded.exp || decoded.exp > Date.now() / 1000)) {
-            req.user = {
-                id: decoded.sub,
-                username: decoded.preferred_username || decoded.email,
-                email: decoded.email,
-                name: decoded.name,
-                roles: decoded.realm_access?.roles || []
-            };
-            return true;
-        }
-    } catch {
-        // Token rusak → diperlakukan sebagai tamu
+        const payload = await verifikasiToken(header.slice(7));
+        const user = penggunaDariPayload(payload);
+        req.user = user;
+        return user;
+    } catch (err) {
+        // Token rusak, kedaluwarsa, tanda tangan salah, atau JWKS tidak terjangkau.
+        // Semua kasus diperlakukan sama: tidak ada pengguna sah.
+        req.galatToken = err.message;
+        return null;
     }
-    return false;
 };
 
 const authMiddleware = async (req, res, next) => {
+    // Alamat yang tidak ada diteruskan ke penangan 404, jangan dijawab 401.
+    if (!alamatDikenal(req.path)) return next();
+
     if (publicRoutes.some(route => req.path.startsWith(route))) {
         // Route publik tetap publik, TETAPI bila klien mengirim Bearer token yang
         // sah, identitasnya dipakai. Diperlukan fitur Link API: link berlabel
         // 'private' ditolak tanpa token, sedangkan link 'publik' tetap jalan
         // tanpa token (lihat routes/link-api.js).
-        bacaBearer(req);
+        await bacaBearer(req);
         return next();
     }
 
     // Modul data publik: cukup untuk BACA. Menulis (impor/ubah/hapus) tetap
-    // harus lewat pemeriksaan token di bawah.
+    // harus lewat pemeriksaan token + peran di bawah.
     const bacaSaja = req.method === 'GET' || req.method === 'HEAD';
     if (bacaSaja && publicBacaRoutes.some(route => req.path.startsWith(route))) {
-        bacaBearer(req);
+        await bacaBearer(req);
         return next();
     }
 
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    // ---- Mulai bagian yang menuntut token sah ----
+    const user = await bacaBearer(req);
+    if (!user) {
+        return res.status(401).json({
+            success: false,
+            message: req.headers.authorization
+                ? 'Token tidak sah atau kedaluwarsa'
+                : 'Unauthorized',
+        });
     }
 
-    const token = authHeader.slice(7);
-    try {
-        const decoded = jwt.decode(token);
-        if (!decoded || (decoded.exp && decoded.exp < Date.now() / 1000)) {
-            return res.status(401).json({ success: false, message: 'Token invalid or expired' });
-        }
-
-        req.user = {
-            id: decoded.sub,
-            username: decoded.preferred_username || decoded.email,
-            email: decoded.email,
-            name: decoded.name,
-            roles: decoded.realm_access?.roles || []
-        };
-        next();
-    } catch (error) {
-        return res.status(401).json({ success: false, message: 'Invalid token' });
+    // Operasi tulis dibatasi pada peran tertentu (temuan 3.1, bagian kedua).
+    // Peran diatur lewat PERAN_TULIS; bawaannya admin,superadmin.
+    if (!bacaSaja && !bolehMenulis(user)) {
+        console.warn(
+            `[auth] TOLAK tulis: ${req.method} ${req.path} oleh ${user.username || user.id} ` +
+            `(peran: ${(user.roles || []).join(', ') || 'tidak ada'}; diizinkan: ${PERAN_TULIS.join(', ')})`
+        );
+        return res.status(403).json({
+            success: false,
+            message: 'Peran Anda tidak berhak mengubah data. Hubungi administrator.',
+        });
     }
+
+    // Batas laju lebih ketat untuk unggah dan hapus.
+    if (!bacaSaja && (req.path.includes('/import') || req.method === 'DELETE')) {
+        return lajuTulis(req, res, next);
+    }
+
+    return next();
 };
 
 app.use(authMiddleware);
@@ -274,10 +392,18 @@ app.use((err, req, res, next) => {
 });
 
 // ========== START SERVER ==========
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
+    const info = ringkasanAuth();
     console.log(`
     ════════════════════════════════════════
-    🚀 Server running on port ${PORT}
+    🚀 Server running on ${HOST}:${PORT}
+    🔐 Verifikasi token : ${info.verifikasi}
+       Issuer           : ${info.issuer}
+       JWKS             : ${info.jwks}
+       Audience         : ${info.audience}
+       Peran boleh tulis: ${info.peranTulis}
+    🌐 CORS asal        : ${ASAL_DIIZINKAN.join(', ')}
+    ⛔ Pembatasan laju  : umum 300/menit · login 10/15 menit · tulis 30/5 menit
     📋 Routes:
     - POST  /api/login
     - GET   /api/health
@@ -295,6 +421,9 @@ app.listen(PORT, () => {
     - GET   /api/publik/kinerja/pilihan | /ringkasan | /sarana   (publik)
     ════════════════════════════════════════
     `);
+    if (!info.verifikasi.startsWith('AKTIF')) {
+        console.warn('    ⚠️  AUTH_VERIFIKASI=nonaktif — token TIDAK diperiksa. Jangan pakai di luar pengembangan.\n');
+    }
 });
 
 module.exports = app;

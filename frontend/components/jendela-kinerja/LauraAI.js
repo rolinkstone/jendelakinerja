@@ -31,6 +31,14 @@ import {
 import { useSuaraLaura } from '../../lib/tts';
 import PengaturanSuara from '../laura/PengaturanSuara';
 
+/**
+ * Tautan ke aplikasi LAURA AI versi penuh. Diambil dari variabel lingkungan
+ * supaya alamat bisa diganti tanpa menyentuh kode; nilai bawaan menunjuk
+ * situs produksi. Dulu widget ini sama sekali tidak menyediakan tautan ke
+ * sana (temuan UAT-08 pada laporan pengujian).
+ */
+const TAUTAN_LAURA = process.env.NEXT_PUBLIC_LAURA_URL || 'https://laura-ai.bbpompky.id';
+
 const KUNCI_TUTUP = 'laura-balon-tutup';
 const KUNCI_SESI = 'laura-jk-session-id';
 /** Mode tanya terakhir (suara/teks) — diingat agar tidak dipilih ulang. */
@@ -300,6 +308,16 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
               <p className="text-[10.5px] leading-tight text-slate-500 dark:text-slate-400">
                 Asisten data Jendela Kinerja
               </p>
+              {/* Tautan ke LAURA AI versi penuh — dulu widget ini tidak punya
+                  jalan sama sekali ke sana (temuan UAT-08). */}
+              <a
+                href={TAUTAN_LAURA}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10.5px] font-semibold text-accent-600 underline underline-offset-2 transition hover:text-accent-700 dark:text-accent-400"
+              >
+                Buka situs LAURA AI
+              </a>
             </div>
             <div className="flex items-center gap-0.5">
               <button
@@ -549,6 +567,14 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
             Buka Laura
             <FaChevronDown className="h-2 w-2" />
           </button>
+          <a
+            href={TAUTAN_LAURA}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1.5 block text-center text-[10px] font-semibold text-accent-600 underline underline-offset-2 transition hover:text-accent-700 dark:text-accent-400"
+          >
+            Buka situs LAURA AI
+          </a>
         </div>
       )}
 
