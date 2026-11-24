@@ -4,10 +4,44 @@ Dashboard kinerja. Modul dikelompokkan dalam tiga menu, masing-masing bersub men
 
 - **Distribusi → PBF** — impor laporan hasil pemeriksaan sarana distribusi PBF
   dari berkas Excel.
+- **Distribusi → PBF** — impor laporan hasil pemeriksaan sarana distribusi
+  PBF (44 kolom: ada blok temuan Kategori/Observasi/Temuan, M/m/C, Analisa,
+  Kriteria Resiko, ATC).
+- **Distribusi → IFP** — sarana distribusi **Instalasi Farmasi Pemerintah**.
+  Tata letak berkasnya IDENTIK dengan PBF, jadi memakai router kembar.
+- **Distribusi → IFK** — Instalasi Farmasi Pemerintah **Kota/Kabupaten**.
+  Berkasnya IDENTIK dengan PBF/IFP (44 kolom, rincian fokus pemeriksaan,
+  M/m/C), jadi memakai router kembar. Jangan tertukar dengan **IFP**
+  (provinsi) — kolomnya sama, tabel & kewenangannya beda.
+  Berkas contoh `distribusi IFK 2024.xlsx` (149 baris) → **10 laporan +
+  130 rincian**, karena satu laporan menampung banyak baris fokus.
+- **Distribusi → Kosmetika** — 35 kolom, TIDAK punya blok temuan maupun M/m/C.
+  Judul "Tindak Lanjut" muncul **dua kali** (kolom 11 = UPT, kolom 15 = pusat)
+  dan disimpan ke kolom berbeda (`tindak_lanjut` / `tindak_lanjut_pusat`).
+  Kesimpulan ada di "Hasil Balai" (kolom 14).
+- **Distribusi → Obat Tradisional** — 38 kolom, ada "Metode Inspeksi" dan tiga
+  kolom detil (Detil Tindak Lanjut, Detil Hasil Pemeriksaan, Detil Kesimpulan
+  TMK). Kesimpulan ada di "Hasil Balai" (kolom 17).
+  **Jangan tertukar dengan Produksi → Obat Tradisional** (CPOTB): yang ini
+  sarana peredaran, bukan sarana produksi.
+- **Distribusi → IPK (Intensifikasi Pengawasan Khusus)** — 32 kolom, paling
+  ringkas: tanpa blok temuan, M/m/C, maupun "Klasifikasi". Yang khas hanya
+  "Tindakan Terhadap Produk". Kesimpulan di "Hasil Balai".
+- **Distribusi → Suplemen Kesehatan** — 38 kolom. Jangan tertukar dengan
+  **Sampel → Suplemen Kesehatan** (`sampel-sk`): yang ini sarana peredaran yang
+  diperiksa, bukan produk yang diuji lab. Judul "Tindak Lanjut" juga muncul
+  **dua kali** (kolom 12 = UPT, kolom 18 = pusat).
 - **Produksi → Pangan IRT** — impor laporan hasil pemeriksaan sarana produksi
   pangan IRT (CPPB-IRT).
 - **Produksi → Obat Tradisional** — impor laporan hasil pemeriksaan sarana
   produksi obat tradisional (CPOTB) dari berkas Excel.
+- **Produksi → Pangan MD** — sarana produksi Pangan Olahan Makanan Dalam.
+  Berkasnya **48 kolom** (beda dari IRT/OT): identitas produk ada di baris
+  sarana (Nama Pangan, Jenis Pangan, Merk Produk), ada blok **Sertifikat**
+  (jenis, nomor, masa berlaku, lembaga), Status Sarana, temuan ketidaksesuaian
+  administrasi, M/m/C, dan Tingkat Rating. Kesimpulan akhir memakai
+  `hasil_balai` (kolom `kesimpulan` hanya ringkasan UPT).
+  Berkas contoh `produksi - pangan md.xlsx` (31 baris) → **22 laporan**.
 - **Sampel → Obat Tradisional** — impor rekap data sampel obat tradisional yang
   diuji laboratorium (satu baris tabel = satu sampel).
 - **Sampel → Suplemen Kesehatan** — sama, untuk komoditi suplemen kesehatan.

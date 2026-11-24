@@ -571,7 +571,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
         <img
           src="/images/maskot-bpom.png"
           alt="Maskot BBPOM — Laura AI"
-          className="pointer-events-none h-40 w-auto max-w-none object-contain object-bottom drop-shadow sm:h-56"
+          className="pointer-events-none h-52 w-auto max-w-none object-contain object-bottom drop-shadow sm:h-72"
         />
         {/* Indikator status: bicara = ikon speaker berdenyut. */}
         {(status === 'bicara' || suara.sedangBicara) ? (

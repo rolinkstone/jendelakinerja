@@ -25,7 +25,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FaFileAudio, FaSyncAlt, FaPlay, FaStop, FaSave, FaTrash, FaInfoCircle,
-  FaCheckCircle, FaExclamationTriangle, FaMicrophoneAlt, FaListUl, FaEdit, FaCog,
+  FaCheckCircle, FaExclamationTriangle, FaMicrophoneAlt, FaListUl, FaEdit, FaCog, FaTimes,
 } from 'react-icons/fa';
 import { useSuaraLaura } from '../../lib/tts';
 import PengaturanSuara from '../laura/PengaturanSuara';
@@ -56,6 +56,24 @@ const queryFilter = (filter) => {
   return s ? `?${s}` : '';
 };
 
+/**
+ * Definisi lima filter (kunci = kolom backend, lihat lib/narasi.js).
+ * Dibungkus array supaya JSX tidak menyalin blok <label>+<select> lima kali —
+ * dan filter baru cukup ditambah di sini.
+ */
+const DAFTAR_FILTER = [
+  { kunci: 'tahun', label: 'Tahun', semua: 'Semua tahun',
+    opsi: (p) => (p?.tahun || []).map((t) => ({ nilai: t.tahun, label: `${t.tahun} (${angka(t.jumlah)})` })) },
+  { kunci: 'bulan', label: 'Bulan', semua: 'Semua bulan',
+    opsi: (p) => (p?.bulan_semua || []).map((b) => ({ nilai: b.nilai, label: b.nama })) },
+  { kunci: 'kegiatan', label: 'Kegiatan', semua: 'Semua kegiatan',
+    opsi: (p) => (p?.kegiatan || []).map((k) => ({ nilai: k.kegiatan, label: `${k.kegiatan} (${angka(k.jumlah)})` })) },
+  { kunci: 'jenis', label: 'Jenis sarana', semua: 'Semua jenis',
+    opsi: (p) => (p?.jenis_sarana || []).map((j) => ({ nilai: j.jenis_sarana, label: j.jenis_sarana })) },
+  { kunci: 'kab', label: 'Kabupaten/Kota', semua: 'Semua wilayah',
+    opsi: (p) => (p?.kab_kota || []).filter((k) => k.kab_kota !== '-').map((k) => ({ nilai: k.kab_kota, label: k.kab_kota })) },
+];
+
 /** Jumlah kata & perkiraan detik baca (150 kata/menit). */
 const hitungKata = (teks) => String(teks || '').trim().split(/\s+/).filter(Boolean).length;
 const perkiraanDetik = (teks) => Math.max(0, Math.round((hitungKata(teks) / 150) * 60));
@@ -84,6 +102,21 @@ export default function NarasiPresentasiContainer() {
   // didengar operator di sini persis yang akan didengar pengunjung.
   const suara = useSuaraLaura();
   const [panelSuara, setPanelSuara] = useState(false);
+
+  // True bila minimal satu filter dipilih → tombol "Reset filter" tampil.
+  // CATATAN: dihitung SETELAH `pilihan` dideklarasikan. Menaruhnya di atas
+  // deklarasi useState `pilihan` membuat `pilihan` masih di zona TDZ
+  // (ReferenceError: Cannot access 'pilihan' before initialization) — halaman
+  // langsung "Application error" begitu filter diubah.
+  const adaFilter = Object.values(filter).some((v) => v !== '' && v !== null && v !== undefined);
+
+  // Chip ringkasan: label + nilai yang sedang dipilih (bukan nilai mentah).
+  const ringkasanFilter = DAFTAR_FILTER
+    .filter((fld) => filter[fld.kunci] !== '' && filter[fld.kunci] != null)
+    .map((fld) => {
+      const cocok = fld.opsi(pilihan).find((o) => String(o.nilai) === String(filter[fld.kunci]));
+      return { kunci: fld.kunci, label: fld.label, nilai: cocok?.label || filter[fld.kunci] };
+    });
 
   // ---- Pilihan filter (route publik) --------------------------------------
   const muatPilihan = useCallback(async () => {
@@ -318,84 +351,66 @@ export default function NarasiPresentasiContainer() {
           <div>
             <h2 className="text-[13px] font-bold text-slate-900 dark:text-white">Filter dashboard</h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Pilih kombinasi data yang naskahnya ingin dikoreksi.
+              Pilih kombinasi data yang naskahnya ingin dikoreksi. Kosong = semua.
             </p>
           </div>
+          {adaFilter && (
+            <button
+              type="button"
+              onClick={() => setFilter(FILTER_KOSONG)}
+              className="btn-ghost inline-flex items-center gap-1.5 text-[11px]"
+              title="Kembalikan semua filter ke Semua"
+            >
+              <FaTimes className="h-2.5 w-2.5" />
+              Reset filter
+            </button>
+          )}
         </div>
 
-        <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-5">
-          <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Tahun</span>
-            <select
-              value={filter.tahun}
-              onChange={(e) => setFilter((f) => ({ ...f, tahun: e.target.value }))}
-              className="input-sm w-full"
-            >
-              <option value="">Semua tahun</option>
-              {(pilihan?.tahun || []).map((t) => (
-                <option key={t.tahun} value={t.tahun}>{t.tahun} ({angka(t.jumlah)})</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Bulan</span>
-            <select
-              value={filter.bulan}
-              onChange={(e) => setFilter((f) => ({ ...f, bulan: e.target.value }))}
-              className="input-sm w-full"
-            >
-              <option value="">Semua bulan</option>
-              {(pilihan?.bulan_semua || []).map((b) => (
-                <option key={b.nilai} value={b.nilai}>{b.nama}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Kegiatan</span>
-            <select
-              value={filter.kegiatan}
-              onChange={(e) => setFilter((f) => ({ ...f, kegiatan: e.target.value }))}
-              className="input-sm w-full"
-            >
-              <option value="">Semua kegiatan</option>
-              {(pilihan?.kegiatan || []).map((k) => (
-                <option key={k.kegiatan} value={k.kegiatan}>{k.kegiatan} ({angka(k.jumlah)})</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Jenis sarana</span>
-            <select
-              value={filter.jenis}
-              onChange={(e) => setFilter((f) => ({ ...f, jenis: e.target.value }))}
-              className="input-sm w-full"
-            >
-              <option value="">Semua jenis</option>
-              {(pilihan?.jenis_sarana || []).map((j) => (
-                <option key={j.jenis_sarana} value={j.jenis_sarana}>{j.jenis_sarana}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Kabupaten/Kota</span>
-            <select
-              value={filter.kab}
-              onChange={(e) => setFilter((f) => ({ ...f, kab: e.target.value }))}
-              className="input-sm w-full"
-            >
-              <option value="">Semua wilayah</option>
-              {(pilihan?.kab_kota || []).filter((k) => k.kab_kota !== '-').map((k) => (
-                <option key={k.kab_kota} value={k.kab_kota}>{k.kab_kota}</option>
-              ))}
-            </select>
-          </label>
+        <div className="grid gap-x-3 gap-y-4 px-5 pt-4 pb-5 sm:grid-cols-2 lg:grid-cols-5">
+          {DAFTAR_FILTER.map((fld) => (
+            <label key={fld.kunci} className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {fld.label}
+              </span>
+              <select
+                value={filter[fld.kunci]}
+                onChange={(e) => setFilter((f) => ({ ...f, [fld.kunci]: e.target.value }))}
+                className="input-sm"
+                data-kosong={filter[fld.kunci] === '' ? '1' : undefined}
+              >
+                <option value="">{fld.semua}</option>
+                {fld.opsi(pilihan).map((o) => (
+                  <option key={o.nilai} value={o.nilai}>{o.label}</option>
+                ))}
+              </select>
+            </label>
+          ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-paper-200 px-5 py-3 dark:border-white/[0.08]">
+        {/* Ringkasan filter aktif: tanpa ini operator tidak tahu kombinasi apa
+            yang sedang dipakai saat tombol ditekan. */}
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-paper-200 px-5 pt-3 dark:border-white/[0.08]">
+          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+            Filter aktif
+          </span>
+          {ringkasanFilter.length === 0 ? (
+            <span className="rounded-md bg-paper-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-white/[0.06] dark:text-slate-400">
+              semua data (tanpa filter)
+            </span>
+          ) : (
+            ringkasanFilter.map((r) => (
+              <span
+                key={r.kunci}
+                className="inline-flex items-center gap-1 rounded-md bg-accent-500/10 px-2 py-0.5 text-[11px] font-semibold text-accent-700 dark:bg-accent-500/15 dark:text-accent-300"
+              >
+                <span className="text-accent-500/70 dark:text-accent-300/60">{r.label}:</span> {r.nilai}
+              </span>
+            ))
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 px-5 py-3">
           <button
             type="button"
             onClick={buatNaskah}

@@ -387,10 +387,26 @@ router.post('/import', (req, res, next) => {
     return res.status(400).json({ success: false, message: `Berkas gagal dibaca: ${e.message}` });
   }
 
-  if (!hasil.laporan.length) {
+  // ---------------------------------------------------------------------
+  // Tahun KOSONG (0 laporan).
+  //
+  // Dulu selalu ditolak ("Tidak ada baris data yang terbaca"). Akibatnya
+  // tahun yang memang tidak ada kegiatannya tidak bisa didaftarkan, sehingga
+  // rekap per tahun melompat (2024 → 2026) seolah 2025 hilang datanya.
+  //
+  // Sekarang impor kosong DIIZINKAN bila tahunnya dipilih manual — tidak ada
+  // isi untuk dideteksi. `bacaWorkbook` sudah memastikan baris header "No."
+  // ditemukan, jadi berkas yang bukan laporan tetap ditolak lebih awal.
+  // Yang dicatat hanya baris *_import dengan jumlah_laporan = 0.
+  // ---------------------------------------------------------------------
+  const berkasKosong = hasil.laporan.length === 0;
+
+  if (berkasKosong && tahunPilihan === null) {
     return res.status(400).json({
       success: false,
-      message: 'Tidak ada baris data yang terbaca. Pastikan berkas memakai format laporan yang benar.',
+      message:
+        'Berkas ini tidak berisi baris data, jadi tahunnya tidak bisa dibaca otomatis. ' +
+        'Pilih tahun data secara manual (bukan "Otomatis") lalu unggah ulang untuk mendaftarkan tahun kosong.',
     });
   }
 
@@ -460,9 +476,14 @@ router.post('/import', (req, res, next) => {
       ? `menggantikan ${sebelum.laporan} laporan dan ${sebelum.rincian} rincian tahun ${tahun}`
       : `data tahun ${tahun} sebelumnya kosong`;
 
+    const pesan = berkasKosong
+      ? `Tahun ${tahun} didaftarkan dengan 0 laporan (${pengganti}). ` +
+        'Tahun ini sekarang ikut terhitung di rekap per tahun. Tahun lain tidak diubah.'
+      : `Impor selesai — ${hasil.laporan.length} laporan dan ${jumlahRincian} rincian untuk tahun ${tahun} (${pengganti}). Tahun lain tidak diubah.`;
+
     return res.json({
       success: true,
-      message: `Impor selesai — ${hasil.laporan.length} laporan dan ${jumlahRincian} rincian untuk tahun ${tahun} (${pengganti}). Tahun lain tidak diubah.`,
+      message: pesan,
       data: {
         import_id: imp.insertId,
         tahun,
@@ -473,6 +494,7 @@ router.post('/import', (req, res, next) => {
         jumlah_laporan: hasil.laporan.length,
         jumlah_rincian: jumlahRincian,
         sebelumnya: sebelum,
+        tahun_kosong: berkasKosong,
       },
     });
   } catch (e) {

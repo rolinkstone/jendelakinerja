@@ -55,8 +55,15 @@ const publicRoutes = ['/api/login', '/api/health', '/api/publik',
 // lib/saring-publik.js di endpoint detail, jadi yang keluar hanya data teknis.
 const publicBacaRoutes = [
     '/api/pbf',
+    '/api/ifp',
+    '/api/distribusi-kos',
+    '/api/distribusi-ot',
+    '/api/distribusi-ipk',
+    '/api/distribusi-sk',
+    '/api/distribusi-ifk',
     '/api/produksi-ot',
     '/api/produksi-irt',
+    '/api/produksi-pangan-md',
     '/api/sampel' // mencakup sampel-ot, -sk, -ob, -kos, -pp, -kp
 ];
 
@@ -188,6 +195,21 @@ app.use('/api/keycloak', require('./routes/keycloak'));
 // memanggilnya lewat proxy pages/api/pbf/[...path].js).
 app.use('/api/pbf', require('./routes/pbf'));
 
+// Router Distribusi — IFP (Instalasi Farmasi Pemerintah): impor laporan Excel
+// per tahun. Struktur berkasnya IDENTIK dengan PBF (44 kolom, header dua
+// tingkat), jadi router-nya kembar; yang beda hanya tabel & jenis sarana.
+app.use('/api/ifp', require('./routes/ifp'));
+
+// Router Distribusi — Kosmetika & Obat Tradisional. Tata letak berkasnya
+// BERBEDA dari PBF (35 & 38 kolom, tanpa blok temuan/M-m-C), jadi memakai
+// engine `lib/distribusi.js` dengan pemetaan kolom per komoditi.
+app.use('/api/distribusi-kos', require('./routes/distribusi-kos'));
+app.use('/api/distribusi-ot', require('./routes/distribusi-ot'));
+app.use('/api/distribusi-ipk', require('./routes/distribusi-ipk'));
+app.use('/api/distribusi-sk', require('./routes/distribusi-sk'));
+// Distribusi IFK — kembar PBF/IFP (44 kolom dengan rincian fokus).
+app.use('/api/distribusi-ifk', require('./routes/distribusi-ifk'));
+
 // Router Produksi — Obat Tradisional — impor laporan Excel per tahun (butuh
 // Bearer token; frontend memanggilnya lewat proxy
 // pages/api/produksi-ot/[...path].js).
@@ -197,6 +219,11 @@ app.use('/api/produksi-ot', require('./routes/produksi-ot'));
 // (butuh Bearer token; frontend memanggilnya lewat proxy
 // pages/api/produksi-irt/[...path].js).
 app.use('/api/produksi-irt', require('./routes/produksi-irt'));
+
+// Router Produksi — Pangan MD (Pangan Olahan Makanan Dalam). Berkasnya 48
+// kolom (beda dari IRT/OT), jadi memakai mesin lib/distribusi.js dengan
+// pemetaan kolom sendiri.
+app.use('/api/produksi-pangan-md', require('./routes/produksi-pangan-md'));
 
 // Sampel: impor "REKAP DATA SAMPEL" per tahun (satu baris = satu sampel;
 // baris lanjutan di berkas digabung di backend/lib/sampel.js).

@@ -167,6 +167,150 @@ const MODUL = {
       petugas: f('Petugas', GRUP.BERKAS, { pribadi: true })
     }
   },
+  'ifp': {
+    nama: 'Distribusi IFP',
+    tabel: 'ifp_laporan',
+    kolom: {
+      tahun: f('Tahun Data', GRUP.BERKAS, { ringkas: true, tipe: 'number' }),
+      no_urut: f('No. Urut', GRUP.IDENTITAS, { tipe: 'number' }),
+      nama_sarana: f('Nama Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_sarana: f('Jenis Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_industri: f('Jenis Industri', GRUP.SARANA),
+      kab_kota: f('Kabupaten / Kota', GRUP.SARANA, { ringkas: true }),
+      tujuan_pemeriksaan: f('Tujuan Pemeriksaan', GRUP.SARANA),
+      grading: f('Grading', GRUP.RINGKASAN, { ringkas: true }),
+      kesimpulan_akhir: f('Kesimpulan Akhir', GRUP.RINGKASAN, { ringkas: true }),
+      jumlah_mayor: f('Temuan Mayor', GRUP.RINGKASAN, { ringkas: true, tipe: 'number' }),
+      jumlah_minor: f('Temuan Minor', GRUP.RINGKASAN, { ringkas: true, tipe: 'number' }),
+      jumlah_kritis: f('Temuan Kritis', GRUP.RINGKASAN, { tipe: 'number' }),
+      jumlah_sampel_lab: f('Sampel Lab', GRUP.RINGKASAN, { tipe: 'number' }),
+      tindak_lanjut: f('Tindak Lanjut', GRUP.TINDAK, { ringkas: true }),
+      temuan: f('Uraian Temuan', GRUP.UPT),
+      rekomendasi: f('Rekomendasi', GRUP.TINDAK),
+      operator: f('Operator', GRUP.BERKAS, { pribadi: true }),
+      petugas: f('Petugas', GRUP.BERKAS, { pribadi: true })
+    }
+  },
+  'distribusi-ifk': {
+    nama: 'Distribusi IFK',
+    tabel: 'ifk_laporan',
+    kolom: {
+      tahun: f('Tahun Data', GRUP.BERKAS, { ringkas: true, tipe: 'number' }),
+      no_urut: f('No. Urut', GRUP.IDENTITAS, { tipe: 'number' }),
+      nama_sarana: f('Nama Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_sarana: f('Jenis Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_industri: f('Jenis Industri', GRUP.SARANA),
+      kab_kota: f('Kabupaten / Kota', GRUP.SARANA, { ringkas: true }),
+      tujuan_pemeriksaan: f('Tujuan Pemeriksaan', GRUP.SARANA),
+      grading: f('Grading', GRUP.RINGKASAN, { ringkas: true }),
+      kesimpulan_akhir: f('Kesimpulan Akhir', GRUP.RINGKASAN, { ringkas: true }),
+      jumlah_mayor: f('Temuan Mayor', GRUP.RINGKASAN, { ringkas: true, tipe: 'number' }),
+      jumlah_minor: f('Temuan Minor', GRUP.RINGKASAN, { ringkas: true, tipe: 'number' }),
+      jumlah_kritis: f('Temuan Kritis', GRUP.RINGKASAN, { tipe: 'number' }),
+      jumlah_sampel_lab: f('Sampel Lab', GRUP.RINGKASAN, { tipe: 'number' }),
+      tindak_lanjut: f('Tindak Lanjut', GRUP.TINDAK, { ringkas: true }),
+      temuan: f('Uraian Temuan', GRUP.UPT),
+      rekomendasi: f('Rekomendasi', GRUP.TINDAK),
+      operator: f('Operator', GRUP.BERKAS, { pribadi: true }),
+      petugas: f('Petugas', GRUP.BERKAS, { pribadi: true })
+    }
+  },
+  'distribusi-kos': {
+    nama: 'Distribusi Kosmetika',
+    tabel: 'dist_kos_laporan',
+    kolom: {
+      tahun: f('Tahun Data', GRUP.BERKAS, { ringkas: true, tipe: 'number' }),
+      no_urut: f('No. Urut', GRUP.IDENTITAS, { tipe: 'number' }),
+      nama_sarana: f('Nama Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_sarana: f('Jenis Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_industri: f('Jenis Industri', GRUP.SARANA),
+      kab_kota: f('Kabupaten / Kota', GRUP.SARANA, { ringkas: true }),
+      tujuan_pemeriksaan: f('Tujuan Pemeriksaan', GRUP.SARANA),
+      // Berkas kosmetika tidak punya kolom "Kesimpulan Akhir"; yang dipakai
+      // adalah "Hasil Balai" (kolom 14).
+      hasil_balai: f('Hasil Balai', GRUP.RINGKASAN, { ringkas: true }),
+      klasifikasi: f('Klasifikasi', GRUP.RINGKASAN, { ringkas: true }),
+      grading: f('Grading', GRUP.RINGKASAN, { ringkas: true }),
+      tindak_lanjut: f('Tindak Lanjut (UPT)', GRUP.TINDAK, { ringkas: true }),
+      tindak_lanjut_pusat: f('Tindak Lanjut (Pusat)', GRUP.TINDAK),
+      saran_tindak_lanjut: f('Saran Tindak Lanjut', GRUP.TINDAK),
+      catatan: f('Catatan', GRUP.UPT),
+      jumlah_sampel_lab: f('Sampel Lab', GRUP.RINGKASAN, { tipe: 'number' }),
+      operator: f('Operator', GRUP.BERKAS, { pribadi: true }),
+      petugas: f('Petugas', GRUP.BERKAS, { pribadi: true })
+    }
+  },
+  'distribusi-ot': {
+    nama: 'Distribusi Obat Tradisional',
+    tabel: 'dist_ot_laporan',
+    kolom: {
+      tahun: f('Tahun Data', GRUP.BERKAS, { ringkas: true, tipe: 'number' }),
+      no_urut: f('No. Urut', GRUP.IDENTITAS, { tipe: 'number' }),
+      nama_sarana: f('Nama Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_sarana: f('Jenis Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_industri: f('Jenis Industri', GRUP.SARANA),
+      kab_kota: f('Kabupaten / Kota', GRUP.SARANA, { ringkas: true }),
+      tujuan_pemeriksaan: f('Tujuan Pemeriksaan', GRUP.SARANA),
+      metode_inspeksi: f('Metode Inspeksi', GRUP.SARANA),
+      // Kesimpulan ada di "Hasil Balai" (kolom 17), bukan "Kesimpulan Akhir".
+      hasil_balai: f('Hasil Balai', GRUP.RINGKASAN, { ringkas: true }),
+      klasifikasi: f('Klasifikasi', GRUP.RINGKASAN, { ringkas: true }),
+      grading: f('Grading', GRUP.RINGKASAN, { ringkas: true }),
+      detil_hasil_pemeriksaan: f('Detil Hasil Pemeriksaan', GRUP.UPT),
+      detil_kesimpulan_tmk: f('Detil Kesimpulan TMK', GRUP.UPT),
+      tindak_lanjut: f('Tindak Lanjut', GRUP.TINDAK, { ringkas: true }),
+      saran_tindak_lanjut: f('Saran Tindak Lanjut', GRUP.TINDAK),
+      catatan: f('Catatan', GRUP.UPT),
+      jumlah_sampel_lab: f('Sampel Lab', GRUP.RINGKASAN, { tipe: 'number' }),
+      operator: f('Operator', GRUP.BERKAS, { pribadi: true }),
+      petugas: f('Petugas', GRUP.BERKAS, { pribadi: true })
+    }
+  },
+  'distribusi-ipk': {
+    nama: 'Distribusi IPK',
+    tabel: 'dist_ipk_laporan',
+    kolom: {
+      tahun: f('Tahun Data', GRUP.BERKAS, { ringkas: true, tipe: 'number' }),
+      no_urut: f('No. Urut', GRUP.IDENTITAS, { tipe: 'number' }),
+      nama_sarana: f('Nama Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_sarana: f('Jenis Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_industri: f('Jenis Industri', GRUP.SARANA),
+      kab_kota: f('Kabupaten / Kota', GRUP.SARANA, { ringkas: true }),
+      tujuan_pemeriksaan: f('Tujuan Pemeriksaan', GRUP.SARANA),
+      // IPK tidak punya "Klasifikasi"; yang khas hanya tindakan terhadap produk.
+      tindakan_terhadap_produk: f('Tindakan Terhadap Produk', GRUP.RINGKASAN, { ringkas: true }),
+      hasil_balai: f('Hasil Balai', GRUP.RINGKASAN, { ringkas: true }),
+      grading: f('Grading', GRUP.RINGKASAN, { ringkas: true }),
+      tindak_lanjut: f('Tindak Lanjut', GRUP.TINDAK, { ringkas: true }),
+      jumlah_sampel_lab: f('Sampel Lab', GRUP.RINGKASAN, { tipe: 'number' }),
+      operator: f('Operator', GRUP.BERKAS, { pribadi: true }),
+      petugas: f('Petugas', GRUP.BERKAS, { pribadi: true })
+    }
+  },
+  'distribusi-sk': {
+    nama: 'Distribusi Suplemen Kesehatan',
+    tabel: 'dist_sk_laporan',
+    kolom: {
+      tahun: f('Tahun Data', GRUP.BERKAS, { ringkas: true, tipe: 'number' }),
+      no_urut: f('No. Urut', GRUP.IDENTITAS, { tipe: 'number' }),
+      nama_sarana: f('Nama Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_sarana: f('Jenis Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_industri: f('Jenis Industri', GRUP.SARANA),
+      kab_kota: f('Kabupaten / Kota', GRUP.SARANA, { ringkas: true }),
+      tujuan_pemeriksaan: f('Tujuan Pemeriksaan', GRUP.SARANA),
+      metode_inspeksi: f('Metode Inspeksi', GRUP.SARANA),
+      klasifikasi: f('Klasifikasi', GRUP.RINGKASAN, { ringkas: true }),
+      hasil_balai: f('Hasil Balai', GRUP.RINGKASAN, { ringkas: true }),
+      grading: f('Grading', GRUP.RINGKASAN, { ringkas: true }),
+      tindak_lanjut: f('Tindak Lanjut (UPT)', GRUP.TINDAK, { ringkas: true }),
+      tindak_lanjut_pusat: f('Tindak Lanjut (Pusat)', GRUP.TINDAK),
+      detil_hasil_pemeriksaan: f('Detil Hasil Pemeriksaan', GRUP.UPT),
+      detil_kesimpulan_tmk: f('Detil Kesimpulan TMK', GRUP.UPT),
+      jumlah_sampel_lab: f('Sampel Lab', GRUP.RINGKASAN, { tipe: 'number' }),
+      operator: f('Operator', GRUP.BERKAS, { pribadi: true }),
+      petugas: f('Petugas', GRUP.BERKAS, { pribadi: true })
+    }
+  },
   'produksi-ot': {
     nama: 'Produksi Obat Tradisional',
     tabel: 'ot_laporan',
@@ -212,6 +356,43 @@ const MODUL = {
       jumlah_sampel_lab: f('Sampel Lab', GRUP.RINGKASAN, { tipe: 'number' }),
       penyimpangan: f('Penyimpangan', GRUP.UPT),
       tindak_lanjut: f('Tindak Lanjut', GRUP.TINDAK, { ringkas: true }),
+      operator: f('Operator', GRUP.BERKAS, { pribadi: true }),
+      petugas: f('Petugas', GRUP.BERKAS, { pribadi: true })
+    }
+  },
+'produksi-pangan-md': {
+    nama: 'Produksi Pangan MD',
+    tabel: 'prod_md_laporan',
+    kolom: {
+      tahun: f('Tahun Data', GRUP.BERKAS, { ringkas: true, tipe: 'number' }),
+      no_urut: f('No. Urut', GRUP.IDENTITAS, { tipe: 'number' }),
+      nama_sarana: f('Nama Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_sarana: f('Jenis Sarana', GRUP.SARANA, { ringkas: true }),
+      jenis_industri: f('Jenis Industri', GRUP.SARANA),
+      kab_kota: f('Kabupaten / Kota', GRUP.SARANA, { ringkas: true }),
+      tujuan_pemeriksaan: f('Tujuan Pemeriksaan', GRUP.SARANA),
+      metode_inspeksi: f('Metode Inspeksi', GRUP.SARANA),
+      // Identitas produk pangan yang diperiksa
+      nama_pangan: f('Nama Pangan', GRUP.RINGKASAN, { ringkas: true }),
+      jenis_pangan: f('Jenis Pangan', GRUP.RINGKASAN, { ringkas: true }),
+      merk_produk: f('Merk Produk', GRUP.RINGKASAN),
+      sert_jenis: f('Jenis Sertifikat', GRUP.RINGKASAN),
+      sert_nomor: f('Nomor Sertifikat', GRUP.RINGKASAN),
+      sert_masa_berlaku: f('Masa Berlaku Sertifikat', GRUP.RINGKASAN),
+      sert_lembaga: f('Lembaga Penerbit', GRUP.RINGKASAN),
+      status_sarana: f('Status Sarana', GRUP.RINGKASAN),
+      temuan_nomor: f('Nomor & Kategori Ketidaksesuaian', GRUP.UPT),
+      temuan_deskripsi: f('Deskripsi Ketidaksesuaian', GRUP.UPT),
+      jumlah_mayor: f('Temuan Mayor', GRUP.RINGKASAN, { ringkas: true, tipe: 'number' }),
+      jumlah_minor: f('Temuan Minor', GRUP.RINGKASAN, { ringkas: true, tipe: 'number' }),
+      jumlah_kritis: f('Temuan Kritis', GRUP.RINGKASAN, { tipe: 'number' }),
+      rating: f('Tingkat Rating', GRUP.RINGKASAN, { ringkas: true }),
+      hasil_balai: f('Hasil Balai', GRUP.RINGKASAN, { ringkas: true }),
+      kesimpulan: f('Kesimpulan', GRUP.RINGKASAN),
+      grading: f('Grading', GRUP.RINGKASAN, { ringkas: true }),
+      tindak_lanjut: f('Tindak Lanjut', GRUP.TINDAK, { ringkas: true }),
+      catatan: f('Catatan', GRUP.UPT),
+      jumlah_sampel_lab: f('Sampel Lab', GRUP.RINGKASAN, { tipe: 'number' }),
       operator: f('Operator', GRUP.BERKAS, { pribadi: true }),
       petugas: f('Petugas', GRUP.BERKAS, { pribadi: true })
     }

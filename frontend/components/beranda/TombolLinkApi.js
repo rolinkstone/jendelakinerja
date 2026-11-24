@@ -44,7 +44,7 @@ export default function TombolLinkApi() {
   const [tersalin, setTersalin] = useState(null);
 
   // Jangan tampilkan tombol di halaman tanpa modul (mis. /beranda)
-  const tampil = Boolean(modul) && modul !== 'beranda' && modul !== 'beranda/integrasi-laura';
+  const tampil = Boolean(modul) && modul !== 'beranda' && !modul.startsWith('setting/');
 
   const ambil = useCallback(async () => {
     setMemuat(true);

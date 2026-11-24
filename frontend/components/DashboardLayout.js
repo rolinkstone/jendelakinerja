@@ -33,6 +33,10 @@ import {
   FaTruck,
   FaIndustry,
   FaBoxOpen,
+  FaWarehouse,
+  FaBuilding,
+  FaBoxes,
+  FaClipboardCheck,
   FaBandAid,
   FaFilm,
   FaLeaf,
@@ -45,6 +49,7 @@ import {
   FaUtensils,
   FaPlug,
   FaFileAudio,
+  FaCog,
 } from 'react-icons/fa';
 import Brand, { BRAND, BrandMark } from './Brand';
 import TombolLinkApi from './beranda/TombolLinkApi';
@@ -55,17 +60,22 @@ const NAV_GROUPS = [
   // jadi memakai '/' di sini membuat tombol Beranda melempar pengguna KELUAR
   // dari dashboard ke halaman publik.
   { label: 'Beranda', href: '/beranda', icon: FaThLarge },
-  // Integrasi knowledge: katalog link API modul untuk LAURA AI.
-  { label: 'Integrasi Laura AI', href: '/beranda/integrasi-laura', icon: FaPlug },
-  // Koreksi naskah presentasi 1 menit yang dibacakan widget LAURA di halaman
-  // publik /jendela-kinerja (lihat components/beranda/NarasiPresentasiContainer.js).
-  { label: 'Narasi Presentasi', href: '/beranda/narasi-presentasi', icon: FaFileAudio },
   {
     label: 'Distribusi',
     icon: FaTruck,
     // Sub menu: satu kelompok bisa punya beberapa modul. Modul berikutnya
     // tinggal ditambah di sini + folder halaman pages/<kelompok>/<modul>/.
-    items: [{ label: 'PBF', href: '/distribusi/pbf', icon: FaBoxOpen }],
+    items: [
+      { label: 'PBF', href: '/distribusi/pbf', icon: FaBoxOpen },
+      { label: 'IFK', href: '/distribusi/ifk', icon: FaBuilding },
+      // IFP = Instalasi Farmasi Pemerintah. Berkasnya kembar dengan PBF.
+      { label: 'IFP', href: '/distribusi/ifp', icon: FaWarehouse },
+      // Dua modul ini tata letak berkasnya BERBEDA dari PBF (35 & 38 kolom).
+      { label: 'Kosmetika', href: '/distribusi/kos', icon: FaSprayCan },
+      { label: 'Obat Tradisional', href: '/distribusi/ot', icon: FaLeaf },
+      { label: 'IPK', href: '/distribusi/ipk', icon: FaClipboardCheck },
+      { label: 'Suplemen Kesehatan', href: '/distribusi/sk', icon: FaPills },
+    ],
   },
   {
     label: 'Produksi',
@@ -73,6 +83,7 @@ const NAV_GROUPS = [
     items: [
       { label: 'Obat Tradisional', href: '/produksi/ot', icon: FaLeaf },
       { label: 'Pangan IRT', href: '/produksi/irt', icon: FaCookieBite },
+      { label: 'Pangan MD', href: '/produksi/pangan-md', icon: FaBoxes },
     ],
   },
   {
@@ -89,6 +100,19 @@ const NAV_GROUPS = [
       { label: 'Produk Pangan', href: '/sampel/pp', icon: FaUtensils },
       { label: 'Kemasan Pangan', href: '/sampel/kp', icon: FaFilm },
       { label: 'Obat Kuasi', href: '/sampel/ok', icon: FaBandAid },
+    ],
+  },
+  {
+    // Menu PENGATURAN: konfigurasi yang tidak menyajikan data pengawasan.
+    // Dulu dua entri ini berdiri sendiri di bawah Beranda sehingga menyamar
+    // sebagai modul data; sekarang dikelompokkan supaya jelas ini setting.
+    label: 'Setting',
+    icon: FaCog,
+    items: [
+      // Katalog link API tiap modul untuk knowledge LAURA AI.
+      { label: 'Laura AI', href: '/setting/laura-ai', icon: FaPlug },
+      // Koreksi naskah presentasi yang dibacakan widget LAURA di halaman publik.
+      { label: 'Narasi Presentasi', href: '/setting/narasi-presentasi', icon: FaFileAudio },
     ],
   },
 ];

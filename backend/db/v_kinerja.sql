@@ -7,9 +7,11 @@
 --  tahu dari tabel mana asalnya, kedua tabel dijahit di sini dengan kolom yang
 --  seragam:
 --
---    sumber            : 'PBF' | 'OT' | 'IRTP' | 'SAMPEL_OT' | 'SAMPEL_SK' |
+--    sumber            : 'PBF' | 'IFP' | 'IFK' | 'DIST_KOS' | 'DIST_OT' | 'DIST_IPK' |
+--                        'DIST_SK' | 'OT' | 'IRTP' | 'MD' | 'SAMPEL_OT' | 'SAMPEL_SK' |
 --                        'SAMPEL_OB' | 'SAMPEL_KOS' | 'SAMPEL_PP' | 'SAMPEL_KP'
---    sumber_label      : 'PBF' | 'Obat Tradisional' | 'Pangan IRT' |
+--    sumber_label      : 'PBF' | 'IFP' | 'Distribusi Kosmetika' |
+--                        'Distribusi Obat Tradisional' | 'Obat Tradisional' | 'Pangan IRT' |
 --                        'Sampel Obat Tradisional' | 'Sampel Suplemen Kesehatan' |
 --                        'Sampel Obat' | 'Sampel Kosmetika' | 'Sampel Produk Pangan' |
 --                        'Sampel Kemasan Pangan' |
@@ -27,7 +29,9 @@
 --  File ini IDEMPOTEN (CREATE OR REPLACE VIEW) dan HARUS diurutkan SESUDAH
 --  pbf.sql / pbf_kinerja.sql / pbf_sampel_lab.sql / produksi_ot.sql /
 --  produksi_irt.sql / sampel_ot.sql / sampel_sk.sql / sampel_ob.sql /
---  sampel_kos.sql / sampel_pp.sql / sampel_kp.sql / sampel_ok.sql — makanya
+--  sampel_kos.sql / sampel_pp.sql / sampel_kp.sql / sampel_ok.sql /
+--  distribusi_kos_ot.sql / distribusi_ipk_sk.sql / produksi_pangan_md.sql
+--  — makanya
 --  namanya diawali 'v_' supaya apply-schema.js (urut alfabetis) menjalankannya
 --  paling akhir. View bergantung pada kolom yang baru ada setelah migrasi itu.
 -- ============================================================================
@@ -59,6 +63,181 @@ FROM `pbf_laporan`
 
 UNION ALL
 
+-- ---------------------------------------------------------------------------
+-- Cabang: DISTRIBUSI IFP (Instalasi Farmasi Pemerintah)
+-- Berkasnya identik dengan PBF (44 kolom, header dua tingkat), sehingga kolom
+-- yang dipetakan juga sama. Yang membedakan hanya tabel sumber dan label.
+-- `kegiatan`/`jenis_sarana` berasal dari kepala berkas ("Distribusi - Instalasi
+-- Farmasi"), diisi routes/ifp.js lewat lib/kinerja.js.
+-- ---------------------------------------------------------------------------
+SELECT
+  'IFP'                AS `sumber`,
+  'IFP'                AS `sumber_label`,
+  `kegiatan`           AS `kegiatan`,
+  `jenis_sarana`       AS `jenis_sarana`,
+  `tahun`              AS `tahun`,
+  `bulan`              AS `bulan`,
+  `kab_kota`           AS `kab_kota`,
+  `nama_sarana`        AS `nama_sarana`,
+  `kesimpulan_akhir`   AS `kesimpulan_akhir`,
+  `jumlah_mayor`       AS `jumlah_mayor`,
+  `jumlah_minor`       AS `jumlah_minor`,
+  NULL                 AS `jumlah_lain`,
+  `jumlah_kritis`      AS `jumlah_kritis`,
+  `jumlah_sampel_lab`  AS `jumlah_sampel_lab`,
+  `tgl_input`          AS `tgl_input`,
+  `tgl_periksa_mulai`  AS `tgl_periksa_mulai`,
+  `tgl_periksa_selesai` AS `tgl_periksa_selesai`,
+  `jenis_industri`     AS `jenis_industri`,
+  NULL                 AS `produk_sampel`
+FROM `ifp_laporan`
+
+UNION ALL
+
+-- ---------------------------------------------------------------------------
+-- Cabang: DISTRIBUSI IFK (Instalasi Farmasi Pemerintah Kota/Kabupaten)
+-- Berkasnya IDENTIK dengan PBF/IFP (44 kolom, ada rincian fokus & M/m/C).
+-- Beda dengan IFP hanya wilayah kewenangannya (kabupaten/kota vs provinsi).
+-- ---------------------------------------------------------------------------
+SELECT
+  'IFK'                AS `sumber`,
+  'IFK'                AS `sumber_label`,
+  `kegiatan`           AS `kegiatan`,
+  `jenis_sarana`       AS `jenis_sarana`,
+  `tahun`              AS `tahun`,
+  `bulan`              AS `bulan`,
+  `kab_kota`           AS `kab_kota`,
+  `nama_sarana`        AS `nama_sarana`,
+  `kesimpulan_akhir`   AS `kesimpulan_akhir`,
+  `jumlah_mayor`       AS `jumlah_mayor`,
+  `jumlah_minor`       AS `jumlah_minor`,
+  NULL                 AS `jumlah_lain`,
+  `jumlah_kritis`      AS `jumlah_kritis`,
+  `jumlah_sampel_lab`  AS `jumlah_sampel_lab`,
+  `tgl_input`          AS `tgl_input`,
+  `tgl_periksa_mulai`  AS `tgl_periksa_mulai`,
+  `tgl_periksa_selesai` AS `tgl_periksa_selesai`,
+  `jenis_industri`     AS `jenis_industri`,
+  NULL                 AS `produk_sampel`
+FROM `ifk_laporan`
+
+UNION ALL
+
+-- ---------------------------------------------------------------------------
+-- Cabang: DISTRIBUSI KOSMETIKA (DIST_KOS)
+-- Berkas 35 kolom (berbeda dari PBF). Kesimpulan ada di `hasil_balai`, dan
+-- TIDAK ada blok temuan/M-m-C → kolom jumlah_* diisi NULL.
+-- ---------------------------------------------------------------------------
+SELECT
+  'DIST_KOS'           AS `sumber`,
+  'Distribusi Kosmetika' AS `sumber_label`,
+  `kegiatan`           AS `kegiatan`,
+  `jenis_sarana`       AS `jenis_sarana`,
+  `tahun`              AS `tahun`,
+  `bulan`              AS `bulan`,
+  `kab_kota`           AS `kab_kota`,
+  `nama_sarana`        AS `nama_sarana`,
+  `hasil_balai`        AS `kesimpulan_akhir`,
+  NULL                 AS `jumlah_mayor`,
+  NULL                 AS `jumlah_minor`,
+  NULL                 AS `jumlah_lain`,
+  NULL                 AS `jumlah_kritis`,
+  `jumlah_sampel_lab`  AS `jumlah_sampel_lab`,
+  `tgl_input`          AS `tgl_input`,
+  `tgl_periksa_mulai`  AS `tgl_periksa_mulai`,
+  `tgl_periksa_selesai` AS `tgl_periksa_selesai`,
+  `jenis_industri`     AS `jenis_industri`,
+  NULL                 AS `produk_sampel`
+FROM `dist_kos_laporan`
+
+UNION ALL
+
+-- ---------------------------------------------------------------------------
+-- Cabang: DISTRIBUSI OBAT TRADISIONAL (DIST_OT)
+-- Berkas 38 kolom. Kesimpulan ada di `hasil_balai`.
+-- ---------------------------------------------------------------------------
+SELECT
+  'DIST_OT'            AS `sumber`,
+  'Distribusi Obat Tradisional' AS `sumber_label`,
+  `kegiatan`           AS `kegiatan`,
+  `jenis_sarana`       AS `jenis_sarana`,
+  `tahun`              AS `tahun`,
+  `bulan`              AS `bulan`,
+  `kab_kota`           AS `kab_kota`,
+  `nama_sarana`        AS `nama_sarana`,
+  `hasil_balai`        AS `kesimpulan_akhir`,
+  NULL                 AS `jumlah_mayor`,
+  NULL                 AS `jumlah_minor`,
+  NULL                 AS `jumlah_lain`,
+  NULL                 AS `jumlah_kritis`,
+  `jumlah_sampel_lab`  AS `jumlah_sampel_lab`,
+  `tgl_input`          AS `tgl_input`,
+  `tgl_periksa_mulai`  AS `tgl_periksa_mulai`,
+  `tgl_periksa_selesai` AS `tgl_periksa_selesai`,
+  `jenis_industri`     AS `jenis_industri`,
+  NULL                 AS `produk_sampel`
+FROM `dist_ot_laporan`
+
+UNION ALL
+
+-- ---------------------------------------------------------------------------
+-- Cabang: DISTRIBUSI IPK (Intensifikasi Pengawasan Khusus)
+-- Berkas 32 kolom — paling ringkas; TIDAK ada klasifikasi/temuan/M-m-C.
+-- Kesimpulan ada di `hasil_balai`.
+-- ---------------------------------------------------------------------------
+SELECT
+  'DIST_IPK'           AS `sumber`,
+  'Distribusi IPK'     AS `sumber_label`,
+  `kegiatan`           AS `kegiatan`,
+  `jenis_sarana`       AS `jenis_sarana`,
+  `tahun`              AS `tahun`,
+  `bulan`              AS `bulan`,
+  `kab_kota`           AS `kab_kota`,
+  `nama_sarana`        AS `nama_sarana`,
+  `hasil_balai`        AS `kesimpulan_akhir`,
+  NULL                 AS `jumlah_mayor`,
+  NULL                 AS `jumlah_minor`,
+  NULL                 AS `jumlah_lain`,
+  NULL                 AS `jumlah_kritis`,
+  `jumlah_sampel_lab`  AS `jumlah_sampel_lab`,
+  `tgl_input`          AS `tgl_input`,
+  `tgl_periksa_mulai`  AS `tgl_periksa_mulai`,
+  `tgl_periksa_selesai` AS `tgl_periksa_selesai`,
+  `jenis_industri`     AS `jenis_industri`,
+  NULL                 AS `produk_sampel`
+FROM `dist_ipk_laporan`
+
+UNION ALL
+
+-- ---------------------------------------------------------------------------
+-- Cabang: DISTRIBUSI SUPLEMEN KESEHATAN (DIST_SK)
+-- Berkas 38 kolom; kesimpulan di `hasil_balai`.
+-- Perhatikan: ini sarana peredaran, BUKAN sampel lab (sampel_sk).
+-- ---------------------------------------------------------------------------
+SELECT
+  'DIST_SK'            AS `sumber`,
+  'Distribusi Suplemen Kesehatan' AS `sumber_label`,
+  `kegiatan`           AS `kegiatan`,
+  `jenis_sarana`       AS `jenis_sarana`,
+  `tahun`              AS `tahun`,
+  `bulan`              AS `bulan`,
+  `kab_kota`           AS `kab_kota`,
+  `nama_sarana`        AS `nama_sarana`,
+  `hasil_balai`        AS `kesimpulan_akhir`,
+  NULL                 AS `jumlah_mayor`,
+  NULL                 AS `jumlah_minor`,
+  NULL                 AS `jumlah_lain`,
+  NULL                 AS `jumlah_kritis`,
+  `jumlah_sampel_lab`  AS `jumlah_sampel_lab`,
+  `tgl_input`          AS `tgl_input`,
+  `tgl_periksa_mulai`  AS `tgl_periksa_mulai`,
+  `tgl_periksa_selesai` AS `tgl_periksa_selesai`,
+  `jenis_industri`     AS `jenis_industri`,
+  NULL                 AS `produk_sampel`
+FROM `dist_sk_laporan`
+
+UNION ALL
+
 SELECT
   'IRTP'               AS `sumber`,
   'Pangan IRT'         AS `sumber_label`,
@@ -80,6 +259,37 @@ SELECT
   `jenis_industri`     AS `jenis_industri`,
   NULL                 AS `produk_sampel`
 FROM `irt_laporan`
+
+UNION ALL
+
+-- ---------------------------------------------------------------------------
+-- Cabang: PRODUKSI PANGAN MD (Pangan Olahan Makanan Dalam)
+-- Berkas 48 kolom. Berbeda dari IRTP: identitas produk (Nama/Jenis Pangan,
+-- Merk) ada di baris sarana, ada blok Sertifikat, Status Sarana, temuan
+-- administrasi, M/m/C, dan Tingkat Rating. Kesimpulan akhir = `hasil_balai`
+-- (kolom `kesimpulan` 26 hanya ringkasan UPT).
+-- ---------------------------------------------------------------------------
+SELECT
+  'MD'                 AS `sumber`,
+  'Pangan MD'          AS `sumber_label`,
+  `kegiatan`           AS `kegiatan`,
+  `jenis_sarana`       AS `jenis_sarana`,
+  `tahun`              AS `tahun`,
+  `bulan`              AS `bulan`,
+  `kab_kota`           AS `kab_kota`,
+  `nama_sarana`        AS `nama_sarana`,
+  `hasil_balai`        AS `kesimpulan_akhir`,
+  `jumlah_mayor`       AS `jumlah_mayor`,
+  `jumlah_minor`       AS `jumlah_minor`,
+  NULL                 AS `jumlah_lain`,
+  `jumlah_kritis`      AS `jumlah_kritis`,
+  `jumlah_sampel_lab`  AS `jumlah_sampel_lab`,
+  `tgl_input`          AS `tgl_input`,
+  `tgl_periksa_mulai`  AS `tgl_periksa_mulai`,
+  `tgl_periksa_selesai` AS `tgl_periksa_selesai`,
+  `jenis_industri`     AS `jenis_industri`,
+  NULL                 AS `produk_sampel`
+FROM `prod_md_laporan`
 
 UNION ALL
 

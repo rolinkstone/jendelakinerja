@@ -36,7 +36,7 @@ const KEGIATAN = ['Produksi', 'Distribusi'];
 /** Asal modul yang menyumbang data — dipakai filter `?sumber=`. */
 // Asal modul yang boleh diminta lewat ?sumber=. Modul baru cukup ditambahkan
 // di sini — nama label & kegiatan dibaca dari view, bukan dari daftar ini.
-const SUMBER = ['PBF', 'OT', 'IRTP', 'SAMPEL_OT', 'SAMPEL_SK', 'SAMPEL_OB', 'SAMPEL_KOS', 'SAMPEL_PP', 'SAMPEL_KP', 'SAMPEL_OK'];
+const SUMBER = ['PBF', 'IFP', 'IFK', 'DIST_KOS', 'DIST_OT', 'DIST_IPK', 'DIST_SK', 'OT', 'IRTP', 'MD', 'SAMPEL_OT', 'SAMPEL_SK', 'SAMPEL_OB', 'SAMPEL_KOS', 'SAMPEL_PP', 'SAMPEL_KP', 'SAMPEL_OK'];
 
 /**
  * Susun klausa WHERE dari query string.
@@ -157,6 +157,8 @@ router.get('/kinerja/pilihan', async (req, res) => {
            UNION ALL
            SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM irt_import
            UNION ALL
+           SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM prod_md_import
+           UNION ALL
            SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM sampel_ot_import
            UNION ALL
            SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM sampel_sk_import
@@ -170,6 +172,18 @@ router.get('/kinerja/pilihan', async (req, res) => {
            SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM sampel_kp_import
            UNION ALL
            SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM sampel_ok_import
+           UNION ALL
+           SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM ifp_import
+           UNION ALL
+           SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM dist_kos_import
+           UNION ALL
+           SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM dist_ot_import
+           UNION ALL
+           SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM dist_ipk_import
+           UNION ALL
+           SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM dist_sk_import
+           UNION ALL
+           SELECT MAX(diunggah_pada) AS diunggah_pada, COUNT(*) AS jumlah_impor FROM ifk_import
          ) x`,
     );
 
@@ -206,8 +220,14 @@ router.get('/kinerja/ringkasan', async (req, res) => {
   const { where, params } = saring;
 
   try {
+    // PENTING: `sarana_diperiksa` TIDAK boleh COUNT(*).
+    // v_kinerja_sarana memuat juga baris SAMPEL (kegiatan='Sampling'), dan tiap
+    // sampel = satu baris. Kalau dihitung apa adanya, angka "Total Sarana
+    // Diperiksa" membengkak oleh ribuan sampel lab padahal sampel bukan sarana
+    // yang diperiksa — sampel masuk ke bagian pengujian laboratorium.
+    // Jadi yang dihitung hanya baris dengan kegiatan Produksi atau Distribusi.
     const [total] = await db.query(
-      `SELECT COUNT(*) AS sarana_diperiksa,
+      `SELECT SUM(kegiatan IN ('Produksi','Distribusi')) AS sarana_diperiksa,
               SUM(kegiatan = 'Produksi')   AS produksi,
               SUM(kegiatan = 'Distribusi') AS distribusi,
               SUM(kegiatan IS NULL)        AS tanpa_kegiatan,
@@ -226,9 +246,12 @@ router.get('/kinerja/ringkasan', async (req, res) => {
       params,
     );
 
+    // `total` = jumlah SARANA (bukan baris sampel). Wilayah tanpa nama ('-' /
+    // kosong) dibuang supaya peringkat hanya berisi kabupaten/kota sungguhan
+    // (Kalteng = 10 kab + 1 kota; di sini kota sudah termasuk, '-' bukan wilayah).
     const [perKab] = await db.query(
       `SELECT COALESCE(NULLIF(kab_kota,''),'Tidak diketahui') AS kab_kota,
-              COUNT(*) AS total,
+              SUM(kegiatan IN ('Produksi','Distribusi')) AS total,
               SUM(kegiatan = 'Produksi')   AS produksi,
               SUM(kegiatan = 'Distribusi') AS distribusi,
               -- MK = Memenuhi Ketentuan, TMK = Tidak Memenuhi Ketentuan.
@@ -249,7 +272,8 @@ router.get('/kinerja/ringkasan', async (req, res) => {
               COALESCE(SUM(jumlah_minor),0)  AS minor,
               SUM(kesimpulan_akhir LIKE '%Tidak Memenuhi%') AS tidak_memenuhi
          FROM v_kinerja_sarana ${where}
-        GROUP BY 1 ORDER BY total DESC, kab_kota`,
+        ${where ? 'AND' : 'WHERE'} COALESCE(kab_kota,'') NOT IN ('', '-')
+        GROUP BY 1 HAVING total > 0 ORDER BY total DESC, kab_kota`,
       params,
     );
 
@@ -434,17 +458,44 @@ router.get('/kinerja/sampel', async (req, res) => {
   const where = saringan.length ? `WHERE ${saringan.join(' AND ')}` : '';
 
   try {
+    // per_tahun memakai LEFT JOIN ke daftar tahun terdaftar supaya tahun yang
+    // sengaja didaftarkan TANPA sampel (impor 0 baris) tetap tampil dengan
+    // angka 0 — kalau hanya GROUP BY dari tabel sampel, tahun itu hilang dan
+    // grafik melompat (2024 → 2026) seolah 2025 tidak pernah ada.
+    // Saat difilter satu tahun, subquery `sumber` juga mengikuti filter itu.
     const [perTahun] = await db.query(
-      `SELECT tahun,
-              COUNT(*) AS sampel,
-              SUM(${KESIMPULAN_MEMENUHI}) AS memenuhi,
-              SUM(${KESIMPULAN_TIDAK_MEMENUHI}) AS tidak_memenuhi, 
-              COUNT(DISTINCT NULLIF(nama_sampel,'')) AS produk,
-              COUNT(DISTINCT NULLIF(pabrik,'')) AS produsen,
-              COUNT(DISTINCT NULLIF(kab_kota,'')) AS wilayah
-         FROM ${TABEL_SAMPEL} ${where}
-        GROUP BY tahun ORDER BY tahun DESC`,
-      params,
+      `SELECT t.tahun,
+              COALESCE(COUNT(s.tahun), 0) AS sampel,
+              COALESCE(SUM(${KESIMPULAN_MEMENUHI}), 0) AS memenuhi,
+              COALESCE(SUM(${KESIMPULAN_TIDAK_MEMENUHI}), 0) AS tidak_memenuhi,
+              COUNT(DISTINCT NULLIF(s.nama_sampel,'')) AS produk,
+              COUNT(DISTINCT NULLIF(s.pabrik,'')) AS produsen,
+              -- Wilayah sampling: '-' = berkas tidak mencantumkan wilayah,
+              -- bukan kabupaten/kota. Membiarkannya membuat hitungan jadi 11.
+              COUNT(DISTINCT CASE WHEN s.kab_kota NOT IN ('','-') THEN s.kab_kota END) AS wilayah
+         FROM (
+           SELECT tahun FROM ${TABEL_SAMPEL} WHERE tahun IS NOT NULL ${where ? `AND ${where.replace(/^WHERE /, '')}` : ''}
+           UNION
+           SELECT tahun FROM sampel_ot_import WHERE tahun IS NOT NULL
+           UNION
+           SELECT tahun FROM sampel_sk_import WHERE tahun IS NOT NULL
+           UNION
+           SELECT tahun FROM sampel_ob_import WHERE tahun IS NOT NULL
+           UNION
+           SELECT tahun FROM sampel_kos_import WHERE tahun IS NOT NULL
+           UNION
+           SELECT tahun FROM sampel_pp_import WHERE tahun IS NOT NULL
+           UNION
+           SELECT tahun FROM sampel_kp_import WHERE tahun IS NOT NULL
+           UNION
+           SELECT tahun FROM sampel_ok_import WHERE tahun IS NOT NULL
+         ) t
+         LEFT JOIN ${TABEL_SAMPEL} ON s.tahun = t.tahun
+        ${where ? `WHERE t.${where.replace(/^WHERE /, '')}` : ''}
+         GROUP BY t.tahun ORDER BY t.tahun DESC`,
+      // Filter di subquery `sumber` dan di WHERE luar memakai parameter yang
+      // sama, jadi nilainya diduplikasi persis dengan urutan yang sama.
+      where ? [...params, ...params] : params,
     );
 
     const [perKomoditas] = await db.query(
@@ -475,13 +526,32 @@ router.get('/kinerja/sampel', async (req, res) => {
               SUM(${KESIMPULAN_TIDAK_MEMENUHI}) AS tidak_memenuhi, 
               COUNT(DISTINCT NULLIF(nama_sampel,'')) AS produk,
               COUNT(DISTINCT NULLIF(pabrik,'')) AS produsen,
-              COUNT(DISTINCT NULLIF(kab_kota,'')) AS wilayah
+              COUNT(DISTINCT CASE WHEN kab_kota NOT IN ('','-') THEN kab_kota END) AS wilayah
          FROM ${TABEL_SAMPEL} ${where}`,
       params,
     );
 
+    // daftar_tahun juga memuat tahun yang DIDAFTARKAN tanpa sampel (impor 0
+    // baris, mis. Kemasan Pangan 2025). Tanpa UNION ke tabel *_import, tahun
+    // kosong hilang dari pemilih tahun padahal sengaja didaftarkan.
     const [daftarTahun] = await db.query(
-      `SELECT DISTINCT tahun FROM ${TABEL_SAMPEL} WHERE tahun IS NOT NULL ORDER BY tahun DESC`,
+      `SELECT DISTINCT tahun FROM (
+         SELECT tahun FROM ${TABEL_SAMPEL} WHERE tahun IS NOT NULL
+         UNION
+         SELECT tahun FROM sampel_ot_import WHERE tahun IS NOT NULL
+         UNION
+         SELECT tahun FROM sampel_sk_import WHERE tahun IS NOT NULL
+         UNION
+         SELECT tahun FROM sampel_ob_import WHERE tahun IS NOT NULL
+         UNION
+         SELECT tahun FROM sampel_kos_import WHERE tahun IS NOT NULL
+         UNION
+         SELECT tahun FROM sampel_pp_import WHERE tahun IS NOT NULL
+         UNION
+         SELECT tahun FROM sampel_kp_import WHERE tahun IS NOT NULL
+         UNION
+         SELECT tahun FROM sampel_ok_import WHERE tahun IS NOT NULL
+       ) t ORDER BY tahun DESC`,
     );
 
     return res.json({

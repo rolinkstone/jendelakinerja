@@ -56,6 +56,41 @@ const bacaSimpanan = () => {
  * null (biarkan browser memilih). Mengembalikan null berarti utterance memakai
  * suara default sistem.
  */
+/**
+ * Nama voice yang dikenal WANITA / PRIA.
+ *
+ * Kenapa perlu daftar eksplisit: Web Speech API tidak menyediakan field gender.
+ * Tanpa daftar ini, pemilihan jatuh ke voice pertama yang bahasanya cocok —
+ * dan di Windows default-nya `Microsoft David` (PRIYA). Itu sebabnya di satu
+ * laptop LAURA bersuara wanita (ada `Microsoft Gadis - id-ID`), di perangkat
+ * lain bersuara pria (tidak ada voice Indonesia → default sistem = David).
+ *
+ * `Zira`/`Sari`/`Damayanti` dst. adalah nama voice wanita bawaan Windows/Chrome.
+ */
+const NAMA_WANITA = /gadis|female|wanita|perempuan|zira|sari|damayanti|andini|dewi|lestari|indah|maya|siti|nova|aria|jenny|sonia|michelle|google\s*bahasa\s*indonesia/i;
+
+/** Voice pria — dipakai sebagai penalti terakhir, bukan larangan mutlak. */
+const NAMA_PRIA = /\bardi\b|\bandika\b|\bmale\b|\bpria\b|david|mark|budi|rizwan|arif|dimas/i;
+
+const wanita = (v) => NAMA_WANITA.test(v.name);
+const pria = (v) => NAMA_PRIA.test(v.name);
+
+/**
+ * Pilih voice untuk satu utterance.
+ *
+ * Urutan (penting — jangan diacak):
+ *   1. nama tersimpan (pilihan operator) — dihormati apa adanya;
+ *   2. id-ID WANITA   → Gadis, Google Bahasa Indonesia, dst.
+ *   3. bahasa target apa pun (id) — lebih baik daripada suara Inggris;
+ *   4. WANITA dengan bahasa apa pun — menjaga karakter suara tetap perempuan
+ *      walau perangkat tidak punya voice Indonesia (mis. Zira en-US);
+ *   5. bahasa target/primer apa pun;
+ *   6. null → biarkan browser memilih (BISA PRIA; hanya terjadi bila tidak ada
+ *      satu pun voice yang dikenali).
+ *
+ * Poin 4 adalah perbaikan inti: sebelumnya perangkat tanpa voice Indonesia
+ * langsung jatuh ke `null`, sehingga Windows memakai David (pria).
+ */
 function pilihVoice(daftar, pref) {
   if (!daftar || daftar.length === 0) return null;
 
@@ -68,12 +103,18 @@ function pilihVoice(daftar, pref) {
 
   const target = (pref.lang || 'id-ID').toLowerCase();
   const kode = target.slice(0, 2);
+  const bahasa = (v, pola) => String(v.lang || '').toLowerCase().startsWith(pola);
+
   return (
+    // 2. Indonesia + wanita
+    daftar.find((v) => v.lang.toLowerCase() === target && wanita(v)) ||
+    // 3. Indonesia apa pun
     daftar.find((v) => v.lang.toLowerCase() === target) ||
-    daftar.find((v) => v.lang.toLowerCase().startsWith(kode)) ||
-    // Terakhir: suara apa pun yang mungkin bisa melafalkan Indonesia lebih baik
-    // daripada default (mis. Microsoft Gadis/Gadis Online bila terpasang).
-    daftar.find((v) => /indones|gadis|andika|ardi/i.test(v.name)) ||
+    daftar.find((v) => bahasa(v, kode)) ||
+    // 4. Wanita bahasa apa pun (mis. Zira en-US) — jaga karakter suara
+    daftar.find((v) => wanita(v) && !pria(v)) ||
+    // 5. Sisanya, hindari yang jelas pria bila masih ada pilihan lain
+    daftar.find((v) => !pria(v)) ||
     null
   );
 }

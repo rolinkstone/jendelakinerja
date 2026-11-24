@@ -1,6 +1,6 @@
-// pages/beranda/integrasi-laura.js
+// pages/setting/laura-ai.js
 /**
- * HALAMAN: INTEGRASI LAURA AI (di dalam dashboard ber-SSO)
+ * HALAMAN: SETTING → LAURA AI (di dalam dashboard ber-SSO)
  * --------------------------------------------------------
  * Satu tempat untuk mengelola data Jendela Kinerja yang masuk ke knowledge
  * LAURA AI:
@@ -12,21 +12,24 @@
  * Alur kerja:
  *   Salin link di sini → tempel di LAURA AI → Integrasi JK → Sinkron.
  *
- * Konvensi modul: logika + tampilan di components/beranda/Container.js.
+ * Dipindahkan dari `/beranda/integrasi-laura` ke `/setting/laura-ai` supaya
+ * menu konfigurasi berkumpul di satu kelompok "Setting" (bukan tercampur di
+ * antara Beranda dan modul data Distribusi/Produksi/Sampel).
+ * Konvensi modul: logika + tampilan di components/beranda/.
  */
 import Head from 'next/head';
 import DashboardLayout from '../../components/DashboardLayout';
 import { BRAND } from '../../components/Brand';
 import IntegrasiLauraContainer from '../../components/beranda/IntegrasiLauraContainer';
 
-export default function IntegrasiLauraPage() {
+export default function PengaturanLauraAiPage() {
   return (
     <>
       <Head>
-        <title>{`Integrasi Laura AI | ${BRAND.name}`}</title>
+        <title>{`Setting — Laura AI | ${BRAND.name}`}</title>
       </Head>
 
-      <DashboardLayout pageTitle="Integrasi Laura AI">
+      <DashboardLayout pageTitle="Setting — Laura AI">
         <IntegrasiLauraContainer />
       </DashboardLayout>
     </>

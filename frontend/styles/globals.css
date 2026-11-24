@@ -184,6 +184,37 @@
     @apply w-full rounded-lg border border-paper-300 bg-white px-2.5 py-2 text-[12.5px] font-medium text-slate-700 outline-none transition focus:border-accent-400/70 focus:ring-2 focus:ring-accent-400/25 dark:border-white/10 dark:bg-ink-900 dark:text-slate-100;
   }
 
+  /* Varian ringkas untuk baris filter.
+     Sebelumnya kelas ini DIPAKAI di 6 tempat (form filter Narasi Presentasi,
+     panel koreksi, dll.) tetapi TIDAK PERNAH didefinisikan — akibatnya <select>
+     tampil sebagai kontrol bawaan peramban: tinggi ±23px, tanpa padding,
+     tanpa border, sehingga baris filter terlihat "aneh" dan tidak sejalan
+     dengan kartu panel di sekitarnya.
+     Ditulis eksplisit (bukan @apply) supaya panah select bisa diganti ikon
+     sendiri: panah bawaan peramban tidak bisa diberi jarak dari tepi kanan. */
+  .input-sm {
+    @apply w-full cursor-pointer rounded-lg border border-paper-300 bg-white py-2 pl-3 pr-9 text-[12px] font-medium text-slate-700 outline-none transition;
+    @apply focus:border-accent-400/70 focus:ring-2 focus:ring-accent-400/25;
+    @apply dark:border-white/10 dark:bg-ink-900 dark:text-slate-100;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    /* panah kustom: chevron abu-abu, digeser 12px dari tepi kanan */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2394a3b8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6.5 8 10.5 12 6.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+    background-size: 0.85rem;
+    min-height: 2.25rem;
+  }
+  .input-sm:disabled {
+    @apply cursor-not-allowed opacity-60;
+  }
+  /* Select dengan nilai kosong = belum difilter → teks lebih redup supaya
+     beda jelas dengan yang sudah dipilih. */
+  .input-sm[data-kosong='1'] {
+    @apply text-slate-400 dark:text-slate-500;
+  }
+
   /* ===== Badge status ===== */
   .badge {
     @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold;

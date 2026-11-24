@@ -493,7 +493,11 @@ export default function Container() {
               </div>
               <span className="badge-primary">{urutKab.length}</span>
             </div>
-            <div className="max-h-[520px] overflow-y-auto px-4 py-2">
+            {/* Tanpa max-height/overflow: seluruh kabupaten/kota (10 wilayah)
+                ditampilkan sekaligus. Sebelumnya daftar dibatasi 520px sehingga
+                baris terakhir tersembunyi di balik scroll dan angkanya tidak
+                bisa dibandingkan sekali lihat. */}
+            <div className="px-4 py-2">
               {urutKab.length === 0 && (
                 <p className="py-8 text-center text-[13px] text-slate-400 dark:text-slate-500">
                   Tidak ada sarana pada kombinasi filter ini.
@@ -507,7 +511,7 @@ export default function Container() {
                     key={k.kab_kota}
                     type="button"
                     onClick={() => ubahFilter('kab', filter.kab === k.kab_kota ? '' : k.kab_kota)}
-                    className={`w-full border-b border-paper-200 py-2.5 text-left transition-colors last:border-0 hover:bg-paper-50 dark:border-white/5 dark:hover:bg-white/[0.04] ${
+                    className={`w-full border-b border-paper-200 py-2 text-left transition-colors last:border-0 hover:bg-paper-50 dark:border-white/5 dark:hover:bg-white/[0.04] ${
                       filter.kab === k.kab_kota ? 'bg-accent-500/5' : ''
                     }`}
                   >

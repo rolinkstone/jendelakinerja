@@ -763,10 +763,37 @@ function buatRouterSampel({ label, tabelImpor, tabelLaporan, kolomPaku = {} }) {
       return res.status(400).json({ success: false, message: `Berkas gagal dibaca: ${e.message}` });
     }
 
-    if (!hasil.laporan.length) {
+    // ------------------------------------------------------------------
+    // Tahun KOSONG (0 sampel).
+    //
+    // Dulu ini SELALU ditolak 400. Akibatnya tahun yang memang tidak ada
+    // kegiatannya (mis. Kemasan Pangan 2025) tidak pernah bisa terdaftar,
+    // sehingga grafik "sampel per tahun" melompat 2024 → 2026 dan pembaca
+    // mengira 2025 hilang datanya/belum diunggah.
+    //
+    // Sekarang: impor kosong DIIZINKAN asalkan tahunnya dipilih manual di UI
+    // (tidak ada isi untuk dideteksi) dan berkasnya masih berbentuk rekap
+    // sampel (header kolom dikenali). Baris laporan tidak dibuat; yang dicatat
+    // hanya baris `*_import` dengan jumlah_sampel = 0 — itulah yang membuat
+    // tahun tetap muncul di daftar dan di rekap per tahun.
+    // ------------------------------------------------------------------
+    const berkasKosong = hasil.laporan.length === 0;
+
+    if (berkasKosong && !hasil.kolom.dari_header) {
       return res.status(400).json({
         success: false,
-        message: 'Tidak ada baris sampel yang terbaca. Pastikan berkas memakai format rekap data sampel yang benar.',
+        message:
+          'Tidak ada baris sampel yang terbaca dan header berkas tidak dikenali. ' +
+          'Pastikan berkas memakai format rekap data sampel yang benar.',
+      });
+    }
+
+    if (berkasKosong && tahunPilihan === null) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Berkas ini tidak berisi sampel, jadi tahunnya tidak bisa dibaca otomatis. ' +
+          'Pilih tahun data secara manual (bukan "Otomatis") lalu unggah ulang untuk mendaftarkan tahun kosong.',
       });
     }
 
@@ -831,9 +858,16 @@ function buatRouterSampel({ label, tabelImpor, tabelLaporan, kolomPaku = {} }) {
         ? `menggantikan ${sebelum.laporan} sampel tahun ${tahun}`
         : `data tahun ${tahun} sebelumnya kosong`;
 
+      // Tahun tanpa sampel tetap DICATAT lewat baris import ini (jumlah_sampel=0),
+      // supaya muncul di daftar tahun & grafik per tahun sebagai "0".
+      const pesan = berkasKosong
+        ? `Tahun ${tahun} didaftarkan dengan 0 sampel (${pengganti}). ` +
+          'Tahun ini sekarang ikut terhitung di rekap per tahun. Tahun lain tidak diubah.'
+        : `Impor selesai — ${hasil.laporan.length} sampel untuk tahun ${tahun} (${pengganti}). Tahun lain tidak diubah.`;
+
       return res.json({
         success: true,
-        message: `Impor selesai — ${hasil.laporan.length} sampel untuk tahun ${tahun} (${pengganti}). Tahun lain tidak diubah.`,
+        message: pesan,
         data: {
           import_id: imp.insertId,
           tahun,
@@ -845,6 +879,7 @@ function buatRouterSampel({ label, tabelImpor, tabelLaporan, kolomPaku = {} }) {
           jumlah_baris: hasil.jumlahBaris,
           kolom: hasil.kolom,
           sebelumnya: sebelum,
+          tahun_kosong: berkasKosong,
         },
       });
     } catch (e) {
