@@ -68,9 +68,14 @@ Copy-Item frontend\.env.example frontend\.env
 | `KEYCLOAK_CLIENT_SECRET`    | Keycloak → Clients → `pengujian` → Credentials              |
 | `KEYCLOAK_ADMIN_PASSWORD`   | password user admin Keycloak                                |
 | `NEXTAUTH_SECRET`           | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
+| `SESSION_SECRET`            | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
 
 Selama masih kosong, `docker compose` **menolak jalan** dan memberi pesan
 `DB_PASSWORD wajib diisi - salin .env.example ke .env`.
+
+> `SESSION_SECRET` dipakai backend untuk menyegel token di tabel `api_link`.
+> Kalau nilainya berubah setelah ada link dibuat, link lama tidak bisa dibuka
+> lagi — tetapi link baru tetap bisa dibuat.
 
 ---
 
@@ -122,13 +127,17 @@ cd <repo>
 
 # 2. Siapkan konfigurasi (TIDAK dari git)
 cp .env.example .env
-nano .env            # isi DB_PASSWORD, KEYCLOAK_*_SECRET, NEXTAUTH_SECRET
+nano .env            # isi DB_PASSWORD, KEYCLOAK_*_SECRET, NEXTAUTH_SECRET, SESSION_SECRET
 
 # 3. Jalankan
 docker compose up -d --build
-docker compose ps
+docker compose ps          # tunggu kedua layanan "healthy"
 docker compose logs -f backend
 ```
+
+> **Image berisi kode.** Tidak ada lagi mount folder `./backend` atau `./frontend`
+> ke dalam container. Setelah mengubah kode, wajib `docker compose up -d --build`
+> (atau `docker compose build backend` lalu `up -d`).
 
 Kalau `.env` berubah (khususnya `API_URL`) frontend harus di-build ulang karena
 nilai `NEXT_PUBLIC_*` ditanam saat build:
@@ -183,18 +192,21 @@ komputer itu, lalu sesuaikan `GRANT`-nya.
 > ports:
 >   - "5006:5006"
 > ```
-> lalu set `DB_HOST=host.docker.internal` di `.env` dan buka `bind-address` MySQL
-> ke `0.0.0.0` (serta `GRANT` untuk user `@'%'`).
+> lalu set `DB_HOST=host.docker.internal` **dan** `BACKEND_HOST=0.0.0.0` di `.env`
+> (tanpa `BACKEND_HOST=0.0.0.0`, backend hanya mendengar di loopback container dan
+> port mapping tidak bisa dijangkau). Buka juga `bind-address` MySQL ke `0.0.0.0`
+> (serta `GRANT` untuk user `@'%'`).
 
 ### Masalah umum
 
 | Gejala                                        | Penyebab & solusi                                                                     |
 | --------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `docker compose up` gagal: `... wajib diisi - salin .env.example ke .env` | Ada nilai kosong di `.env`. Isi dulu.                    |
+| `docker compose config` error `SESSION_SECRET wajib diisi` | Tambahkan `SESSION_SECRET` di `.env` (belum ada di `.env` lama). |
 | Backend `ECONNREFUSED` ke MySQL               | `DB_HOST` salah. MySQL di server yang sama → `127.0.0.1`; di komputer lain → IP komputer itu. |
 | `Access denied for user ...`                  | `DB_USER` / `DB_PASSWORD` di `.env` tidak cocok dengan yang ada di MySQL.              |
 | Docker menolak `network_mode` + `ports`       | Keduanya tidak boleh digabung. Backend = host (tanpa `ports`), frontend = bridge + `ports`. |
-| Domain web error 502 / blank                  | Reverse proxy belum meneruskan ke `localhost:3007` (lihat bagian Reverse proxy).        |
+| Domain web error 502 / blank                  | Reverse proxy belum meneruskan ke `127.0.0.1:3007` (lihat bagian Reverse proxy). Frontend sekarang dijalankan `next start -H 0.0.0.0` di dalam container; jangan diganti `npm start` (script itu mengikat `127.0.0.1` dan membuat port mapping tidak bisa diakses). |
 | Domain API error 502                          | Reverse proxy belum meneruskan ke `localhost:5006`.                                     |
 | Browser gagal memanggil API                   | `API_URL` salah. Set `https://data-lets.bbpompky.id/api`, lalu **build ulang** frontend (nilainya ditanam saat build). |
 | Login muter-muter / `redirect_uri` mismatch   | Tambahkan `https://lets-digital.bbpompky.id/api/auth/callback/keycloak` ke *Valid redirect URIs* di Keycloak. |
@@ -218,8 +230,8 @@ Di Keycloak → Clients → `pengujian`:
   - Standard flow: **ON** (dipakai NextAuth)
   - Direct access grants: **ON** (dipakai `POST /api/login` di backend)
 
-Kalau `KEYCLOAK_CLIENT_ID` diubah, variabel itu **ditanam saat build** ke browser
-(`NEXT_PUBLIC_KEYCLOAK_CLIENT_ID`) → frontend harus di-build ulang.
+Kalau `KEYCLOAK_CLIENT_ID` diubah, nilai untuk browser ikut berubah saat build
+frontend, jadi frontend harus di-build ulang (`--no-cache`).
 
 ---
 
@@ -298,16 +310,96 @@ sehingga kiriman dari perangkat akan dibalas `404`.
 
 ---
 
-## 9. Rotasi kredensial (disarankan)
+## 9. KEAMANAN — kredensial yang bocor (WAJIB dibaca sebelum deploy)
 
-Kredensial berikut sebelumnya tersimpan sebagai teks biasa di file lokal
-(`docker-compose.yml` lama, `.env`, dan sketch Arduino). Repo ini **belum pernah
-di-push**, jadi belum ada kebocoran ke GitHub — tetapi kalau folder ini pernah
-disalin ke tempat lain, sebaiknya diganti:
+Audit `git` menemukan **satu kredensial asli yang ter-commit**:
+
+| Nilai                        | Lokasi                          | Status |
+| ---------------------------- | ------------------------------- | ------ |
+| Password MySQL user `jendela_app` | `backend/.env.example` baris 32 | **BOCOK** — sudah ter-push ke GitHub |
+
+Temuan detail:
+
+- Masuk lewat commit `ddced5f` ("perbaikan bug version") dan masih ada di semua
+  commit sesudahnya, termasuk `main`.
+- Repo `rolinkstone/jendelakinerja` **publik**, sehingga berkas itu bisa dibaca
+  siapa pun lewat `https://raw.githubusercontent.com/.../backend/.env.example`.
+- Sejak commit ini, file `backend/.env.example` sudah dikembalikan ke placeholder
+  (`DB_PASSWORD=ISI_PASSWORD_MYSQL`), tetapi **commit lama tetap menyimpan nilai
+  aslinya**.
+
+### 9.1 Tindakan wajib (lakukan berurutan)
+
+1. **Ganti password MySQL sekarang** (anggap password lama sudah diketahui publik):
+
+   ```sql
+   -- di server MySQL
+   ALTER USER 'jendela_app'@'localhost' IDENTIFIED BY 'PASSWORD-BARU-YANG-KUAT';
+   FLUSH PRIVILEGES;
+   ```
+
+2. Perbarui `DB_PASSWORD` di `.env` server dengan password baru itu.
+
+3. Ganti juga bila password lama pernah dipakai di tempat lain (Keycloak admin,
+   SSH, dsb.) — orang bisa mencoba memakainya ulang.
+
+4. Kalau server MySQL sempat terbuka ke jaringan saat password itu masih berlaku,
+   periksa log akses:
+
+   ```bash
+   sudo grep -i 'jendela_app' /var/log/mysql/error.log | tail -50
+   ```
+
+### 9.2 Membersihkan jejak di git (opsional, tapi disarankan)
+
+Rotation di atas sudah menutup risikonya. Kalau ingin nilainya hilang dari
+riwayat GitHub juga, tulis ulang history dengan `git filter-repo`:
+
+```bash
+pip install git-filter-repo
+
+# 1. Backup dulu
+git clone --mirror https://github.com/rolinkstone/jendelakinerja.git jk-backup.git
+
+# 2. Ganti nilai rahasia di SELURUH riwayat
+#    (ambil nilai aslinya dari commit lama, JANGAN ditulis di file ini)
+cd jendela-kinerja
+printf '%s==>ISI_PASSWORD_MYSQL\n' 'PASSWORD-LAMA' > /tmp/ganti.txt
+git filter-repo --replace-text /tmp/ganti.txt
+
+# 3. Push paksa
+git remote add origin https://github.com/rolinkstone/jendelakinerja.git
+git push --force --all
+git push --force --tags
+```
+
+> Force-push menulis ulang `main`. Setelah itu, commit lama masih bisa muncul di
+> cache GitHub (mis. lewat URL commit langsung) sampai GitHub membersihkan cache-
+> nya. Ini alasan rotation password tetap langkah nomor satu.
+>
+> Kontributor lain harus `git clone` ulang; `git pull` biasa akan bentrok.
+
+### 9.3 Kredensial yang belum pernah bocor
+
+Nilai berikut **tidak pernah** masuk ke git (hanya ada di `.env` lokal yang
+di-ignore). Tetap sebaiknya diganti bila folder proyek pernah disalin ke tempat
+lain:
 
 | Kredensial                       | Cara ganti                                   |
 | -------------------------------- | -------------------------------------------- |
 | Keycloak client secret           | Keycloak → Clients → `pengujian` → Credentials → Regenerate |
 | Password admin Keycloak          | Keycloak → Users → admin → Credentials        |
 | `NEXTAUTH_SECRET`                | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
-| Password MySQL                   | `ALTER USER ... IDENTIFIED BY 'baru';`        |
+| `SESSION_SECRET`                 | sama seperti di atas                          |
+
+### 9.4 Audit ulang sebelum push berikutnya
+
+```bash
+# File rahasia tidak boleh ter-track
+git ls-files | grep -E '(^|/)\.env($|\.)'          # hanya *.env.example yang boleh muncul
+
+# Tidak ada nilai asli di template / kode
+git grep -n -I -E '(PASSWORD|SECRET|TOKEN)=[^I ]'
+```
+
+Semua hasil harus berupa placeholder (`ISI_...`) atau referensi `${VAR}`.

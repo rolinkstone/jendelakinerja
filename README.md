@@ -130,6 +130,10 @@ Port internal di server: frontend `3007`, backend `5006`.
 File `.env` **tidak ikut ter-commit**. Selalu pakai file `.example` sebagai
 template. Detail lengkap ada di [`DEPLOY.md`](DEPLOY.md).
 
+> ⚠️ **Sebelum deploy:** password MySQL user `jendela_app` pernah ter-commit di
+> `backend/.env.example` dan repo ini publik. Password itu **wajib diganti** —
+> lihat [DEPLOY.md §9](DEPLOY.md#9-keamanan--kredensial-yang-bocor-wajib-dibaca-sebelum-deploy).
+
 ## Laura AI (maskot bantuan di halaman publik)
 
 Halaman publik menampilkan **maskot BBPOM** di pojok kanan bawah sebagai pintu
