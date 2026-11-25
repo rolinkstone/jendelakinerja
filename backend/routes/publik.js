@@ -461,14 +461,32 @@ const TABEL_SAMPEL = `(
 // tidak, datanya ada di database tapi tidak muncul di dashboard publik.
 router.get('/kinerja/sampel', async (req, res) => {
   const tahun = String(req.query.tahun ?? '').trim();
-  const saringan = [];
-  const params = [];
+  const kab = String(req.query.kab ?? '').trim();
+
+  // Dua saringan DIPISAH karena dipakai di dua tempat berbeda:
+  //  - `where`      → subquery ber-alias `s` (TABEL_SAMPEL): boleh tahun + kabupaten
+  //  - `whereTahun` → WHERE luar pada per_tahun. Subquery `t` hanya memilih
+  //    kolom `tahun`, jadi menyertakan `kab_kota` di situ menghasilkan
+  //    ER_BAD_FIELD_ERROR: Unknown column 't.kab_kota'.
+  const syaratTahun = [];
+  const paramTahun = [];
+  const syaratKab = [];
+  const paramKab = [];
+
   if (tahun && tahun !== 'semua') {
     if (!/^\d{4}$/.test(tahun)) return res.status(400).json({ success: false, message: 'Parameter tahun harus 4 digit (mis. 2024)' });
-    saringan.push('tahun = ?');
-    params.push(Number(tahun));
+    syaratTahun.push('tahun = ?');
+    paramTahun.push(Number(tahun));
   }
-  const where = saringan.length ? `WHERE ${saringan.join(' AND ')}` : '';
+  if (kab) {
+    syaratKab.push('kab_kota = ?');
+    paramKab.push(kab);
+  }
+
+  const semuaSyarat = [...syaratTahun, ...syaratKab];
+  const params = [...paramTahun, ...paramKab];
+  const where = semuaSyarat.length ? `WHERE ${semuaSyarat.join(' AND ')}` : '';
+  const whereTahun = syaratTahun.length ? `WHERE t.${syaratTahun.join(' AND t.')}` : '';
 
   try {
     // per_tahun memakai LEFT JOIN ke daftar tahun terdaftar supaya tahun yang
@@ -503,12 +521,15 @@ router.get('/kinerja/sampel', async (req, res) => {
            UNION
            SELECT tahun FROM sampel_ok_import WHERE tahun IS NOT NULL
          ) t
-         LEFT JOIN ${TABEL_SAMPEL} ON s.tahun = t.tahun
-        ${where ? `WHERE t.${where.replace(/^WHERE /, '')}` : ''}
+         LEFT JOIN ${TABEL_SAMPEL} ON s.tahun = t.tahun${paramKab.length ? ' AND s.kab_kota = ?' : ''}
+        ${whereTahun}
          GROUP BY t.tahun ORDER BY t.tahun DESC`,
-      // Filter di subquery `sumber` dan di WHERE luar memakai parameter yang
-      // sama, jadi nilainya diduplikasi persis dengan urutan yang sama.
-      where ? [...params, ...params] : params,
+      // Urutan parameter harus PERSIS mengikuti urutan tanda tanya di SQL:
+      //   1) subquery `sumber`  → tahun, kabupaten
+      //   2) ON ... JOIN        → kabupaten
+      //   3) WHERE luar         → tahun
+      // Kalau salah urut, hasilnya angka wilayah lain tanpa error apa pun.
+      where ? [...params, ...paramKab, ...paramTahun] : params,
     );
 
     const [perKomoditas] = await db.query(
@@ -570,6 +591,11 @@ router.get('/kinerja/sampel', async (req, res) => {
     return res.json({
       success: true,
       data: {
+        // `kab` dikembalikan supaya UI bisa memberi label wilayah yang benar
+        // ("Kota Palangka Raya" vs "Seluruh wilayah"). Tanpa itu, pengguna yang
+        // mengklik satu kabupaten melihat angka seluruh wilayah (1.311) dan
+        // mengira kolom tabelnya salah.
+        kab: kab || null,
         total: ringkas[0],
         per_tahun: perTahun,
         per_komoditas: perKomoditas,

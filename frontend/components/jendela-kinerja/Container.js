@@ -82,7 +82,7 @@ export default function Container() {
   }, []);
 
   // ---- Hasil pengujian laboratorium (seluruh modul Sampel) ----
-  const muatSampel = useCallback(async (tahun) => {
+  const muatSampel = useCallback(async (tahun, kab) => {
     // Bagian ini pelengkap: kalau gagal, dashboard tetap tampil apa adanya.
     //
     // Tahun filter halaman ini milik modul SARANA (default = tahun sarana
@@ -90,18 +90,31 @@ export default function Container() {
     // ikut tahun filter, bagian ini kosong padahal sampelnya ada. Jadi:
     // tahun filter dipakai selama benar-benar ada sampelnya; kalau tidak,
     // tampilkan seluruh tahun + tandai `lintas_tahun` supaya labelnya jujur.
+    //
+    // `kab` WAJIB ikut. Tanpa itu, mengklik satu kabupaten di panel Peringkat
+    // membuat bagian ini tetap menampilkan angka SELURUH wilayah (2026: 1.311)
+    // sementara tabel per kab/kota menampilkan angka wilayah itu (1.096 untuk
+    // Kota Palangka Raya) — dua angka berbeda untuk wilayah yang sama.
+    const saring = (t, k) => {
+      const q = new URLSearchParams();
+      if (t) q.set('tahun', t);
+      if (k) q.set('kab', k);
+      const s = q.toString();
+      return s ? `?${s}` : '';
+    };
     try {
       const ambil = async (q) => {
         const r = await fetch(`/api/publik/kinerja/sampel${q}`);
         const j = await r.json();
         return j.success ? j.data : null;
       };
-      let d = await ambil(tahun ? `?tahun=${tahun}` : '');
+      let d = await ambil(saring(tahun, kab));
       // Tanpa filter tahun, yang ditampilkan memang seluruh tahun — labelnya
       // harus bilang begitu, jangan mencomot tahun pertama sebagai judul.
       let lintas = !tahun;
       if (tahun && !angka(d?.total?.sampel) && (d?.daftar_tahun || []).length > 0) {
-        d = await ambil('');
+        // Filter wilayah TETAP dipakai saat jatuh ke seluruh tahun.
+        d = await ambil(saring('', kab));
         lintas = true;
       }
       if (d) setSampel({ ...d, lintas_tahun: lintas });
@@ -160,7 +173,7 @@ export default function Container() {
         // Ringkasan + rekap sampel dijalankan bersamaan; kegagalan sampel
         // ditelan sendiri di dalam muatSampel, jadi `galat` tetap milik
         // ringkasan (data inti halaman).
-        await Promise.all([muatRingkasan(filter), muatSampel(filter.tahun)]);
+        await Promise.all([muatRingkasan(filter), muatSampel(filter.tahun, filter.kab)]);
       } catch (e) {
         if (!batal) setGalat(e.message);
       } finally {
@@ -550,7 +563,7 @@ export default function Container() {
             rekap sampel adalah rekap unit (bukan per wilayah) sehingga lebih
             pas dibaca setelahnya. Tabel per kelompok komoditas menyusul di
             bawah bagian ini. */}
-        <SampelLab data={sampel} memuat={memuat} tahun={filter.tahun} />
+        <SampelLab data={sampel} memuat={memuat} tahun={filter.tahun} kab={filter.kab} />
 
         {/* ============ Kepatuhan mutu per kelompok komoditas ============ */}
         {/* Berdiri sendiri di bawah "Peringkat Sarana Diperiksa" (permintaan

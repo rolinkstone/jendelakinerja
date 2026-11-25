@@ -15,14 +15,21 @@
  * view itu satu sampel hanya jadi satu baris sarana tanpa nama produk, kode
  * sampel, atau sediaan.
  *
- * Komponen ini mengikuti filter tahun halaman induk; filter kab/kota & jenis
- * sarana tidak dipakai karena berkas sampel tidak menggreding sarana.
+ * Komponen ini mengikuti filter TAHUN dan WILAYAH (kab/kota) halaman induk.
+ * Filter wilayah WAJIB diikuti: berkas sampel mencantumkan `kab_kota`, jadi
+ * setelah pengguna mengklik satu kabupaten di panel Peringkat, bagian ini
+ * harus menampilkan angka wilayah itu. Sebelumnya filter wilayah tidak
+ * diteruskan sehingga panel menampilkan angka SELURUH wilayah (2026: 1.311)
+ * sementara tabel per kab/kota menampilkan 1.096 untuk Kota Palangka Raya —
+ * dua angka berbeda untuk wilayah yang sama, dan pembaca mengira salah satu
+ * di antaranya keliru.
+ * Filter JENIS SARANA memang tidak dipakai: berkas sampel tidak menggreding sarana.
  */
 import { FaVial, FaFlask, FaCheckCircle, FaExclamationTriangle, FaMapMarkedAlt } from 'react-icons/fa';
 import { angka, formatAngka } from './helper';
 import TabelKepatuhan, { persenKepatuhan } from './TabelKepatuhan';
 
-export default function SampelLab({ data, memuat, tahun }) {
+export default function SampelLab({ data, memuat, tahun, kab }) {
   // Modul sampel belum diimpor -> bagian ini tidak perlu tampil sama sekali.
   if (!memuat && !angka(data?.total?.sampel)) return null;
 
@@ -61,7 +68,7 @@ export default function SampelLab({ data, memuat, tahun }) {
     {
       label: 'Wilayah Sampling',
       nilai: formatAngka(total.wilayah),
-      catatan: 'kabupaten/kota',
+      catatan: kab ? 'sesuai filter wilayah' : 'kabupaten/kota',
       ikon: FaMapMarkedAlt,
       warna: 'text-slate-500 dark:text-slate-400',
     },
@@ -82,7 +89,11 @@ export default function SampelLab({ data, memuat, tahun }) {
               data sampel, angka di bawah ini mencakup semua tahun. */}
           <span className="chip chip-accent">
             <FaFlask className="h-3 w-3" />
-            {data?.lintas_tahun || !tahun ? 'Seluruh tahun tersedia' : `Tahun ${tahun}`}
+            {/* Wilayah + tahun ditulis eksplisit supaya angka pada kartu tidak
+                ambigu: 1.311 (seluruh wilayah) vs 1.096 (satu kabupaten). */}
+            {kab || 'Semua wilayah'}
+            {' · '}
+            {data?.lintas_tahun || !tahun ? 'seluruh tahun tersedia' : `tahun ${tahun}`}
           </span>
         </div>
 
