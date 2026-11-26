@@ -65,35 +65,30 @@ Copy-Item frontend\.env.example frontend\.env
 | Variabel                    | Cara mendapatkan                                            |
 | --------------------------- | ----------------------------------------------------------- |
 | `DB_PASSWORD`               | password user MySQL                                         |
-| `KEYCLOAK_CLIENT_SECRET`    | Keycloak → Clients → `pengujian` → Credentials              |
+| `KEYCLOAK_CLIENT_SECRET`    | Keycloak → Clients → `<client>` → Credentials               |
 | `KEYCLOAK_ADMIN_PASSWORD`   | password user admin Keycloak                                |
 | `NEXTAUTH_SECRET`           | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
-| `SESSION_SECRET`            | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
 
-Selama masih kosong, `docker compose` **menolak jalan** dan memberi pesan
-`DB_PASSWORD wajib diisi - salin .env.example ke .env`.
+Compose memakai nama variabel yang **sama persis** dengan `.env.example`
+(`PORT_BACKEND`, `PORT_FRONTEND`, `CORS_ORIGIN`, `DB_*`, `KEYCLOAK_*`,
+`NEXT_PUBLIC_API_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `laura_API_URL`,
+`CHROME_PATH`). Tidak ada lagi `${VAR:-nilai}` maupun `${VAR:?pesan}` — nilai
+yang tidak ada di `.env` menjadi **string kosong** tanpa peringatan, jadi
+pastikan semua kunci dari `.env.example` ada.
 
-> **Tidak ada nilai bawaan di `docker-compose.yml`.** Semua `${VAR:-nilai}`
-> sudah dihapus — compose membaca variabel apa adanya dari `.env`. Artinya
-> `.env` wajib memuat **semua** kunci yang ada di `.env.example`, termasuk
-> `BACKEND_PORT`, `BACKEND_HOST`, `FRONTEND_PORT`, `AUTH_COOKIE_PREFIX`, serta
-> variabel keamanan token (`AUTH_VERIFIKASI`, `AUTH_PERIKSA_ISSUER`,
-> `AUTH_AUDIENCE`, `PERAN_TULIS`). Kalau `.env` lama belum lengkap, salin ulang
-> dari `.env.example` lalu isi nilai rahasianya. `BACKEND_PORT` harus sama
-> dengan port yang dipakai healthcheck/backend — kalau kosong, container
-> backend tidak pernah "healthy" dan frontend tidak ikut start.
+> **`SESSION_SECRET` tidak perlu diisi.** `docker-compose.yml` meneruskan
+> `NEXTAUTH_SECRET` sebagai `SESSION_SECRET` ke backend (dipakai menyegel token
+> di tabel `api_link`). Kalau `NEXTAUTH_SECRET` diganti, link lama tidak bisa
+> dibuka lagi — link baru tetap bisa dibuat.
 
-> **`BACKEND_API_URL` (opsional).** Proxy di `frontend/pages/api/**` memanggil
-> backend dari sisi server. Bila kosong, dipakai `API_URL` (domain publik).
-> Kalau domain API publik belum dirutekan (Cloudflare 404 kosong, halaman
-> menampilkan *"Unexpected end of JSON input"*), isi alamat internal:
-> `BACKEND_API_URL=http://host.docker.internal:5006/api` **dan**
-> `BACKEND_HOST=0.0.0.0` supaya backend bisa dijangkau container frontend.
-> Alternatifnya, arahkan hostname API publik ke backend `127.0.0.1:5006`.
-
-> `SESSION_SECRET` dipakai backend untuk menyegel token di tabel `api_link`.
-> Kalau nilainya berubah setelah ada link dibuat, link lama tidak bisa dibuka
-> lagi — tetapi link baru tetap bisa dibuat.
+> **`BACKEND_API_URL` diatur otomatis oleh compose** menjadi
+> `http://host.docker.internal:${PORT_BACKEND}/api` (proxy `pages/api/**`
+> memanggil backend lewat jalur internal). Jadi halaman tidak lagi bergantung
+> pada domain API publik; hostname API hanya dipakai browser (`NEXT_PUBLIC_API_URL`).
+> Supaya bisa dijangkau container frontend, backend dijalankan dengan
+> `HOST=0.0.0.0` (bukan `127.0.0.1`). Kalau ingin backend tetap loopback,
+> jalankan frontend dengan `network_mode: "host"` dan ganti `BACKEND_API_URL`
+> ke `http://127.0.0.1:${PORT_BACKEND}/api`.
 
 ---
 
@@ -145,8 +140,7 @@ cd <repo>
 
 # 2. Siapkan konfigurasi (TIDAK dari git)
 cp .env.example .env
-nano .env            # isi DB_PASSWORD, KEYCLOAK_*_SECRET, NEXTAUTH_SECRET, SESSION_SECRET
-                     # (port/host/cookie prefix sudah ada di template)
+nano .env            # isi DB_PASSWORD, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ADMIN_PASSWORD, NEXTAUTH_SECRET
 
 # 3. Jalankan
 docker compose up -d --build
@@ -158,8 +152,8 @@ docker compose logs -f backend
 > ke dalam container. Setelah mengubah kode, wajib `docker compose up -d --build`
 > (atau `docker compose build backend` lalu `up -d`).
 
-Kalau `.env` berubah (khususnya `API_URL`) frontend harus di-build ulang karena
-nilai `NEXT_PUBLIC_*` ditanam saat build:
+Kalau `.env` berubah (khususnya `NEXT_PUBLIC_API_URL`) frontend harus di-build
+ulang karena nilai `NEXT_PUBLIC_*` ditanam saat build:
 
 ```bash
 docker compose build --no-cache frontend
@@ -211,40 +205,40 @@ komputer itu, lalu sesuaikan `GRANT`-nya.
 > ports:
 >   - "5006:5006"
 > ```
-> lalu set `DB_HOST=host.docker.internal` **dan** `BACKEND_HOST=0.0.0.0` di `.env`
-> (tanpa `BACKEND_HOST=0.0.0.0`, backend hanya mendengar di loopback container dan
-> port mapping tidak bisa dijangkau). Buka juga `bind-address` MySQL ke `0.0.0.0`
-> (serta `GRANT` untuk user `@'%'`).
+> lalu set `DB_HOST=host.docker.internal`. Backend harus mendengar di semua
+> antarmuka (`HOST: 0.0.0.0` sudah diset di compose) supaya port mapping bisa
+> dijangkau. Buka juga `bind-address` MySQL ke `0.0.0.0` (serta `GRANT` untuk
+> user `@'%'`).
 
 ### Masalah umum
 
 | Gejala                                        | Penyebab & solusi                                                                     |
 | --------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `docker compose up` gagal: `... wajib diisi - salin .env.example ke .env` | Ada nilai kosong di `.env`. Isi dulu.                    |
-| `docker compose config` error `SESSION_SECRET wajib diisi` | Tambahkan `SESSION_SECRET` di `.env` (belum ada di `.env` lama). |
-| Browser: `Failed to execute 'json' on 'Response': Unexpected end of JSON input` | Proxy menerima body **kosong** dari backend. Cek `curl -i <API_URL>/health`: bila 404 kosong, hostname API tidak dirutekan ke backend. Isi `BACKEND_API_URL` ke alamat internal (lihat catatan di bagian kredensial) atau benahi tunnel/nginx-nya. Proxy sekarang membalas JSON `BALASAN_KOSONG` berisi URL tujuan, bukan body kosong. |
+| Halaman: **"Gagal memuat ringkasan"** / JSON `BALASAN_KOSONG` | Proxy Next tidak mendapat balasan JSON dari backend internal. Cek `docker compose ps` (backend **healthy**?) dan `docker compose logs --tail=80 backend`. Alamat yang dipakai proxy tercantum di pesan galat (`BACKEND_API_URL`). |
+| Browser: `Failed to execute 'json' on 'Response': Unexpected end of JSON input` | Dulu: proxy meneruskan body **kosong** dari backend. Sekarang proxy membalas JSON `BALASAN_KOSONG` berisi URL tujuan, jadi pesan ini hanya muncul bila ada respons kosong dari jalur lain (mis. reverse proxy). |
 | Backend `ECONNREFUSED` ke MySQL               | `DB_HOST` salah. MySQL di server yang sama → `127.0.0.1`; di komputer lain → IP komputer itu. |
 | `Access denied for user ...`                  | `DB_USER` / `DB_PASSWORD` di `.env` tidak cocok dengan yang ada di MySQL.              |
 | Docker menolak `network_mode` + `ports`       | Keduanya tidak boleh digabung. Backend = host (tanpa `ports`), frontend = bridge + `ports`. |
 | Domain web error 502 / blank                  | Reverse proxy belum meneruskan ke `127.0.0.1:3007` (lihat bagian Reverse proxy). Frontend sekarang dijalankan `next start -H 0.0.0.0` di dalam container; jangan diganti `npm start` (script itu mengikat `127.0.0.1` dan membuat port mapping tidak bisa diakses). |
-| Domain API error 502                          | Reverse proxy belum meneruskan ke `localhost:5006`.                                     |
-| Browser gagal memanggil API                   | `API_URL` salah. Set `https://data-lets.bbpompky.id/api`, lalu **build ulang** frontend (nilainya ditanam saat build). |
-| Login muter-muter / `redirect_uri` mismatch   | Tambahkan `https://lets-digital.bbpompky.id/api/auth/callback/keycloak` ke *Valid redirect URIs* di Keycloak. |
-| NextAuth `UntrustedHost` / cookie gagal       | Pastikan `WEB_URL` sama persis dengan alamat yang dibuka di browser (termasuk `https://`). |
+| `/api/publik/*` 502 padahal halaman lain normal | Pastikan container backend hidup dan `HOST: 0.0.0.0` (compose). Proxy memanggil `http://host.docker.internal:PORT_BACKEND/api`; bila `extra_hosts` tidak ada (container lama), `docker compose up -d` ulang. |
+| Domain API error 502                          | Reverse proxy belum meneruskan ke `localhost:5006`. Bila API publik memang tidak dipakai, biarkan — proxy frontend memakai jalur internal. |
+| Browser gagal memanggil API                   | `NEXT_PUBLIC_API_URL` salah. Perbaiki di `.env`, lalu **build ulang** frontend (nilainya ditanam saat build). |
+| Login muter-muter / `redirect_uri` mismatch   | Tambahkan `https://jendela-kinerja.bbpompky.id/api/auth/callback/keycloak` ke *Valid redirect URIs* di Keycloak. |
+| NextAuth `UntrustedHost` / cookie gagal       | Pastikan `NEXTAUTH_URL` sama persis dengan alamat yang dibuka di browser (termasuk `https://`). |
 
 ---
 
 ## 5. Konfigurasi Keycloak (sekali saja)
 
-Client ID yang dipakai: **`pengujian`**.
+Client ID yang dipakai: **`jendela`** (dari `KEYCLOAK_CLIENT_ID` di `.env`).
 
-Di Keycloak → Clients → `pengujian`:
+Di Keycloak → Clients → `jendela`:
 
 - **Valid redirect URIs**
-  - `https://lets-digital.bbpompky.id/api/auth/callback/keycloak`
+  - `https://jendela-kinerja.bbpompky.id/api/auth/callback/keycloak`
   - `http://localhost:3007/api/auth/callback/keycloak` (untuk dev lokal)
 - **Web origins**
-  - `https://lets-digital.bbpompky.id`
+  - `https://jendela-kinerja.bbpompky.id`
   - `http://localhost:3007`
 - **Capability config**
   - Standard flow: **ON** (dipakai NextAuth)
@@ -407,10 +401,9 @@ lain:
 
 | Kredensial                       | Cara ganti                                   |
 | -------------------------------- | -------------------------------------------- |
-| Keycloak client secret           | Keycloak → Clients → `pengujian` → Credentials → Regenerate |
+| Keycloak client secret           | Keycloak → Clients → `jendela` → Credentials → Regenerate |
 | Password admin Keycloak          | Keycloak → Users → admin → Credentials        |
-| `NEXTAUTH_SECRET`                | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
-| `SESSION_SECRET`                 | sama seperti di atas                          |
+| `NEXTAUTH_SECRET`                | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` (juga dipakai backend sebagai `SESSION_SECRET`) |
 
 ### 9.4 Audit ulang sebelum push berikutnya
 
