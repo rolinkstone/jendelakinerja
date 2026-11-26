@@ -190,6 +190,24 @@ Dua hal yang mudah salah:
 2. **Tombol "Masuk dashboard" mengarah ke `/beranda`**, bukan `/` — kalau
    diarahkan ke `/`, tombol itu hanya memantul kembali ke Jendela Kinerja.
 
+## Peran & hak admin
+
+Peran dibaca dari token Keycloak di `pages/api/auth/[...nextauth].js`: **realm
+roles** (`realm_access.roles`) **dan client roles** milik `KEYCLOAK_CLIENT_ID`
+(`resource_access.<client>.roles`).
+
+- **Admin aplikasi HANYA `admin` atau `admin_jendela_kinerja`.**
+- Peran PIC/pejabat (`pic_gudang`, `pic_lab`, `ppk`, `kabag_tu`, …) **tidak
+  pernah** dianggap admin, meskipun ikut terbawa di token.
+- Pengguna berperan ganda: peran admin dipakai sebagai `role` utama — bukan
+  elemen pertama `realm_access.roles` (urutan dari Keycloak tidak dijamin,
+  dulu itu sebabnya pengguna admin bisa tampil `pic_gudang`).
+- `superadmin` tidak lagi dihitung admin di UI; backend masih mengizinkannya
+  menulis lewat `PERAN_TULIS` (`admin,superadmin,admin_*`).
+- Daftar yang sama dipakai `middleware.js` untuk penjagaan path `/admin`.
+- Perubahan pemetaan peran baru berlaku pada login berikutnya — pengguna harus
+  **logout lalu login ulang** agar JWT memuat peran yang benar.
+
 ## Struktur Folder
 
 Satu modul = satu paket file, halaman tetap tipis:

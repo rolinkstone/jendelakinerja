@@ -3,6 +3,9 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import { authCookies } from "./utils/authCookies";
 
+// Peran yang dianggap administrator aplikasi (sama dengan [...nextauth].js).
+const PERAN_ADMIN = ['admin', 'admin_jendela_kinerja'];
+
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
@@ -10,7 +13,7 @@ export default withAuth(
 
     if (token) {
       // You can add role-based access control here
-      if (path.startsWith('/admin') && token.role !== 'admin') {
+      if (path.startsWith('/admin') && !PERAN_ADMIN.includes(token.role)) {
         const url = new URL('/unauthorized', req.url);
         return NextResponse.redirect(url);
       }

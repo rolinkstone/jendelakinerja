@@ -503,11 +503,22 @@ function extractUserRoles(user) {
 
 /**
  * Helper untuk menentukan role user
+ * Admin aplikasi HANYA `admin` atau `admin_jendela_kinerja` — peran PIC
+ * (pic_gudang, pic_lab, …) tidak boleh dianggap admin.
  */
+const PERAN_ADMIN = ['admin', 'admin_jendela_kinerja'];
+
 function isUserAdmin(user) {
     const roles = user.extractedRoles || user.role || [];
     const roleArray = Array.isArray(roles) ? roles : [roles];
-    return roleArray.some(role => role.toLowerCase() === 'admin');
+    // Peran bisa berada di realm (roles) atau di client (clientRoles /
+    // resource_access), tergantung cara admin Keycloak menetapkannya.
+    const clientRoles = Object.values(user.clientRoles || {}).flatMap((c) =>
+        c && Array.isArray(c.roles) ? c.roles : []
+    );
+    return [...roleArray, ...clientRoles].some((role) =>
+        PERAN_ADMIN.includes(String(role).toLowerCase())
+    );
 }
 
 function isUserPPK(user) {

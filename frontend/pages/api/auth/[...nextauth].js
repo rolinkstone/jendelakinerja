@@ -3,6 +3,46 @@ import NextAuth from "next-auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
 import { authCookies, PAKAI_COOKIE_AMAN } from "../../../utils/authCookies";
 
+// Peran aplikasi yang dianggap ADMIN. Hanya dua ini yang boleh memberi
+// hak admin — peran lain (pic_*, ppk, kabag_tu, …) TIDAK pernah jadi admin.
+const PERAN_ADMIN = ['admin', 'admin_jendela_kinerja'];
+
+// Peran yang dikenali & disimpan di sesi. `admin_jendela_kinerja` WAJIB ada
+// di sini; tanpa itu, pengguna yang hanya punya peran tersebut jatuh ke
+// peran lain (mis. `pic_gudang`) yang kebetulan ikut terbawa di token.
+const PERAN_DIKENAL = [
+  ...PERAN_ADMIN,
+  'superadmin',
+  'ppk',
+  'pic_ruangan',
+  'pic',
+  'kabag_tu',
+  'kabalai',
+  'bendahara',
+  'pic_persediaan',
+  'pic_gudang',
+  'pic_lab',
+  'katim',
+  'mt',
+];
+
+/**
+ * Kumpulkan peran Keycloak dari realm DAN client aplikasi ini.
+ * Urutan `realm_access.roles` dari Keycloak tidak dijamin, jadi peran tidak
+ * boleh diambil "yang pertama" begitu saja (itu sebabnya pengguna berperan
+ * ganda bisa tampil sebagai `pic_gudang`).
+ */
+function peranDariProfil(profile) {
+  const realmRoles = Array.isArray(profile?.realm_access?.roles) ? profile.realm_access.roles : [];
+  const clientId = process.env.KEYCLOAK_CLIENT_ID;
+  const clientRoles = clientId
+    ? profile?.resource_access?.[clientId]?.roles || []
+    : Object.values(profile?.resource_access || {}).flatMap((c) => c?.roles || []);
+
+  const semua = [...realmRoles, ...clientRoles].map((r) => String(r).toLowerCase());
+  return [...new Set(semua)].filter((r) => PERAN_DIKENAL.includes(r));
+}
+
 export const authOptions = {
   providers: [
     KeycloakProvider({
@@ -17,10 +57,10 @@ export const authOptions = {
       },
 
       profile(profile) {
-        const realmRoles = profile.realm_access?.roles || [];
-        const recognizedRoles = ['admin', 'superadmin', 'ppk', 'pic_ruangan', 'pic', 'kabag_tu', 'kabalai', 'bendahara', 'pic_persediaan', 'pic_gudang', 'pic_lab', 'katim', 'mt'];
-        const roles = realmRoles.filter(r => recognizedRoles.includes(r));
-        const primaryRole = roles.length > 0 ? roles[0] : 'user';
+        const roles = peranDariProfil(profile);
+        // Peran admin menang atas peran lain supaya pengguna berperan ganda
+        // (admin + pic_gudang) tetap tampil & diberi hak sebagai admin.
+        const primaryRole = roles.find((r) => PERAN_ADMIN.includes(r)) || roles[0] || 'user';
 
         return {
           id: profile.sub,
@@ -60,7 +100,10 @@ export const authOptions = {
       };
 
       const userRoles = token.roles || [];
-      session.user.isAdmin = userRoles.includes('admin') || userRoles.includes('superadmin');
+      // Admin HANYA `admin` atau `admin_jendela_kinerja`. `superadmin` sengaja
+      // tidak lagi dihitung sebagai admin aplikasi (ia tetap boleh menulis di
+      // backend lewat PERAN_TULIS, tapi UI admin mengikuti dua peran di atas).
+      session.user.isAdmin = userRoles.some((r) => PERAN_ADMIN.includes(r));
       session.user.isPICRuangan = userRoles.includes('pic_ruangan') || userRoles.includes('pic');
       session.user.isPPK = userRoles.includes('ppk');
       session.user.isKabagTU = userRoles.includes('kabag_tu');
