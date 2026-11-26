@@ -75,7 +75,9 @@ const MODUL_API = [
     kode: 'JK-SARANA-2026',
     nama: 'Daftar Sarana Diperiksa 2026',
     url_path: '/api/publik/kinerja/sarana',
-    auth_mode: 'public',
+    // Rincian sarana per baris hanya untuk pengguna login (sejak pembatasan
+    // modal "Rincian" di /jendela-kinerja): backend menolak tanpa Bearer sah.
+    auth_mode: 'bearer',
     parameter: { tahun: '2026', page: '1', limit: '200' },
     model_data: 'daftar_sarana',
     masa_berlaku_hari: 7,

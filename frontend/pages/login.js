@@ -63,7 +63,16 @@ export default function LoginPage() {
       // sekarang halaman publik yang dialihkan ke /jendela-kinerja, sehingga
       // callbackUrl '/' membuat pengguna yang baru login terlempar ke halaman
       // tanpa menu internal.
-      await signIn('keycloak', { callbackUrl: '/beranda' });
+      //
+      // `?callbackUrl=` dihormati (mis. dari tombol "Rincian" di
+      // /jendela-kinerja) HANYA bila berupa path internal — mencegah
+      // open redirect ke domain lain.
+      const diminta = router.query.callbackUrl;
+      const tujuan =
+        typeof diminta === 'string' && diminta.startsWith('/') && !diminta.startsWith('//')
+          ? diminta
+          : '/beranda';
+      await signIn('keycloak', { callbackUrl: tujuan });
     } catch (err) {
       setError('Gagal terhubung ke server SSO. Silakan coba lagi.');
       setIsLoading(false);

@@ -4,17 +4,36 @@
  * -----------------------------
  * Dipakai halaman PUBLIK /jendela-kinerja (di luar dashboard ber-SSO).
  *
- *   browser  →  /api/publik/<path>          (tanpa cookie sesi)
+ *   browser  →  /api/publik/<path>          (tanpa cookie sesi, kecuali rincian)
  *             →  backend /api/publik/<path> (route publik, tanpa token)
  *
- * Berbeda dengan proxy /api/pbf/*, route ini TIDAK memerlukan sesi NextAuth
- * karena backend-nya memang publik (`publicRoutes` di backend/server.js).
- * Tetap lewat server Next supaya browser tidak perlu tahu alamat backend dan
- * supaya tidak terbuka CORS tambahan.
+ * Rekap (pilihan, ringkasan, sampel) memang publik: backend route-nya ada di
+ * `publicRoutes` (backend/server.js) dan browser tidak perlu sesi.
+ *
+ * PENGECUALIAN — RINCIAN SARANA PERLU LOGIN
+ * -----------------------------------------
+ * `/api/publik/kinerja/sarana` membuka daftar NAMA sarana per baris (modal
+ * "Rincian" pada tabel per kab/kota). Endpoint itu dibatasi untuk pengguna
+ * yang sudah login: proxy memeriksa cookie sesi NextAuth (`ambilToken`) dan
+ * meneruskan `Authorization: Bearer <accessToken>` ke backend, yang juga
+ * menolak tanpa pengguna sah. Tamu tetap bisa melihat peta & tabel rekap.
  *
  * Hanya method GET yang diteruskan — dashboard publik bersifat read-only.
  */
+import { ambilToken } from '../../../utils/authCookies';
+
 const BACKEND = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5006/api').replace(/\/+$/, '');
+
+/** Rute rincian yang mewajibkan sesi login (rekap tetap terbuka). */
+const RUTE_WAJIB_LOGIN = ['kinerja/sarana'];
+
+/** Satu balasan JSON baku — klien selalu memanggil res.json(). */
+const balasJson = (res, status, isi) => {
+  if (res.headersSent) return res.end();
+  res.status(status).setHeader('content-type', 'application/json; charset=utf-8');
+  res.setHeader('cache-control', 'no-store');
+  return res.send(JSON.stringify(isi));
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -26,14 +45,35 @@ export default async function handler(req, res) {
   const query = indeksQuery >= 0 ? req.url.slice(indeksQuery) : '';
   const url = `${BACKEND}/publik/${bagian}${query}`;
 
+  const perluLogin = RUTE_WAJIB_LOGIN.some((r) => bagian === r || bagian.startsWith(`${r}/`));
+  let token = null;
+  if (perluLogin) {
+    token = await ambilToken(req);
+    if (!token?.accessToken) {
+      return balasJson(res, 401, {
+        success: false,
+        code: 'TANPA_SESI',
+        message: 'Rincian sarana hanya untuk pengguna yang sudah login. Silakan masuk terlebih dahulu.',
+      });
+    }
+  }
+
   try {
-    const jawaban = await fetch(url, { method: 'GET' });
+    const opsi = { method: 'GET' };
+    if (token?.accessToken) opsi.headers = { authorization: `Bearer ${token.accessToken}` };
+
+    const jawaban = await fetch(url, opsi);
     const teks = await jawaban.text();
 
     res.status(jawaban.status);
     res.setHeader('content-type', jawaban.headers.get('content-type') || 'application/json');
-    // Data publik boleh di-cache singkat di CDN/browser agar peta terasa cepat.
-    res.setHeader('cache-control', 'public, max-age=60, stale-while-revalidate=300');
+    if (perluLogin) {
+      // Balasan berisi nama sarana per baris — jangan disimpan di cache bersama.
+      res.setHeader('cache-control', 'private, no-store');
+    } else {
+      // Data publik boleh di-cache singkat di CDN/browser agar peta terasa cepat.
+      res.setHeader('cache-control', 'public, max-age=60, stale-while-revalidate=300');
+    }
     return res.send(teks);
   } catch (e) {
     return res.status(502).json({

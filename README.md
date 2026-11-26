@@ -473,7 +473,7 @@ ditambah bagian hasil pengujian laboratorium (lihat penjelasan di atas).
 | --- | --- |
 | `GET /api/publik/kinerja/pilihan` | daftar pilihan filter + jumlah (`tahun`, `bulan`, `kegiatan`, `jenis_sarana`, `kab_kota`) |
 | `GET /api/publik/kinerja/ringkasan?tahun=&bulan=&kegiatan=&jenis=&kab=` | KPI + `per_kab_kota` (peta + tabel per kab/kota) + `per_bulan` + `per_jenis_sarana` |
-| `GET /api/publik/kinerja/sarana?...` | daftar sarana (pagination) — dipakai modal "Rincian" per kab/kota |
+| `GET /api/publik/kinerja/sarana?...` | daftar sarana (pagination) — dipakai modal "Rincian" per kab/kota. **Wajib login**: proxy meneruskan Bearer token, backend menolak (401) tanpa pengguna sah |
 
 Sumber data publik adalah view `backend/db/v_kinerja.sql` (`v_kinerja_sarana`)
 yang menjahit `pbf_laporan` + `ot_laporan` dengan kolom seragam (`sumber`
@@ -490,7 +490,7 @@ paling akhir — view ini bergantung pada kolom hasil migrasi lain.
   | Sarana Distribusi (MK/TMK) | `distribusi_mk` / `distribusi_tmk` (sumber `PBF`) |
   | Total Sampel Lab | `sampel_lab` = `SUM(pbf_laporan.jumlah_sampel_lab)` |
   | Indeks Kepatuhan | `MK ÷ (MK + TMK) × 100` (dihitung di frontend `helper.js`) |
-  | Aksi | tombol **Rincian** → modal daftar sarana kab/kota itu (`/kinerja/sarana?kab=`) |
+  | Aksi | tombol **Rincian** → modal daftar sarana kab/kota itu (`/kinerja/sarana?kab=`); untuk tamu tombolnya mengarah ke `/login` (rincian hanya untuk pengguna yang login) |
 
   MK = *Memenuhi Ketentuan*, TMK = *Tidak Memenuhi Ketentuan*. Karena
   `'Tidak Memenuhi Ketentuan'` **juga** mengandung kata "Memenuhi", MK dihitung
@@ -501,7 +501,9 @@ paling akhir — view ini bergantung pada kolom hasil migrasi lain.
   punya kolom itu.
 
 - **Read-only dan agregat saja** — tidak ada temuan/observasi/nama petugas yang keluar.
-  Rincian tetap di dashboard internal.
+  Peta/tabel rekap terbuka untuk tamu; **rincian sarana per baris hanya untuk
+  pengguna yang login** (`/kinerja/sarana` menolak tanpa sesi). Temuan tetap di
+  dashboard internal.
 - Frontend memakai proxy `frontend/pages/api/publik/[...path].js` (hanya GET), jadi
   browser tidak perlu tahu alamat backend.
 - Path `/jendela-kinerja` dan `/api/publik` didaftarkan di `publicPaths`

@@ -21,7 +21,7 @@ kredensial, dan (2) menjalankan produksi dengan Docker di server
 lets-digital.bbpompky.id              data-lets.bbpompky.id
    │ :3007                                       │ :5006
 ┌──┴──────────────────┐              ┌──────────┴───────────────┐
-│  pengujian-frontend │              │  pengujian-backend       │
+│  jendela-frontend   │              │  jendela-backend         │
 │  (bridge, ports)    │              │  network_mode: "host"    │
 └─────────────────────┘              └──────────┬───────────────┘
                                                 │
@@ -72,6 +72,16 @@ Copy-Item frontend\.env.example frontend\.env
 
 Selama masih kosong, `docker compose` **menolak jalan** dan memberi pesan
 `DB_PASSWORD wajib diisi - salin .env.example ke .env`.
+
+> **Tidak ada nilai bawaan di `docker-compose.yml`.** Semua `${VAR:-nilai}`
+> sudah dihapus — compose membaca variabel apa adanya dari `.env`. Artinya
+> `.env` wajib memuat **semua** kunci yang ada di `.env.example`, termasuk
+> `BACKEND_PORT`, `BACKEND_HOST`, `FRONTEND_PORT`, `AUTH_COOKIE_PREFIX`, serta
+> variabel keamanan token (`AUTH_VERIFIKASI`, `AUTH_PERIKSA_ISSUER`,
+> `AUTH_AUDIENCE`, `PERAN_TULIS`). Kalau `.env` lama belum lengkap, salin ulang
+> dari `.env.example` lalu isi nilai rahasianya. `BACKEND_PORT` harus sama
+> dengan port yang dipakai healthcheck/backend — kalau kosong, container
+> backend tidak pernah "healthy" dan frontend tidak ikut start.
 
 > `SESSION_SECRET` dipakai backend untuk menyegel token di tabel `api_link`.
 > Kalau nilainya berubah setelah ada link dibuat, link lama tidak bisa dibuka
@@ -128,6 +138,7 @@ cd <repo>
 # 2. Siapkan konfigurasi (TIDAK dari git)
 cp .env.example .env
 nano .env            # isi DB_PASSWORD, KEYCLOAK_*_SECRET, NEXTAUTH_SECRET, SESSION_SECRET
+                     # (port/host/cookie prefix sudah ada di template)
 
 # 3. Jalankan
 docker compose up -d --build

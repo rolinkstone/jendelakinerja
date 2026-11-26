@@ -45,31 +45,31 @@ services:
     build:
       context: ./backend
     image: jendela-kinerja/backend:latest
-    container_name: pengujian-backend
+    container_name: jendela-backend
     restart: unless-stopped
     init: true
     network_mode: "host"
     environment:
       # ---------- Server ----------
       NODE_ENV: production
-      PORT: ${BACKEND_PORT:-5006}
-      # Bawaan 127.0.0.1 = hanya server ini (paling aman bila memakai
-      # reverse proxy lokal). Untuk mode bridge wajib 0.0.0.0.
-      HOST: ${BACKEND_HOST:-127.0.0.1}
+      PORT: ${BACKEND_PORT}
+      # Isi BACKEND_HOST di .env. 127.0.0.1 = hanya server ini (paling aman
+      # bila memakai reverse proxy lokal). Untuk mode bridge wajib 0.0.0.0.
+      HOST: ${BACKEND_HOST}
 
       # ---------- Database (MySQL di server ini, di luar Docker) ----------
-      DB_HOST: ${DB_HOST:-127.0.0.1}
-      DB_PORT: ${DB_PORT:-3306}
-      DB_USER: ${DB_USER:-root}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diisi - salin .env.example ke .env}
-      DB_NAME: ${DB_NAME:-jendelakinerja}
+      DB_NAME: ${DB_NAME}
 
       # ---------- Keycloak ----------
-      KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL:-https://auth.bbpompky.id}
-      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-master}
-      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-pengujian}
+      KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:?KEYCLOAK_CLIENT_SECRET wajib diisi - salin .env.example ke .env}
-      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD wajib diisi - salin .env.example ke .env}
 
       # ---------- CORS & tautan publik ----------
@@ -82,20 +82,20 @@ services:
       # Dipakai menyegel token di tabel api_link (AES-256-GCM).
       # API_LINK_SECRET opsional; bila kosong dipakai SESSION_SECRET.
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET wajib diisi - salin .env.example ke .env}
-      API_LINK_SECRET: ${API_LINK_SECRET:-}
+      API_LINK_SECRET: ${API_LINK_SECRET}
 
       # ---------- Keamanan token ----------
-      AUTH_VERIFIKASI: ${AUTH_VERIFIKASI:-aktif}
-      AUTH_PERIKSA_ISSUER: ${AUTH_PERIKSA_ISSUER:-aktif}
-      AUTH_AUDIENCE: ${AUTH_AUDIENCE:-}
-      PERAN_TULIS: ${PERAN_TULIS:-admin,superadmin,admin_*}
+      AUTH_VERIFIKASI: ${AUTH_VERIFIKASI}
+      AUTH_PERIKSA_ISSUER: ${AUTH_PERIKSA_ISSUER}
+      AUTH_AUDIENCE: ${AUTH_AUDIENCE}
+      PERAN_TULIS: ${PERAN_TULIS}
     volumes:
       # Volume data opsional (aplikasi hanya memakai database; folder ini
       # disediakan bila nanti ada berkas yang perlu disimpan ke disk).
       - ./data/backend:/data
     healthcheck:
       # network_mode: host -> 127.0.0.1 di sini = server
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${BACKEND_PORT:-5006}/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${BACKEND_PORT}/api/health"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -116,25 +116,25 @@ services:
         # (bukan localhost / IP LAN). Nilai ini ditanam saat build ->
         # kalau berubah, frontend harus di-build ulang (--no-cache).
         NEXT_PUBLIC_API_URL: ${API_URL:?API_URL wajib diisi - salin .env.example ke .env}
-        NEXT_PUBLIC_LAURA_URL: ${LAURA_URL:-https://laura-ai.bbpompky.id}
+        NEXT_PUBLIC_LAURA_URL: ${LAURA_URL}
     image: jendela-kinerja/frontend:latest
-    container_name: pengujian-frontend
+    container_name: jendela-frontend
     restart: unless-stopped
     init: true
     ports:
-      - "${FRONTEND_PORT:-3007}:3007"
+      - "${FRONTEND_PORT}:3007"
     environment:
       NODE_ENV: production
       PORT: "3007"
       HOSTNAME: 0.0.0.0
       # Alamat API untuk browser (harus URL publik)
       NEXT_PUBLIC_API_URL: ${API_URL:?API_URL wajib diisi - salin .env.example ke .env}
-      NEXT_PUBLIC_LAURA_URL: ${LAURA_URL:-https://laura-ai.bbpompky.id}
+      NEXT_PUBLIC_LAURA_URL: ${LAURA_URL}
 
       # ---------- Keycloak (sisi server / NextAuth) ----------
-      KEYCLOAK_ISSUER: ${KEYCLOAK_SERVER_URL:-https://auth.bbpompky.id}/realms/${KEYCLOAK_REALM:-master}
-      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-master}
-      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-pengujian}
+      KEYCLOAK_ISSUER: ${KEYCLOAK_SERVER_URL}/realms/${KEYCLOAK_REALM}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:?KEYCLOAK_CLIENT_SECRET wajib diisi - salin .env.example ke .env}
 
       # ---------- NextAuth ----------
@@ -143,10 +143,10 @@ services:
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET wajib diisi - salin .env.example ke .env}
       # Awalan nama cookie sesi (hindari bentrok dengan aplikasi lain
       # di domain yang sama)
-      AUTH_COOKIE_PREFIX: ${AUTH_COOKIE_PREFIX:-jk}
+      AUTH_COOKIE_PREFIX: ${AUTH_COOKIE_PREFIX}
 
       # ---------- Integrasi LAURA (opsional) ----------
-      LAURA_API_URL: ${LAURA_API_URL:-}
+      LAURA_API_URL: ${LAURA_API_URL}
     volumes:
       - ./data/frontend:/data
     healthcheck:

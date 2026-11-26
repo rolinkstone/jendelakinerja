@@ -12,8 +12,11 @@
  *  mentah, tidak ada data pribadi petugas).
  *
  *  Didaftarkan sebagai route publik di server.js (`publicRoutes`), jadi tidak
- *  memerlukan Bearer token. Frontend memanggilnya lewat proxy
- *  pages/api/publik/[...path].js supaya tetap satu pintu (server-side).
+ *  memerlukan Bearer token — KECUALI `/kinerja/sarana` (daftar NAMA sarana per
+ *  baris, dipakai modal "Rincian"): endpoint itu menolak tanpa pengguna sah
+ *  (`req.user`), karena rincian per sarana hanya untuk pengguna yang login.
+ *  Frontend memanggilnya lewat proxy pages/api/publik/[...path].js (satu pintu,
+ *  server-side).
  *
  *  Sumber data: VIEW `v_kinerja_sarana` (gabungan pbf_laporan + ot_laporan,
  *  lihat backend/db/v_kinerja.sql) beserta kolom turunan kegiatan/jenis_sarana/
@@ -343,6 +346,18 @@ router.get('/kinerja/ringkasan', async (req, res) => {
 // GET /api/publik/kinerja/sarana — daftar sarana yang diperiksa (tabel bawah)
 // ---------------------------------------------------------------------------
 router.get('/kinerja/sarana', async (req, res) => {
+  // Rincian sarana WAJIB login: endpoint ini satu-satunya di /api/publik yang
+  // membuka NAMA sarana per baris. Rekap (pilihan/ringkasan/sampel) tetap
+  // publik. `req.user` diisi authMiddleware (server.js) dari Bearer token yang
+  // sah; tanpa token nilainya undefined → tolak.
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      code: 'TANPA_SESI',
+      message: 'Rincian sarana hanya untuk pengguna yang sudah login. Silakan masuk terlebih dahulu.',
+    });
+  }
+
   const saring = susunSaringan(req.query);
   if (saring.galat) return res.status(400).json({ success: false, message: saring.galat });
 

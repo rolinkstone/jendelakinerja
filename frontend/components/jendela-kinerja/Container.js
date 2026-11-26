@@ -13,6 +13,8 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import {
   FaSyncAlt,
   FaFilter,
@@ -24,6 +26,7 @@ import {
   FaExclamationTriangle,
   FaChartBar,
   FaClipboardList,
+  FaLock,
 } from 'react-icons/fa';
 import { BRAND, BrandMark } from '../Brand';
 import Navbar from '../navbar/Navbar';
@@ -53,6 +56,11 @@ import {
 const LIMIT_RINCIAN = 200;
 
 export default function Container() {
+  const router = useRouter();
+  // Rincian sarana per kab/kota hanya untuk pengguna yang login. Halaman ini
+  // sendiri tetap publik (peta + rekap tanpa sesi).
+  const { status: statusSesi } = useSession();
+  const sudahLogin = statusSesi === 'authenticated';
   const [pilihan, setPilihan] = useState(null);
   const [ringkasan, setRingkasan] = useState(null);
   const [detail, setDetail] = useState(null); // rincian sarana satu kab/kota (modal)
@@ -135,6 +143,12 @@ export default function Container() {
           limit: String(LIMIT_RINCIAN),
         });
         const r = await fetch(`/api/publik/kinerja/sarana?${q.toString()}`);
+        if (r.status === 401) {
+          // Sesi habis / belum login: rincian memang dibatasi.
+          setDetail(null);
+          router.push('/login?callbackUrl=%2Fjendela-kinerja');
+          return;
+        }
         const j = await r.json();
         if (!j.success) throw new Error(j.message || 'Gagal memuat rincian sarana');
         setDetail({ kab, memuat: false, galat: null, total: j.data.total, baris: j.data.baris });
@@ -142,7 +156,7 @@ export default function Container() {
         setDetail({ kab, memuat: false, galat: e.message, total: 0, baris: [] });
       }
     },
-    [filter],
+    [filter, router],
   );
 
   // Muat pertama: ambil opsi, lalu pilih tahun terbaru sebagai default.
@@ -753,13 +767,24 @@ export default function Container() {
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-4 py-2.5">
-                        <button
-                          type="button"
-                          onClick={() => bukaDetail(k.kab_kota)}
-                          className="btn-ghost"
-                        >
-                          Rincian
-                        </button>
+                        {sudahLogin ? (
+                          <button
+                            type="button"
+                            onClick={() => bukaDetail(k.kab_kota)}
+                            className="btn-ghost"
+                          >
+                            Rincian
+                          </button>
+                        ) : (
+                          <Link
+                            href="/login?callbackUrl=%2Fjendela-kinerja"
+                            title="Masuk untuk melihat rincian sarana"
+                            className="btn-ghost inline-flex items-center gap-1.5"
+                          >
+                            <FaLock className="h-3 w-3" />
+                            Rincian
+                          </Link>
+                        )}
                       </td>
                     </tr>
                   );
@@ -811,10 +836,24 @@ export default function Container() {
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-paper-200 px-4 py-3 dark:border-white/[0.08]">
-            <p className="text-[11.5px] text-slate-500 dark:text-slate-400">
-              MK = Memenuhi Ketentuan, TMK = Tidak Memenuhi Ketentuan. Indeks kepatuhan =
-              MK ÷ (MK + TMK) × 100.
-            </p>
+            <div className="space-y-1">
+              <p className="text-[11.5px] text-slate-500 dark:text-slate-400">
+                MK = Memenuhi Ketentuan, TMK = Tidak Memenuhi Ketentuan. Indeks kepatuhan =
+                MK ÷ (MK + TMK) × 100.
+              </p>
+              {!sudahLogin && (
+                <p className="text-[11.5px] text-slate-400 dark:text-slate-500">
+                  Rincian sarana hanya untuk pengguna yang login —{' '}
+                  <Link
+                    href="/login?callbackUrl=%2Fjendela-kinerja"
+                    className="font-semibold text-accent-600 hover:underline dark:text-accent-400"
+                  >
+                    masuk di sini
+                  </Link>
+                  .
+                </p>
+              )}
+            </div>
             <p className="text-[11.5px] text-slate-400 dark:text-slate-500">
               Menampilkan: {labelFilter(filter, pilihan)}
             </p>
@@ -834,7 +873,8 @@ export default function Container() {
                   timeStyle: 'short',
                 })
               : '—'}
-            . Halaman publik ini hanya menampilkan rekap; rincian temuan ada di dashboard internal.
+            . Halaman publik ini hanya menampilkan rekap; rincian sarana per baris
+            hanya untuk pengguna yang login.
           </p>
         </footer>
       </main>
