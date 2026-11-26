@@ -83,6 +83,14 @@ Selama masih kosong, `docker compose` **menolak jalan** dan memberi pesan
 > dengan port yang dipakai healthcheck/backend — kalau kosong, container
 > backend tidak pernah "healthy" dan frontend tidak ikut start.
 
+> **`BACKEND_API_URL` (opsional).** Proxy di `frontend/pages/api/**` memanggil
+> backend dari sisi server. Bila kosong, dipakai `API_URL` (domain publik).
+> Kalau domain API publik belum dirutekan (Cloudflare 404 kosong, halaman
+> menampilkan *"Unexpected end of JSON input"*), isi alamat internal:
+> `BACKEND_API_URL=http://host.docker.internal:5006/api` **dan**
+> `BACKEND_HOST=0.0.0.0` supaya backend bisa dijangkau container frontend.
+> Alternatifnya, arahkan hostname API publik ke backend `127.0.0.1:5006`.
+
 > `SESSION_SECRET` dipakai backend untuk menyegel token di tabel `api_link`.
 > Kalau nilainya berubah setelah ada link dibuat, link lama tidak bisa dibuka
 > lagi — tetapi link baru tetap bisa dibuat.
@@ -214,6 +222,7 @@ komputer itu, lalu sesuaikan `GRANT`-nya.
 | --------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `docker compose up` gagal: `... wajib diisi - salin .env.example ke .env` | Ada nilai kosong di `.env`. Isi dulu.                    |
 | `docker compose config` error `SESSION_SECRET wajib diisi` | Tambahkan `SESSION_SECRET` di `.env` (belum ada di `.env` lama). |
+| Browser: `Failed to execute 'json' on 'Response': Unexpected end of JSON input` | Proxy menerima body **kosong** dari backend. Cek `curl -i <API_URL>/health`: bila 404 kosong, hostname API tidak dirutekan ke backend. Isi `BACKEND_API_URL` ke alamat internal (lihat catatan di bagian kredensial) atau benahi tunnel/nginx-nya. Proxy sekarang membalas JSON `BALASAN_KOSONG` berisi URL tujuan, bukan body kosong. |
 | Backend `ECONNREFUSED` ke MySQL               | `DB_HOST` salah. MySQL di server yang sama → `127.0.0.1`; di komputer lain → IP komputer itu. |
 | `Access denied for user ...`                  | `DB_USER` / `DB_PASSWORD` di `.env` tidak cocok dengan yang ada di MySQL.              |
 | Docker menolak `network_mode` + `ports`       | Keduanya tidak boleh digabung. Backend = host (tanpa `ports`), frontend = bridge + `ports`. |

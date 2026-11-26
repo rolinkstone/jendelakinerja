@@ -130,6 +130,11 @@ services:
       # Alamat API untuk browser (harus URL publik)
       NEXT_PUBLIC_API_URL: ${API_URL:?API_URL wajib diisi - salin .env.example ke .env}
       NEXT_PUBLIC_LAURA_URL: ${LAURA_URL}
+      # Alamat backend yang dipanggil PROXY di pages/api/** (server-side).
+      # Kosong = memakai NEXT_PUBLIC_API_URL (alamat publik). Isi alamat
+      # internal bila domain API publik belum/tidak dirutekan, mis.
+      # http://host.docker.internal:5006/api (lihat extra_hosts di bawah).
+      BACKEND_API_URL: ${BACKEND_API_URL}
 
       # ---------- Keycloak (sisi server / NextAuth) ----------
       KEYCLOAK_ISSUER: ${KEYCLOAK_SERVER_URL}/realms/${KEYCLOAK_REALM}
@@ -149,6 +154,10 @@ services:
       LAURA_API_URL: ${LAURA_API_URL}
     volumes:
       - ./data/frontend:/data
+    extra_hosts:
+      # Backend memakai network_mode: "host", jadi host.docker.internal
+      # menunjuk server (dipakai bila BACKEND_API_URL diisi alamat internal).
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3007/login"]
       interval: 30s

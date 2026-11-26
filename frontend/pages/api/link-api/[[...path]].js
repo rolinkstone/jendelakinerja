@@ -20,10 +20,10 @@
  * dan balasan backend yang ternyata bukan JSON.
  */
 import { ambilToken } from '../../../utils/authCookies';
+import { BACKEND } from '../../../utils/backendUrl';
+import { balasKosong } from '../../../utils/balasBackend';
 
 export const config = { api: { bodyParser: false } };
-
-const BACKEND = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5006/api').replace(/\/+$/, '');
 
 /** Balas JSON dengan aman (jangan menimpa header yang sudah terkirim). */
 const balasJson = (res, status, isi) => {
@@ -88,6 +88,8 @@ export default async function handler(req, res) {
 
     const jawaban = await fetch(url, opsi);
     const teks = await jawaban.text();
+
+    if (req.method !== 'HEAD' && !teks.trim()) return balasKosong(res, jawaban, url);
     const tipe = jawaban.headers.get('content-type') || '';
 
     // Backend seharusnya selalu JSON. Kalau ternyata HTML/teks, bungkus jadi

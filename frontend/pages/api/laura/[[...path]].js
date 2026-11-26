@@ -15,10 +15,11 @@
  * Keamanan: hanya rute publik LAURA yang boleh lewat sini. Daftar putih
  * menjaga proxy ini tidak menjadi jalan pintas ke endpoint admin LAURA.
  */
-const BACKEND = (process.env.LAURA_API_URL || 'http://localhost:5005/api').replace(/\/+$/, '');
+import { BACKEND as BACKEND_JK } from '../../../utils/backendUrl';
+import { balasKosong } from '../../../utils/balasBackend';
 
-/** Backend JK — dipakai untuk membaca koreksi naskah presentasi (publik). */
-const BACKEND_JK = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5006/api').replace(/\/+$/, '');
+/** Backend LAURA (bukan backend JK). */
+const BACKEND = (process.env.LAURA_API_URL || 'http://localhost:5005/api').replace(/\/+$/, '');
 
 /** Kolom filter yang membentuk kunci koreksi (sama dengan backend lib/narasi.js). */
 const KOLOM_FILTER = ['tahun', 'bulan', 'kegiatan', 'jenis', 'kab'];
@@ -125,6 +126,8 @@ export default async function handler(req, res) {
     });
 
     const teks = await jawaban.text();
+
+    if (req.method !== 'HEAD' && !teks.trim()) return balasKosong(res, jawaban, url);
     const tipe = jawaban.headers.get('content-type') || '';
 
     // Balasan LAURA yang bukan JSON (mis. halaman error HTML dari reverse proxy)

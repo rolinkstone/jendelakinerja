@@ -21,10 +21,10 @@
  * jadi boundary dari browser tidak perlu diurai ulang.
  */
 import { ambilToken } from '../../../utils/authCookies';
+import { BACKEND } from '../../../utils/backendUrl';
+import { balasKosong } from '../../../utils/balasBackend';
 
 export const config = { api: { bodyParser: false } };
-
-const BACKEND = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5006/api').replace(/\/+$/, '');
 
 /** Komoditi yang boleh dipanggil. Harus sama dengan prefix router di backend. */
 const SEGMEN = ['ot', 'sk', 'ob', 'kos', 'pp', 'kp', 'ok'];
@@ -78,6 +78,8 @@ export default async function handler(req, res) {
 
     const jawaban = await fetch(url, opsi);
     const teks = await jawaban.text();
+
+    if (req.method !== 'HEAD' && !teks.trim()) return balasKosong(res, jawaban, url);
 
     res.status(jawaban.status);
     res.setHeader('content-type', jawaban.headers.get('content-type') || 'application/json');

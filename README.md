@@ -237,6 +237,13 @@ sengaja tidak memasang header Authorization; setiap modul memanggil route proxy 
 `pages/api/**` (cookie sesi NextAuth bersifat httpOnly), lalu proxy meneruskan
 `Authorization: Bearer <accessToken>` ke backend.
 
+Alamat backend untuk semua proxy diambil dari `frontend/utils/backendUrl.js`:
+`BACKEND_API_URL` (alamat internal, disarankan) → `NEXT_PUBLIC_API_URL` (alamat
+publik dari build) → `http://localhost:5006/api`. Bila backend membalas **tanpa
+isi** (404 kosong dari reverse proxy yang belum dirutekan, tunnel mati, dll.),
+proxy membalas JSON `BALASAN_KOSONG` berisi URL tujuan — bukan body kosong yang
+membuat browser melempar *"Unexpected end of JSON input"*.
+
 ## Endpoint backend
 
 | Endpoint | Keterangan |

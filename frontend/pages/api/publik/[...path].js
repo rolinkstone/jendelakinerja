@@ -21,8 +21,8 @@
  * Hanya method GET yang diteruskan — dashboard publik bersifat read-only.
  */
 import { ambilToken } from '../../../utils/authCookies';
-
-const BACKEND = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5006/api').replace(/\/+$/, '');
+import { BACKEND } from '../../../utils/backendUrl';
+import { balasKosong } from '../../../utils/balasBackend';
 
 /** Rute rincian yang mewajibkan sesi login (rekap tetap terbuka). */
 const RUTE_WAJIB_LOGIN = ['kinerja/sarana'];
@@ -64,6 +64,8 @@ export default async function handler(req, res) {
 
     const jawaban = await fetch(url, opsi);
     const teks = await jawaban.text();
+
+    if (req.method !== 'HEAD' && !teks.trim()) return balasKosong(res, jawaban, url);
 
     res.status(jawaban.status);
     res.setHeader('content-type', jawaban.headers.get('content-type') || 'application/json');

@@ -18,10 +18,10 @@
  * ATURAN: selalu balas JSON (lihat pages/api/link-api/[[...path]].js).
  */
 import { ambilToken } from '../../../utils/authCookies';
+import { BACKEND } from '../../../utils/backendUrl';
+import { balasKosong } from '../../../utils/balasBackend';
 
 export const config = { api: { bodyParser: false } };
-
-const BACKEND = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5006/api').replace(/\/+$/, '');
 
 const balasJson = (res, status, isi) => {
   if (res.headersSent) return res.end();
@@ -88,6 +88,8 @@ export default async function handler(req, res) {
 
     const jawaban = await fetch(url, opsi);
     const teks = await jawaban.text();
+
+    if (req.method !== 'HEAD' && !teks.trim()) return balasKosong(res, jawaban, url);
     const tipe = jawaban.headers.get('content-type') || '';
 
     if (!tipe.includes('application/json')) {
