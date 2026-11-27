@@ -1,16 +1,16 @@
 // components/jendela-kinerja/LauraAI.js
 /**
- * WIDGET LAURA AI — presentasi bersuara + tanya jawab
+ * WIDGET LAURA AI \u2014 presentasi bersuara + tanya jawab
  * ----------------------------------------------------
  * Maskot LAURA menempel di pojok kanan bawah halaman publik /jendela-kinerja.
- * SEMUA interaksi terjadi DI HALAMAN INI — tidak berpindah ke aplikasi LAURA;
- * LAURA hanya menjadi "mesin" di belakang (proxy /api/laura/* → backend LAURA).
+ * SEMUA interaksi terjadi DI HALAMAN INI \u2014 tidak berpindah ke aplikasi LAURA;
+ * LAURA hanya menjadi "mesin" di belakang (proxy /api/laura/* \u2192 backend LAURA).
  *
  * Alur Presentasi:
  *  1. Pengguna klik tombol "Presentasi Dashboard".
  *  2. Widget memakai data dashboard yang SAMA dengan yang tampil di layar
- *     (prop `dataDashboard` dari Container — state `ringkasan`).
- *  3. POST /api/laura/presentasi → naskah narasi ±1 menit (150 kata).
+ *     (prop `dataDashboard` dari Container \u2014 state `ringkasan`).
+ *  3. POST /api/laura/presentasi \u2192 naskah narasi \xb11 menit (150 kata).
  *  4. Naskah dibacakan Web Speech API `speechSynthesis` (built-in browser,
  *     gratis, offline). Suara Indonesia dipilih bila tersedia.
  *  5. Setelah selesai bicara, panel tanya sudah terbuka di bawahnya.
@@ -41,30 +41,30 @@ const TAUTAN_LAURA = process.env.NEXT_PUBLIC_LAURA_URL || 'https://laura-ai.bbpo
 
 const KUNCI_TUTUP = 'laura-balon-tutup';
 const KUNCI_SESI = 'laura-jk-session-id';
-/** Mode tanya terakhir (suara/teks) — diingat agar tidak dipilih ulang. */
+/** Mode tanya terakhir (suara/teks) \u2014 diingat agar tidak dipilih ulang. */
 const KUNCI_MODE = 'laura-jk-mode-tanya';
 
-/** Kecepatan baca TTS — sedikit lebih lambat dari normal agar jelas. */
+/** Kecepatan baca TTS \u2014 sedikit lebih lambat dari normal agar jelas. */
 const LAJU_BICARA = 0.98;
 
 /**
  * Bersihkan teks jawaban LAURA sebelum dibacakan.
- * Jawaban RAG sering memakai markdown (tabel, **tebal**, daftar [-]) — kalau
+ * Jawaban RAG sering memakai markdown (tabel, `tebal`, daftar [-]) \u2014 kalau
  * dibacakan apa adanya, mesin suara akan mengucapkan "garis tegak", "tanda
  * bintang", dan angka tabel berderet tanpa arti.
  */
 function bersihkanUntukSuara(teks) {
   return String(teks || '')
-    // tabel markdown → buang baris pemisah & pipa, sisakan isi sel
+    // tabel markdown \u2192 buang baris pemisah & pipa, sisakan isi sel
     .replace(/^\s*\|?[\s:|-]{4,}\|?\s*$/gm, '')
     .replace(/\|/g, ', ')
     // penanda format
     .replace(/[*_`#>]+/g, '')
-    // tautan [teks](url) → teks
+    // tautan [teks](url) \u2192 teks
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     // daftar berbutir di awal baris
-    .replace(/^\s*[-•]\s+/gm, '')
-    // baris baru → jeda kalimat
+    .replace(/^\s*[-\u2022]\s+/gm, '')
+    // baris baru \u2192 jeda kalimat
     .replace(/\s*\n+\s*/g, '. ')
     // sitasi [1], [2] tidak perlu diucapkan
     .replace(/\[\d+\]/g, '')
@@ -93,7 +93,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
   const [sessionId, setSessionId] = useState(null);
 
   /**
-   * MODE TANYA — ditentukan SETELAH presentasi selesai.
+   * MODE TANYA \u2014 ditentukan SETELAH presentasi selesai.
    *  - null    : belum dipilih; pengguna melihat dua tombol pilihan.
    *  - 'suara' : pertanyaan lewat mic, jawaban DIBACAKAN (tanpa teks panjang
    *              di layar; teks tetap disimpan agar bisa dibaca ulang).
@@ -105,7 +105,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
 
   const [mikroTersedia, setMikroTersedia] = useState(false);
 
-  // Suara Laura: satu sumber (lib/tts.js) — pilihan suara/laju/nada bisa
+  // Suara Laura: satu sumber (lib/tts.js) \u2014 pilihan suara/laju/nada bisa
   // diubah pengguna lewat panel pengaturan dan tersimpan di perangkatnya.
   const suara = useSuaraLaura();
   const suaraTersedia = suara.tersedia;
@@ -121,14 +121,14 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
     try {
       sudahTutup = window.sessionStorage.getItem(KUNCI_TUTUP) === '1';
     } catch (e) {
-      // sessionStorage bisa diblokir (mode privat) — anggap belum ditutup.
+      // sessionStorage bisa diblokir (mode privat) \u2014 anggap belum ditutup.
     }
     if (sudahTutup) return;
     const t = setTimeout(() => setBalon(true), 1200);
     return () => clearTimeout(t);
   }, []);
 
-  // Id sesi chat tamu — diingat agar percakapan lanjutan tetap nyambung.
+  // Id sesi chat tamu \u2014 diingat agar percakapan lanjutan tetap nyambung.
   useEffect(() => {
     try {
       const lama = window.localStorage.getItem(KUNCI_SESI);
@@ -143,7 +143,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
     setMikroTersedia(!!SR);
   }, []);
 
-  // Mode tanya terakhir — dipulihkan agar pengguna tidak memilih ulang setiap buka panel.
+  // Mode tanya terakhir \u2014 dipulihkan agar pengguna tidak memilih ulang setiap buka panel.
   useEffect(() => {
     try {
       const lama = window.localStorage.getItem(KUNCI_MODE);
@@ -163,7 +163,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
     if (daftarRef.current) daftarRef.current.scrollTop = daftarRef.current.scrollHeight;
   }, [pesan, mengirim]);
 
-  // ---- Bicara (TTS) — diambil dari hook useSuaraLaura ----------------------
+  // ---- Bicara (TTS) \u2014 diambil dari hook useSuaraLaura ----------------------
   const { bacakan, berhenti: hentikanBicara } = suara;
 
   /** Hentikan narasi presentasi DAN kembalikan tombol ke keadaan siap. */
@@ -182,7 +182,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
       // Data dashboard yang dikirim = data yang sedang tampil di halaman.
       // Tidak ada hitungan ulang di server; angka narasi = angka layar.
       // Kalau prop belum terisi (Container masih memuat / filter baru), ambil
-      // sendiri dari endpoint publik yang sama — widget tetap jalan.
+      // sendiri dari endpoint publik yang sama \u2014 widget tetap jalan.
       let dashboard = dataDashboard;
       if (!dashboard) {
         const rd = await fetch('/api/publik/kinerja/ringkasan');
@@ -202,7 +202,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
       setNaskah(j.data.naskah);
       setNaskahSumber(j.data.sumber || '');
       setStatus('bicara');
-      // Setelah selesai bicara → status jadi "selesai" (bisa putar ulang).
+      // Setelah selesai bicara \u2192 status jadi "selesai" (bisa putar ulang).
       bacakan(j.data.naskah, () => setStatus('selesai'));
     } catch (e) {
       setStatus('siaga');
@@ -268,8 +268,8 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
 
       setPesan((l) => [...l, { peran: 'laura', teks: jawaban }]);
       // Bentuk jawaban MENGIKUTI mode yang dipilih pengguna:
-      //  - mode 'suara' → jawaban dibacakan (teks dibersihkan dari markdown).
-      //  - mode 'teks'  → jawaban hanya tampil sebagai teks, tanpa suara.
+      //  - mode 'suara' \u2192 jawaban dibacakan (teks dibersihkan dari markdown).
+      //  - mode 'teks'  \u2192 jawaban hanya tampil sebagai teks, tanpa suara.
       if (mode === 'suara') bacakan(bersihkanUntukSuara(jawaban));
     } catch (e) {
       setPesan((l) => [...l, {
@@ -288,9 +288,9 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
   };
 
   const statusLabel = {
-    siaga: 'Putar presentasi dashboard (±1 menit)',
-    menyiapkan: 'Menyiapkan naskah…',
-    bicara: 'Sedang dibacakan — klik untuk berhenti',
+    siaga: 'Putar presentasi dashboard (\xb11 menit)',
+    menyiapkan: 'Menyiapkan naskah\u2026',
+    bicara: 'Sedang dibacakan \u2014 klik untuk berhenti',
     selesai: 'Putar ulang presentasi',
   }[status];
 
@@ -308,7 +308,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
               <p className="text-[10.5px] leading-tight text-slate-500 dark:text-slate-400">
                 Asisten data Jendela Kinerja
               </p>
-              {/* Tautan ke LAURA AI versi penuh — dulu widget ini tidak punya
+              {/* Tautan ke LAURA AI versi penuh \u2014 dulu widget ini tidak punya
                   jalan sama sekali ke sana (temuan UAT-08). */}
               <a
                 href={TAUTAN_LAURA}
@@ -372,7 +372,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
               )}
               <span className="flex-1">
                 <span className="block text-[12.5px] font-bold leading-tight">
-                  {status === 'menyiapkan' ? 'Menyiapkan naskah…' : status === 'bicara' ? 'Sedang membacakan…' : 'Presentasi Dashboard'}
+                  {status === 'menyiapkan' ? 'Menyiapkan naskah\u2026' : status === 'bicara' ? 'Sedang membacakan\u2026' : 'Presentasi Dashboard'}
                 </span>
                 <span className="block text-[10.5px] leading-tight opacity-85">
                   {statusLabel}
@@ -411,7 +411,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
                 Tanya Laura
               </p>
               {mode && (
-                // Ganti mode kapan saja — kembali ke layar pilihan.
+                // Ganti mode kapan saja \u2014 kembali ke layar pilihan.
                 <button
                   type="button"
                   onClick={() => setMode(null)}
@@ -449,7 +449,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
               {mengirim && (
                 <div className="flex items-center gap-1.5 px-1 text-[10.5px] text-slate-400">
                   <FaSpinner className="h-2.5 w-2.5 animate-spin" />
-                  Laura sedang berpikir…
+                  Laura sedang berpikir\u2026
                 </div>
               )}
             </div>
@@ -465,12 +465,12 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
                     type="button"
                     onClick={() => pilihMode('suara')}
                     disabled={!suaraTersedia}
-                    title={suaraTersedia ? 'Pertanyaan lewat mic — jawaban dibacakan' : 'Browser ini tidak mendukung suara'}
+                    title={suaraTersedia ? 'Pertanyaan lewat mic \u2014 jawaban dibacakan' : 'Browser ini tidak mendukung suara'}
                     className="flex flex-col items-center gap-1 rounded-xl border border-paper-200 bg-paper-50 px-2 py-2.5 text-center transition hover:border-hijau-500 hover:bg-hijau-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/[0.12] dark:bg-white/[0.04] dark:hover:border-hijau-500/60 dark:hover:bg-hijau-500/10"
                   >
                     <FaVolumeUp className="h-4 w-4 text-hijau-600 dark:text-hijau-400" />
                     <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">Suara</span>
-                    <span className="text-[9px] leading-tight text-slate-400">bicara → dijawab bersuara</span>
+                    <span className="text-[9px] leading-tight text-slate-400">bicara \u2192 dijawab bersuara</span>
                   </button>
                   <button
                     type="button"
@@ -479,7 +479,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
                   >
                     <FaKeyboard className="h-4 w-4 text-accent-600 dark:text-accent-400" />
                     <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">Teks</span>
-                    <span className="text-[9px] leading-tight text-slate-400">ketik → dijawab teks</span>
+                    <span className="text-[9px] leading-tight text-slate-400">ketik \u2192 dijawab teks</span>
                   </button>
                 </div>
               </div>
@@ -498,7 +498,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
                   }}
                   rows={1}
                   autoFocus
-                  placeholder="Tulis pertanyaan…"
+                  placeholder="Tulis pertanyaan\u2026"
                   className="max-h-20 min-h-[34px] flex-1 resize-none rounded-xl border border-paper-200 bg-white px-3 py-1.5 text-[11.5px] text-slate-800 outline-none transition focus:border-accent-500 dark:border-white/[0.12] dark:bg-white/[0.04] dark:text-white"
                 />
                 <button
@@ -526,11 +526,11 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
                   }
                 >
                   <FaMicrophone className="h-4 w-4" />
-                  {bicaraMic ? 'Mendengarkan… (klik untuk berhenti)' : 'Tekan lalu ajukan pertanyaan'}
+                  {bicaraMic ? 'Mendengarkan\u2026 (klik untuk berhenti)' : 'Tekan lalu ajukan pertanyaan'}
                 </button>
                 <p className="mt-1.5 text-center text-[9.5px] text-slate-400">
                   {!mikroTersedia
-                    ? 'Speech recognition hanya di Chrome/Edge — atau ganti ke mode teks.'
+                    ? 'Speech recognition hanya di Chrome/Edge \u2014 atau ganti ke mode teks.'
                     : 'Jawaban akan dibacakan Laura setelah selesai.'}
                 </p>
               </div>
@@ -583,11 +583,11 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
         type="button"
         onClick={bukaPanel}
         aria-label={panel ? 'Tutup Laura AI' : 'Buka Laura AI'}
-        title={suaraTersedia ? 'Laura AI — presentasi & tanya jawab' : 'Laura AI — tanya jawab'}
+        title={suaraTersedia ? 'Laura AI \u2014 presentasi & tanya jawab' : 'Laura AI \u2014 tanya jawab'}
         className="group relative flex items-end justify-center rounded-2xl bg-gradient-to-b from-accent-500/10 to-hijau-500/15 p-2 shadow-lg shadow-accent-900/15 ring-1 ring-accent-500/25 transition hover:scale-105 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 sm:rounded-3xl"
       >
-        {/* Maskot aslinya 263x948 (rasio 1:3,6 — sangat jangkung). Dua percobaan
-            sebelumnya SALAH: membatasi tinggi saja membuatnya kurus (±20px), dan
+        {/* Maskot aslinya 263x948 (rasio 1:3,6 \u2014 sangat jangkung). Dua percobaan
+            sebelumnya SALAH: membatasi tinggi saja membuatnya kurus (\xb120px), dan
             memakai `absolute bottom-0` + `overflow-hidden` memotong bagian atas
             sehingga yang tampak hanya KAKI.
             Yang benar: gambar UTUH di dalam tombol (object-contain), dipaksa
@@ -596,7 +596,7 @@ export default function LauraAI({ dataDashboard = null, filterAktif = null }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/maskot-bpom.png"
-          alt="Maskot BBPOM — Laura AI"
+          alt="Maskot BBPOM \u2014 Laura AI"
           className="pointer-events-none h-52 w-auto max-w-none object-contain object-bottom drop-shadow sm:h-72"
         />
         {/* Indikator status: bicara = ikon speaker berdenyut. */}

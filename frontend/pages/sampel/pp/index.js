@@ -1,6 +1,6 @@
 // pages/sampel/pp/index.js
 /**
- * Sampel — Produk Pangan.
+ * Sampel \u2014 Produk Pangan.
  * Halaman TIPIS: seluruh logika & tampilan ada di
  * components/sampel/lab/Container.js (satu engine untuk semua komoditi).
  */
@@ -12,7 +12,7 @@ export default function SampelProdukPanganPage() {
   return (
     <>
       <Head>
-        <title>Sampel — Produk Pangan | Jendela Kinerja</title>
+        <title>Sampel \u2014 Produk Pangan | Jendela Kinerja</title>
       </Head>
       <DashboardLayout>
         <SampelContainer jenis="pp" />

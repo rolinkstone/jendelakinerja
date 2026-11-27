@@ -52,7 +52,7 @@ export default function KepatuhanKomoditas({ data, memuat }) {
       {/* Kelompok komoditas mengikuti kolom `komoditi` di berkas, jadi modul
           sampel baru (pangan, kosmetik) otomatis menambah baris di sini. */}
       <p className="border-t border-paper-200 px-4 py-2.5 text-[11px] leading-snug text-slate-400 dark:border-white/[0.08] dark:text-slate-500">
-        Kelompok komoditas mengikuti kolom <em>Komoditi</em> pada berkas sampel — modul sampel lain
+        Kelompok komoditas mengikuti kolom <em>Komoditi</em> pada berkas sampel \u2014 modul sampel lain
         (pangan, kosmetik) akan muncul otomatis di sini begitu diimpor.
       </p>
     </div>

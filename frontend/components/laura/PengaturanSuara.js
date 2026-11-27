@@ -9,8 +9,8 @@
  *
  * Catatan penting yang ditampilkan ke pengguna: suara berasal dari perangkat
  * pengunjung, bukan dari server. Kalau perangkat belum punya paket suara
- * Indonesia, Laura membaca dengan suara terdekat — di Windows perlu memasang
- * paket "Bahasa Indonesia" pada Settings → Time & Language → Speech.
+ * Indonesia, Laura membaca dengan suara terdekat \u2014 di Windows perlu memasang
+ * paket "Bahasa Indonesia" pada Settings \u2192 Time & Language \u2192 Speech.
  */
 import {
   FaVolumeUp, FaPlay, FaUndo, FaExclamationTriangle, FaCheck,
@@ -58,8 +58,8 @@ export default function PengaturanSuara({ suara, ringkas = false }) {
           <FaExclamationTriangle className="mt-0.5 h-2.5 w-2.5 shrink-0" />
           <span>
             Belum ada paket suara Indonesia di perangkat ini, jadi Laura membaca dengan
-            suara lain. Di Windows: <strong>Settings → Time &amp; Language → Language &amp;
-            region → Tambah bahasa Indonesia → centang Speech</strong>, lalu muat ulang halaman.
+            suara lain. Di Windows: <strong>Settings \u2192 Time &amp; Language \u2192 Language &amp;
+            region \u2192 Tambah bahasa Indonesia \u2192 centang Speech</strong>, lalu muat ulang halaman.
           </span>
         </p>
       )}

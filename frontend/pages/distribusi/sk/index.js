@@ -1,13 +1,13 @@
 // pages/distribusi/sk/index.js
 /**
- * HALAMAN: DISTRIBUSI — SUPLEMEN KESEHATAN
+ * HALAMAN: DISTRIBUSI \u2014 SUPLEMEN KESEHATAN
  * ---------------------------------------------------------------
  * Halaman TIPIS: seluruh logika & tampilan ada di
  * components/distribusi/sk/{Container,helper,Modal}.js
  * Backend: backend/routes/distribusi-sk.js (engine lib/distribusi.js).
  *
  * Berkas sumber: "Laporan Hasil Pemeriksaan Sarana Distribusi - Suplemen Kesehatan".
- * Tata letaknya berbeda dari PBF — memakai engine distribusi dengan pemetaan
+ * Tata letaknya berbeda dari PBF \u2014 memakai engine distribusi dengan pemetaan
  * kolom sendiri.
  */
 import Head from 'next/head';
@@ -22,7 +22,7 @@ export default function DistribusiSkPage() {
         <title>{`Distribusi Suplemen Kesehatan | ${BRAND.name}`}</title>
       </Head>
 
-      <DashboardLayout pageTitle="Distribusi — Suplemen Kesehatan">
+      <DashboardLayout pageTitle="Distribusi \u2014 Suplemen Kesehatan">
         <DistribusiSkContainer />
       </DashboardLayout>
     </>

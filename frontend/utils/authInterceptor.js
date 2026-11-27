@@ -87,16 +87,16 @@ export const handleAuthFailure = () => {
 
   try {
     // Sisa nilai token dari versi lama aplikasi (aplikasi TIDAK lagi menyimpan
-    // token di storage — satu-satunya sumber token adalah cookie httpOnly).
+    // token di storage \u2014 satu-satunya sumber token adalah cookie httpOnly).
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
   } catch (err) {
-    // storage tidak tersedia — abaikan
+    // storage tidak tersedia \u2014 abaikan
   }
 
   const target = `${window.location.origin}/login?error=session_expired`;
 
-  console.warn('[auth-interceptor] Sesi tidak valid/kedaluwarsa → redirect ke /login');
+  console.warn('[auth-interceptor] Sesi tidak valid/kedaluwarsa \u2192 redirect ke /login');
 
   // signOut({ redirect:true }) membersihkan cookie sesi NextAuth dan
   // memicu events.signOut di [...nextauth].js (logout Keycloak SSO),
@@ -110,7 +110,7 @@ export const handleAuthFailure = () => {
 };
 
 // ----------------------------------------------------------------------
-// 1) INTERCEPTOR AXIOS — dipasang pada instance default axios
+// 1) INTERCEPTOR AXIOS \u2014 dipasang pada instance default axios
 // ----------------------------------------------------------------------
 let axiosInterceptorInstalled = false;
 const installAxiosInterceptor = () => {
@@ -134,7 +134,7 @@ const installAxiosInterceptor = () => {
 };
 
 // ----------------------------------------------------------------------
-// 2) INTERCEPTOR FETCH — bungkus window.fetch (deteksi 401)
+// 2) INTERCEPTOR FETCH \u2014 bungkus window.fetch (deteksi 401)
 // ----------------------------------------------------------------------
 let fetchInterceptorInstalled = false;
 const installFetchInterceptor = () => {

@@ -1,6 +1,6 @@
 // pages/produksi/irt/index.js
 /**
- * HALAMAN — Produksi: Pangan IRT (CPPB - IRT)
+ * HALAMAN \u2014 Produksi: Pangan IRT (CPPB - IRT)
  * ------------------------------------------
  * Halaman TIPIS: hanya <Head> + DashboardLayout + container modul.
  * Seluruh logika & tampilan ada di components/produksi/irt/Container.js.
@@ -14,14 +14,14 @@ export default function ProduksiIrtPage() {
   return (
     <>
       <Head>
-        <title>{`Produksi — Pangan IRT | ${BRAND.name}`}</title>
+        <title>{`Produksi \u2014 Pangan IRT | ${BRAND.name}`}</title>
         <meta
           name="description"
           content="Laporan hasil pemeriksaan sarana produksi pangan IRT (CPPB-IRT) per tahun."
         />
       </Head>
 
-      <DashboardLayout pageTitle="Produksi — Pangan IRT">
+      <DashboardLayout pageTitle="Produksi \u2014 Pangan IRT">
         <ProduksiIrtContainer />
       </DashboardLayout>
     </>

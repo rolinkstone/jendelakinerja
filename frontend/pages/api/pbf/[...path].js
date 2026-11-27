@@ -1,13 +1,13 @@
 // pages/api/pbf/[...path].js
 /**
- * PROXY BACKEND — /api/pbf/*
+ * PROXY BACKEND \u2014 /api/pbf/*
  * --------------------------
  * Token Keycloak SENGAJA tidak pernah dikirim ke browser (lihat catatan di
  * utils/axiosInstance.js). Semua permintaan modul Distribusi PBF karena itu
  * lewat route server ini:
  *
- *   browser  →  /api/pbf/<path>          (cookie sesi NextAuth, httpOnly)
- *            →  backend /api/pbf/<path>  (header Authorization: Bearer <access_token>)
+ *   browser  \u2192  /api/pbf/<path>          (cookie sesi NextAuth, httpOnly)
+ *            \u2192  backend /api/pbf/<path>  (header Authorization: Bearer <access_token>)
  *
  * Body multipart (unggah berkas) diteruskan apa adanya sebagai buffer, jadi
  * boundary dari browser tidak perlu diurai ulang.

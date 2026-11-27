@@ -22,7 +22,7 @@ export default withAuth(
     return NextResponse.next();
   },
   {
-    // Halaman yang dituju saat sesi tidak ada — HARUS /login (halaman SSO
+    // Halaman yang dituju saat sesi tidak ada \u2014 HARUS /login (halaman SSO
     // aplikasi ini), bukan halaman bawaan NextAuth. Tanpa baris ini withAuth
     // mengarahkan ke /api/auth/signin, yang menjawab dengan redirect HTML;
     // fetch() di browser lalu menerima HTML, bukan JSON, dan muncul galat
@@ -30,7 +30,7 @@ export default withAuth(
     pages: {
       signIn: '/login',
     },
-    // Nama cookie sesi dipakai middleware (withAuth) untuk membaca token —
+    // Nama cookie sesi dipakai middleware (withAuth) untuk membaca token \u2014
     // harus sama dengan authOptions.cookies supaya tidak selalu "tidak login".
     cookies: authCookies,
     callbacks: {
@@ -47,20 +47,23 @@ export default withAuth(
           '/css',
           '/js',
           '/public',
-          // Dashboard publik "Jendela Kinerja" — dibuka tanpa login
+          // Dashboard publik "Jendela Kinerja" \u2014 dibuka tanpa login
           // (peta Kalteng + rekap pemeriksaan sarana). Proxy API-nya juga
           // publik karena backend route /api/publik tidak memakai token.
+          '/dashboard',
+          // Alamat lama (dialihkan 308 di next.config.mjs) tetap diloloskan
+          // supaya redirect-nya dieksekusi Next, bukan ditahan middleware.
           '/jendela-kinerja',
-          // Proxy LAURA AI dari halaman publik /jendela-kinerja (presentasi
+          // Proxy LAURA AI dari halaman publik /dashboard (presentasi
           // bersuara + tanya jawab). Endpoint backend-nya publik, dan daftar
           // rute yang diizinkan dijaga ketat di pages/api/laura/[[...path]].js.
           '/api/laura',
-          // Proxy koreksi narasi presentasi (Beranda → Narasi Presentasi).
+          // Proxy koreksi narasi presentasi (Beranda \u2192 Narasi Presentasi).
           // Wajib masuk publicPaths: kalau tidak, middleware mengalihkan ke
           // /login dan klien menerima HTML, bukan JSON. Otorisasi sesungguhnya
-          // ada DI DALAM proxy (utils/authCookies → ambilToken).
+          // ada DI DALAM proxy (utils/authCookies \u2192 ambilToken).
           '/api/narasi',
-          // Menu navbar publik lain — halaman "segera hadir" selama modulnya
+          // Menu navbar publik lain \u2014 halaman "segera hadir" selama modulnya
           // belum selesai. Semuanya di luar SSO, sama seperti Jendela Kinerja.
           '/prestasi-unit-kerja',
           '/anggaran-realisasi',
@@ -69,16 +72,16 @@ export default withAuth(
           '/api/publik',
           // Proxy Link API ikut dilewatkan: route ini SELALU membalas JSON
           // (401 bila sesi tidak ada). Kalau middleware yang mencegatnya, ia
-          // membalas redirect ke halaman login berisi HTML — fetch() di
+          // membalas redirect ke halaman login berisi HTML \u2014 fetch() di
           // browser lalu melempar "Unexpected token '<'". Penjagaan sesi
           // tetap ada, tapi di dalam proxy (lihat pages/api/link-api/[...path].js).
           '/api/link-api'
         ];
         
         // Akar aplikasi "/" SELALU publik: halaman itu hanya mengalihkan
-        // (307) ke /jendela-kinerja lewat getServerSideProps. Kalau middleware
+        // (307) ke /dashboard lewat getServerSideProps. Kalau middleware
         // lebih dulu menahannya di signin, permintaan "localhost:3007" akan
-        // mendarat di form login — persis yang tidak diinginkan.
+        // mendarat di form login \u2014 persis yang tidak diinginkan.
         // Perhatikan: `startsWith('/')` akan cocok dengan SEMUA path, jadi akar
         // harus diperiksa dengan perbandingan persis.
         if (path === '/') {
@@ -96,11 +99,11 @@ export default withAuth(
         // Beranda TIDAK lagi dikecualikan. Dulu `path === '/'` selalu
         // dikembalikan true, akibatnya tamu (sudah logout) tetap menerima
         // kerangka halaman beranda dari server dan hanya bergantung pada
-        // pemeriksaan sesi di sisi klien — kalau sesi masih tersisa, dashboard
+        // pemeriksaan sesi di sisi klien \u2014 kalau sesi masih tersisa, dashboard
         // langsung terbuka. Sekarang beranda ikut aturan protected paths.
         
         // Protected paths require authentication.
-        // Catatan: kembalikan `false` (BUKAN NextResponse.redirect) — pada
+        // Catatan: kembalikan `false` (BUKAN NextResponse.redirect) \u2014 pada
         // next-auth v4 + Next 16 respons redirect dari callback `authorized`
         // diabaikan sehingga halaman tetap terkirim dengan status 200.
         // Dengan `false`, withAuth sendiri yang mengalihkan ke halaman
@@ -122,7 +125,7 @@ export const config = {
      * - api/auth            (route autentikasi NextAuth)
      * - _next/static        (berkas statis hasil build)
      * - _next/image         (optimasi gambar)
-     * - _next/webpack-hmr   (kanal HMR dev — WAJIB dikecualikan)
+     * - _next/webpack-hmr   (kanal HMR dev \u2014 WAJIB dikecualikan)
      * - favicon.ico
      *
      * PENTING: `_next/webpack-hmr` harus dikecualikan. Jika middleware

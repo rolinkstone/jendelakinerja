@@ -1,6 +1,6 @@
 // pages/sampel/ok/index.js
 /**
- * Sampel — Obat Kuasi.
+ * Sampel \u2014 Obat Kuasi.
  * Halaman TIPIS: seluruh logika & tampilan ada di
  * components/sampel/lab/Container.js (satu engine untuk semua komoditi).
  */
@@ -12,7 +12,7 @@ export default function SampelObatKuasiPage() {
   return (
     <>
       <Head>
-        <title>Sampel — Obat Kuasi | Jendela Kinerja</title>
+        <title>Sampel \u2014 Obat Kuasi | Jendela Kinerja</title>
       </Head>
       <DashboardLayout>
         <SampelContainer jenis="ok" />

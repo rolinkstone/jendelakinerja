@@ -1,13 +1,13 @@
 // pages/api/produksi-pangan-md/[...path].js
 /**
- * PROXY BACKEND — /api/produksi-pangan-md/*
+ * PROXY BACKEND \u2014 /api/produksi-pangan-md/*
  * --------------------------
  * Token Keycloak SENGAJA tidak pernah dikirim ke browser (lihat catatan di
  * utils/axiosInstance.js). Semua permintaan modul Distribusi KOS karena itu
  * lewat route server ini:
  *
- *   browser  →  /api/produksi-pangan-md/<path>          (cookie sesi NextAuth, httpOnly)
- *            →  backend /api/produksi-pangan-md/<path>  (header Authorization: Bearer <access_token>)
+ *   browser  \u2192  /api/produksi-pangan-md/<path>          (cookie sesi NextAuth, httpOnly)
+ *            \u2192  backend /api/produksi-pangan-md/<path>  (header Authorization: Bearer <access_token>)
  *
  * Body multipart (unggah berkas) diteruskan apa adanya sebagai buffer, jadi
  * boundary dari browser tidak perlu diurai ulang.

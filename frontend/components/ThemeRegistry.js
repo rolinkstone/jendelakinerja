@@ -47,7 +47,7 @@ export default function ThemeRegistry({ children }) {
           }),
         },
         typography: {
-          // Samakan font MUI (CssBaseline) dengan font brand — tanpa ini
+          // Samakan font MUI (CssBaseline) dengan font brand \u2014 tanpa ini
           // CssBaseline memaksa Roboto dan mengalahkan font Tailwind.
           fontFamily: '"Plus Jakarta Sans", Inter, system-ui, sans-serif',
           button: { textTransform: 'none', fontWeight: 600 },

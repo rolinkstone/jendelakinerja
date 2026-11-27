@@ -1,16 +1,16 @@
 // utils/authCookies.js
 /**
- * NAMA COOKIE NEXTAUTH — DIPISAH PER APLIKASI
+ * NAMA COOKIE NEXTAUTH \u2014 DIPISAH PER APLIKASI
  * ------------------------------------------
  * Cookie browser dipisahkan berdasarkan HOST, bukan PORT. Dua aplikasi NextAuth
  * di mesin yang sama (Jendela Kinerja di localhost:3007 dan LAURA AI di
  * localhost:3006) akan memakai cookie yang SAMA bila namanya default
  * (`next-auth.session-token`). Login di satu aplikasi lalu menimpa cookie sesi
- * aplikasi lain — aplikasi yang tertimpa langsung terlempar ke /login.
+ * aplikasi lain \u2014 aplikasi yang tertimpa langsung terlempar ke /login.
  *
  * Solusi: awalan nama cookie sendiri per aplikasi (AUTH_COOKIE_PREFIX,
  * default 'jk'). Karena nama cookie berubah, setiap pembacaan token di sisi
- * server WAJIB lewat `ambilToken(req)` — jangan memanggil getToken() langsung,
+ * server WAJIB lewat `ambilToken(req)` \u2014 jangan memanggil getToken() langsung,
  * sebab getToken() memakai nama default.
  */
 import { getToken } from 'next-auth/jwt';
@@ -54,7 +54,7 @@ export const authCookies = {
   },
 };
 
-/** Nama cookie sesi — dipakai bila server perlu membaca cookie secara manual. */
+/** Nama cookie sesi \u2014 dipakai bila server perlu membaca cookie secara manual. */
 export const NAMA_COOKIE_SESI = authCookies.sessionToken.name;
 
 /**

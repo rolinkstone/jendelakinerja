@@ -1,6 +1,6 @@
 // pages/404.js
 /**
- * Halaman 404 — memakai identitas brand Jendela Kinerja (components/Brand.js).
+ * Halaman 404 \u2014 memakai identitas brand Jendela Kinerja (components/Brand.js).
  * Gaya: panel kertas dengan bingkai "jendela" bertinta navy + aksen biru/hijau.
  */
 import Head from 'next/head';
@@ -40,7 +40,7 @@ export default function Custom404() {
                 Kembali ke Beranda
               </Link>
               <p className="mt-5 text-[11px] text-slate-400 dark:text-slate-500">
-                {BRAND.name} v{BRAND.version} — {BRAND.subtitle}
+                {BRAND.name} v{BRAND.version} \u2014 {BRAND.subtitle}
               </p>
             </div>
           </div>

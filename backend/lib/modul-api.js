@@ -40,7 +40,7 @@ const modulRingkasan = TAHUN_TERSEDIA.map((tahun, i) => ({
   urutan: (i + 1) * 10,
   keterangan: `Rekap sarana diperiksa, MK/TMK, temuan, dan sampel lab tahun ${tahun}.`,
   modul: 'jendela-kinerja',
-  halaman: '/jendela-kinerja',
+  halaman: '/dashboard',
 }));
 
 const MODUL_API = [
@@ -56,7 +56,7 @@ const MODUL_API = [
     urutan: 40,
     keterangan: 'Total sampel diuji per tahun/komoditas/bentuk sediaan beserta hasil MK & TMK.',
     modul: 'jendela-kinerja',
-    halaman: '/jendela-kinerja',
+    halaman: '/dashboard',
   },
   {
     kode: 'JK-PILIHAN',
@@ -69,7 +69,7 @@ const MODUL_API = [
     urutan: 50,
     keterangan: 'Daftar tahun, jenis sarana, kab/kota, dan tanggal unggah terakhir.',
     modul: 'jendela-kinerja',
-    halaman: '/jendela-kinerja',
+    halaman: '/dashboard',
   },
   {
     kode: 'JK-SARANA-2026',
@@ -84,7 +84,7 @@ const MODUL_API = [
     urutan: 60,
     keterangan: 'Baris sarana yang diperiksa (nama, jenis, kab/kota, kesimpulan). Butuh Bearer token Keycloak.',
     modul: 'jendela-kinerja',
-    halaman: '/jendela-kinerja',
+    halaman: '/dashboard',
   },
 
   // -------------------------------------------------------------------------

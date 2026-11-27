@@ -1,6 +1,6 @@
 // components/jendela-kinerja/Peta.js
 /**
- * PETA KALIMANTAN TENGAH — choropleth per kab/kota (SVG, tanpa library peta)
+ * PETA KALIMANTAN TENGAH \u2014 choropleth per kab/kota (SVG, tanpa library peta)
  * ------------------------------------------------------------------------
  * Geometri sudah diproyeksikan ke bidang datar saat build data
  * (frontend/data/kalteng-kabupaten.json), jadi komponen ini hanya:
@@ -14,7 +14,7 @@
  * Props:
  *   perKab   : { [namaKab]: { total, produksi, distribusi, mayor, minor } }
  *   terpilih : nama kab/kota yang sedang difilter (atau '')
- *   onPilih  : (namaKab) => void   — klik wilayah = pasang filter kab/kota
+ *   onPilih  : (namaKab) => void   \u2014 klik wilayah = pasang filter kab/kota
  *   maks     : nilai maksimum untuk skala warna
  */
 import { useState } from 'react';
@@ -105,7 +105,7 @@ export default function Peta({ perKab = {}, terpilih = '', onPilih, maks = 0 }) 
           })}
         </g>
 
-        {/* Gelembung angka — hanya untuk wilayah yang punya data */}
+        {/* Gelembung angka \u2014 hanya untuk wilayah yang punya data */}
         <g>
           {wil.map((k) => {
             const data = perKab[k.nama] || { total: 0 };
@@ -133,7 +133,7 @@ export default function Peta({ perKab = {}, terpilih = '', onPilih, maks = 0 }) 
           })}
         </g>
 
-        {/* Label nama wilayah — hanya untuk wilayah tanpa gelembung agar tidak bertumpuk */}
+        {/* Label nama wilayah \u2014 hanya untuk wilayah tanpa gelembung agar tidak bertumpuk */}
         <g>
           {wil.map((k) => {
             const data = perKab[k.nama] || { total: 0 };
@@ -170,7 +170,7 @@ export default function Peta({ perKab = {}, terpilih = '', onPilih, maks = 0 }) 
           )}
           <p className="whitespace-nowrap text-slate-500 dark:text-slate-400">
             Produksi <strong className="text-accent-600 dark:text-accent-300">{formatAngka(hover.produksi)}</strong>
-            {'  ·  '}
+            {'  \xb7  '}
             Distribusi <strong className="text-accent-600 dark:text-accent-300">{formatAngka(hover.distribusi)}</strong>
           </p>
           <p className="mt-0.5 whitespace-nowrap font-semibold text-slate-700 dark:text-slate-200">
@@ -198,7 +198,7 @@ export default function Peta({ perKab = {}, terpilih = '', onPilih, maks = 0 }) 
           </span>
           <div className="flex items-center gap-1">
             {[0, 0.25, 0.5, 0.75, 1].map((rasio) => {
-              // Legenda memakai skala yang sama dengan warnaSarana (hijau → biru).
+              // Legenda memakai skala yang sama dengan warnaSarana (hijau \u2192 biru).
               const h = [31, 166, 95];
               const b = [15, 108, 184];
               const rgb = h.map((v, i) => Math.round(v + (b[i] - v) * rasio));

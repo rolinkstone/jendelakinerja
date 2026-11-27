@@ -1,6 +1,6 @@
 // pages/sumber-daya/index.js
 /**
- * HALAMAN PUBLIK — Sumber Daya
+ * HALAMAN PUBLIK \u2014 Sumber Daya
  * ---------------------------------
  * Menu ini sudah tampil di navbar tetapi modulnya belum selesai. Halaman ini
  * menjaga tautan menu tetap hidup (bukan 404) memakai komponen bersama

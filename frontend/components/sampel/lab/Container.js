@@ -1,11 +1,11 @@
 // components/sampel/lab/Container.js
 /**
- * MODUL: SAMPEL — Container (dipakai semua komoditi)
+ * MODUL: SAMPEL \u2014 Container (dipakai semua komoditi)
  * --------------------------------------------------
  * Impor "REKAP DATA SAMPEL" (export SIPT) dari berkas Excel, lalu tampilkan
  * sebagai tabel + rincian per SAMPEL yang diuji laboratorium.
  *
- * Satu komponen untuk SEMUA komoditi (Obat Tradisional, Suplemen Kesehatan, …):
+ * Satu komponen untuk SEMUA komoditi (Obat Tradisional, Suplemen Kesehatan, \u2026):
  * halaman cukup mengirim `jenis` ("ot" / "sk") dan sisa perbedaannya
  * (prefix API, judul) dibaca dari components/sampel/lab/config.js. Menyalin
  * folder komponen per komoditi = jaminan perbaikannya hanya mendarat di satu
@@ -28,9 +28,9 @@
  *
  * BEDA dengan modul Produksi/Distribusi: satu SAMPEL bisa memakan beberapa baris
  * di berkas Excel (kolom Kategori & Komposisi berlanjut). Penggabungan baris
- * dikerjakan backend — di sini baris sudah bersih: satu baris = satu sampel.
+ * dikerjakan backend \u2014 di sini baris sudah bersih: satu baris = satu sampel.
  *
- * Permintaan API lewat proxy server `pages/api/sampel/[...path].js` —
+ * Permintaan API lewat proxy server `pages/api/sampel/[...path].js` \u2014
  * token Keycloak tidak pernah menyentuh browser.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -362,7 +362,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
           )}
         </div>
         <p className="mt-2 text-[11px] leading-relaxed text-ink-500 dark:text-ink-300">
-          Data disimpan terpisah per tahun. Mengunggah berkas sampel 2024 hanya mengganti data 2024 —
+          Data disimpan terpisah per tahun. Mengunggah berkas sampel 2024 hanya mengganti data 2024 \u2014
           data tahun lain tetap utuh.
         </p>
       </section>
@@ -399,7 +399,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
                 <>
                   <p className="text-[13px] font-bold text-ink-900 dark:text-ink-50">{berkas.name}</p>
                   <p className="text-[11px] text-ink-500 dark:text-ink-300">
-                    {formatUkuran(berkas.size)} · klik untuk mengganti berkas
+                    {formatUkuran(berkas.size)} \xb7 klik untuk mengganti berkas
                   </p>
                 </>
               ) : (
@@ -408,7 +408,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
                     Lepas berkas di sini atau klik untuk memilih
                   </p>
                   <p className="text-[11px] text-ink-500 dark:text-ink-300">
-                    .xlsx / .xls / .xlsm · maksimal 15 MB
+                    .xlsx / .xls / .xlsm \xb7 maksimal 15 MB
                   </p>
                 </>
               )}
@@ -436,7 +436,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
                 onChange={(e) => setTahunImpor(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-paper-300 bg-white px-2.5 py-1.5 text-[12px] font-medium text-ink-800 outline-none transition focus:border-accent-400/70 focus:ring-2 focus:ring-accent-400/25 dark:border-white/10 dark:bg-ink-900 dark:text-ink-100"
               >
-                <option value={TAHUN_OTOMATIS}>Otomatis — dibaca dari isi berkas</option>
+                <option value={TAHUN_OTOMATIS}>Otomatis \u2014 dibaca dari isi berkas</option>
                 {daftarPilihanTahun.map((t) => (
                   <option key={t} value={String(t)}>Tahun {t}</option>
                 ))}
@@ -456,7 +456,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
                 </p>
                 <p className="mt-1 text-[11px] leading-relaxed text-ink-500 dark:text-ink-300">
                   Tahun data dibaca dari tanggal sampling terbanyak di dalam berkas. Data tahun
-                  lain tidak tersentuh — tidak ada riwayat versi untuk tahun yang sama.
+                  lain tidak tersentuh \u2014 tidak ada riwayat versi untuk tahun yang sama.
                 </p>
                 <p className="mt-1.5 text-[11px] font-medium text-ink-500 dark:text-ink-300">
                   {tahunImpor === TAHUN_OTOMATIS
@@ -465,13 +465,13 @@ export default function SampelContainer({ jenis = 'ot' }) {
                       )} sampel dari ${totalTahunTersedia} tahun.`
                     : isiTahunDipilih
                       ? `Tahun ${tahunImpor} saat ini berisi ${formatAngka(isiTahunDipilih.jumlah_sampel)} sampel.`
-                      : `Tahun ${tahunImpor} belum punya data — unggahan ini akan jadi data pertamanya.`}
+                      : `Tahun ${tahunImpor} belum punya data \u2014 unggahan ini akan jadi data pertamanya.`}
                 </p>
                 <p className="mt-1.5 flex items-start gap-1.5 text-[11px] text-ink-500 dark:text-ink-300">
                   <FaFlask className="mt-0.5 shrink-0" />
                   <span>
                     Satu sampel di berkas bisa memakan beberapa baris (Kategori &amp; Komposisi
-                    berlanjut). Baris tersebut digabung otomatis — jumlah yang tersimpan adalah
+                    berlanjut). Baris tersebut digabung otomatis \u2014 jumlah yang tersimpan adalah
                     jumlah SAMPEL, bukan jumlah baris.
                   </span>
                 </p>
@@ -486,7 +486,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
                 className="btn-primary w-full"
               >
                 {mengunggah ? <FaSpinner className="animate-spin" /> : <FaFileExcel />}
-                {mengunggah ? 'Mengimpor…' : 'Unggah & Ganti Data Tahun Ini'}
+                {mengunggah ? 'Mengimpor\u2026' : 'Unggah & Ganti Data Tahun Ini'}
               </button>
               <div className="flex gap-2">
                 <button
@@ -509,7 +509,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
                 )}
               </div>
 
-              {/* Konfirmasi hapus dua langkah — sengaja di dalam UI, bukan dialog
+              {/* Konfirmasi hapus dua langkah \u2014 sengaja di dalam UI, bukan dialog
                   bawaan browser, supaya tidak terhapus karena klik tak sengaja. */}
               {konfirmasiHapus && (
                 <div className="rounded-lg border border-rose-400/60 bg-rose-500/5 p-2 dark:border-rose-500/40">
@@ -527,7 +527,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
                       className="btn-ghost flex-1 border-rose-400/70 text-rose-600 hover:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-300"
                     >
                       {menghapus ? <FaSpinner className="animate-spin" /> : <FaTrashAlt />}
-                      {menghapus ? 'Menghapus…' : 'Ya, hapus'}
+                      {menghapus ? 'Menghapus\u2026' : 'Ya, hapus'}
                     </button>
                     <button
                       type="button"
@@ -563,7 +563,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
       <section className="space-y-2">
         <p className="section-label">
           Ringkasan {labelTahun(tahun)}
-          {tahun && <span className="ml-1 font-normal text-ink-400 dark:text-ink-500">— dikunci ke satu tahun</span>}
+          {tahun && <span className="ml-1 font-normal text-ink-400 dark:text-ink-500">\u2014 dikunci ke satu tahun</span>}
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {kartuStatistik.map((k, i) => (
@@ -729,7 +729,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
                   type="search"
                   value={cari}
                   onChange={(e) => setCari(e.target.value)}
-                  placeholder="Cari kode sampel, nama, pabrik…"
+                  placeholder="Cari kode sampel, nama, pabrik\u2026"
                   className="w-56 rounded-lg border border-paper-300 bg-white py-1.5 pl-7 pr-2 text-[12px] text-ink-800 outline-none transition focus:border-accent-400/70 focus:ring-2 focus:ring-accent-400/25 dark:border-white/10 dark:bg-ink-900 dark:text-ink-100"
                 />
               </div>
@@ -742,7 +742,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
 
         {memuatData ? (
           <div className="flex items-center justify-center gap-2 px-4 py-12 text-[12px] font-medium text-ink-500 dark:text-ink-300">
-            <FaSpinner className="animate-spin" /> Memuat data…
+            <FaSpinner className="animate-spin" /> Memuat data\u2026
           </div>
         ) : tabel.rows.length === 0 ? (
           <div className="empty-track m-4">
@@ -796,7 +796,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
                         {row.nama_sampel || '-'}
                       </p>
                       <p className="truncate text-[11px] text-ink-500 dark:text-ink-300">
-                        {row.no_reg ? `${row.no_reg} · ` : ''}
+                        {row.no_reg ? `${row.no_reg} \xb7 ` : ''}
                         {ringkas(row.pabrik, 40)}
                       </p>
                     </td>
@@ -807,8 +807,8 @@ export default function SampelContainer({ jenis = 'ot' }) {
                       <p className="truncate text-[11px] text-ink-500 dark:text-ink-300">
                         {row.kab_kota || '-'}
                         {/* Tujuan sampling tidak ada di semua berkas (berkas Obat
-                            tidak punya kolomnya) — jangan tampilkan "· -" kosong. */}
-                        {row.tujuan_sampling ? ` · ${row.tujuan_sampling}` : ''}
+                            tidak punya kolomnya) \u2014 jangan tampilkan "\xb7 -" kosong. */}
+                        {row.tujuan_sampling ? ` \xb7 ${row.tujuan_sampling}` : ''}
                       </p>
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-[11px] text-ink-600 dark:text-ink-300">
@@ -838,7 +838,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
         {tabel.total > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-paper-200 px-4 py-3 dark:border-white/10">
             <p className="text-[11px] font-medium text-ink-500 dark:text-ink-300">
-              Halaman {tabel.page} dari {tabel.total_halaman} · {formatAngka(tabel.total)} sampel
+              Halaman {tabel.page} dari {tabel.total_halaman} \xb7 {formatAngka(tabel.total)} sampel
             </p>
             <div className="flex gap-2">
               <button
@@ -867,7 +867,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
       {memuatDetail && !detail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 backdrop-blur-sm">
           <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-[12px] font-medium text-ink-600 shadow-lg dark:bg-ink-900 dark:text-ink-200">
-            <FaSpinner className="animate-spin" /> Memuat rincian sampel…
+            <FaSpinner className="animate-spin" /> Memuat rincian sampel\u2026
           </div>
         </div>
       )}

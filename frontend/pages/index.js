@@ -1,9 +1,9 @@
 // pages/index.js
 /**
- * GERBANG APLIKASI — "/"
+ * GERBANG APLIKASI \u2014 "/"
  * ----------------------
- * Membuka `localhost:3007` langsung menampilkan **Jendela Kinerja** (halaman
- * publik, tanpa login), bukan form login. Form login hanya muncul bila
+ * Membuka `localhost:3007` langsung dialihkan ke halaman /dashboard (publik,
+ * tanpa login), bukan form login. Form login hanya muncul bila
  * pengguna menekan "Masuk dashboard" di navbar.
  *
  * Dikerjakan dengan `redirect` di `getServerSideProps` (bukan komponen yang
@@ -11,17 +11,18 @@
  * menerima 307 sebelum React dijalankan, jadi tidak ada kedipan halaman kosong
  * dan tidak ada kesempatan middleware menahan di `/login`.
  *
- * Beranda dashboard (kartu KPI + daftar modul) kini ada di `/beranda`.
+ * Beranda dashboard internal (kartu KPI + daftar modul, ber-SSO) ada di `/beranda`.
+ * Alamat lama `/jendela-kinerja` dialihkan permanen ke `/dashboard` di next.config.mjs.
  */
 export default function Root() {
-  // Tidak pernah dirender — permintaan selalu dialihkan di server.
+  // Tidak pernah dirender \u2014 permintaan selalu dialihkan di server.
   return null;
 }
 
 export async function getServerSideProps() {
   return {
     redirect: {
-      destination: '/jendela-kinerja',
+      destination: '/dashboard',
       permanent: false,
     },
   };

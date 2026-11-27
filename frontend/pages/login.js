@@ -1,11 +1,11 @@
 // pages/login.js
 /**
- * HALAMAN LOGIN — Jendela Kinerja
+ * HALAMAN LOGIN \u2014 Jendela Kinerja
  * -------------------------------
  * Pintu masuk aplikasi. Identitas brand (nama, logo, tagline) diambil dari
  * components/Brand.js supaya konsisten di seluruh halaman.
  *
- * Tampilan: "executive cockpit" — panel kiri tinta navy bermotif jendela dengan
+ * Tampilan: "executive cockpit" \u2014 panel kiri tinta navy bermotif jendela dengan
  * aksen biru/hijau, panel kanan kertas hangat berisi form. Autentikasi via SSO
  * Keycloak (NextAuth): halaman ini TIDAK pernah menangani password.
  */
@@ -65,7 +65,7 @@ export default function LoginPage() {
       // tanpa menu internal.
       //
       // `?callbackUrl=` dihormati (mis. dari tombol "Rincian" di
-      // /jendela-kinerja) HANYA bila berupa path internal — mencegah
+      // /jendela-kinerja) HANYA bila berupa path internal \u2014 mencegah
       // open redirect ke domain lain.
       const diminta = router.query.callbackUrl;
       const tujuan =
@@ -85,7 +85,7 @@ export default function LoginPage() {
         <title>{`Masuk | ${BRAND.name}`}</title>
         <meta
           name="description"
-          content={`${BRAND.name} — ${BRAND.tagline}. Masuk menggunakan akun SSO untuk mengakses dashboard.`}
+          content={`${BRAND.name} \u2014 ${BRAND.tagline}. Masuk menggunakan akun SSO untuk mengakses dashboard.`}
         />
       </Head>
 
@@ -93,7 +93,7 @@ export default function LoginPage() {
       <div className="app-surface relative flex min-h-screen items-center justify-center p-4 text-slate-800 dark:text-slate-100 sm:p-8">
         <div className="animate-rise w-full max-w-5xl">
           <div className="panel grid overflow-hidden lg:grid-cols-[0.85fr_1fr]">
-            {/* ===== KIRI — HERO BRAND (panel tinta) ===== */}
+            {/* ===== KIRI \u2014 HERO BRAND (panel tinta) ===== */}
             <div className="window-pattern relative hidden flex-col justify-between bg-ink-900 p-8 text-white lg:flex">
               <div className="relative">
                 <Brand size="lg" tone="onDark" subtitle={BRAND.subtitle} />
@@ -128,7 +128,7 @@ export default function LoginPage() {
                     <FaCircle className="h-1.5 w-1.5 animate-pulse text-emerald-400" />
                     Sistem aktif
                   </span>
-                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-600">\u2022</span>
                   <span>
                     {BRAND.name} v{BRAND.version}
                   </span>
@@ -136,7 +136,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* ===== KANAN — FORM LOGIN ===== */}
+            {/* ===== KANAN \u2014 FORM LOGIN ===== */}
             <div className="flex items-center p-7 sm:p-10">
               <div className="mx-auto w-full max-w-sm">
                 {/* Lockup brand (layar kecil) */}
@@ -162,7 +162,7 @@ export default function LoginPage() {
                 {/* Error */}
                 {error && (
                   <div className="mt-5 flex items-start gap-2 rounded-lg border border-red-300 bg-red-50 px-3.5 py-2.5 text-[13px] text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
-                    <span className="mt-0.5">⚠️</span>
+                    <span className="mt-0.5">\u26a0\ufe0f</span>
                     <span>{error}</span>
                   </div>
                 )}
@@ -174,7 +174,7 @@ export default function LoginPage() {
                   ) : (
                     <FaLock className="h-4 w-4" />
                   )}
-                  <span>{isLoading ? 'Mengarahkan ke SSO…' : 'Masuk dengan SSO'}</span>
+                  <span>{isLoading ? 'Mengarahkan ke SSO\u2026' : 'Masuk dengan SSO'}</span>
                 </button>
 
                 <p className="mt-3 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
@@ -218,7 +218,7 @@ export default function LoginPage() {
           <div className="mt-5 flex items-center justify-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
             <BrandMark size="xs" glow={false} />
             <span>
-              {BRAND.name} v{BRAND.version} — {BRAND.footerNote}
+              {BRAND.name} v{BRAND.version} \u2014 {BRAND.footerNote}
             </span>
           </div>
         </div>

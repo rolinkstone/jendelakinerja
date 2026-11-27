@@ -2,14 +2,14 @@
 /**
  * DASHBOARD PUBLIK "JENDELA KINERJA" (di luar dashboard ber-SSO)
  * --------------------------------------------------------------
- * Halaman /jendela-kinerja: peta Kalimantan Tengah per kab/kota + filter
+ * Halaman /dashboard: peta Kalimantan Tengah per kab/kota + filter
  * tahun, bulan, produksi/distribusi, dan jenis sarana.
  *
  * Data diambil dari route publik backend lewat proxy pages/api/publik/[...path].js
- * (backend/routes/publik.js) — hanya rekap angka & nama sarana, tanpa temuan.
+ * (backend/routes/publik.js) \u2014 hanya rekap angka & nama sarana, tanpa temuan.
  *
  * Konvensi modul tetap dipakai: logika + tampilan di Container, formatter di
- * helper, peta di Peta.js, halaman tipis di pages/jendela-kinerja/index.js.
+ * helper, peta di Peta.js, halaman tipis di pages/dashboard/index.js.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -64,7 +64,7 @@ export default function Container() {
   const [pilihan, setPilihan] = useState(null);
   const [ringkasan, setRingkasan] = useState(null);
   const [detail, setDetail] = useState(null); // rincian sarana satu kab/kota (modal)
-  // Hasil pengujian laboratorium (modul Sampel) — hanya ikut filter tahun,
+  // Hasil pengujian laboratorium (modul Sampel) \u2014 hanya ikut filter tahun,
   // karena berkas sampel tidak menggreding sarana per kab/kota.
   const [sampel, setSampel] = useState(null);
   const [filter, setFilter] = useState({ ...FILTER_KOSONG });
@@ -94,7 +94,7 @@ export default function Container() {
     // Bagian ini pelengkap: kalau gagal, dashboard tetap tampil apa adanya.
     //
     // Tahun filter halaman ini milik modul SARANA (default = tahun sarana
-    // terbaru, mis. 2026). Modul sampel baru punya data 2024 — kalau dipaksa
+    // terbaru, mis. 2026). Modul sampel baru punya data 2024 \u2014 kalau dipaksa
     // ikut tahun filter, bagian ini kosong padahal sampelnya ada. Jadi:
     // tahun filter dipakai selama benar-benar ada sampelnya; kalau tidak,
     // tampilkan seluruh tahun + tandai `lintas_tahun` supaya labelnya jujur.
@@ -102,7 +102,7 @@ export default function Container() {
     // `kab` WAJIB ikut. Tanpa itu, mengklik satu kabupaten di panel Peringkat
     // membuat bagian ini tetap menampilkan angka SELURUH wilayah (2026: 1.311)
     // sementara tabel per kab/kota menampilkan angka wilayah itu (1.096 untuk
-    // Kota Palangka Raya) — dua angka berbeda untuk wilayah yang sama.
+    // Kota Palangka Raya) \u2014 dua angka berbeda untuk wilayah yang sama.
     const saring = (t, k) => {
       const q = new URLSearchParams();
       if (t) q.set('tahun', t);
@@ -117,7 +117,7 @@ export default function Container() {
         return j.success ? j.data : null;
       };
       let d = await ambil(saring(tahun, kab));
-      // Tanpa filter tahun, yang ditampilkan memang seluruh tahun — labelnya
+      // Tanpa filter tahun, yang ditampilkan memang seluruh tahun \u2014 labelnya
       // harus bilang begitu, jangan mencomot tahun pertama sebagai judul.
       let lintas = !tahun;
       if (tahun && !angka(d?.total?.sampel) && (d?.daftar_tahun || []).length > 0) {
@@ -146,7 +146,7 @@ export default function Container() {
         if (r.status === 401) {
           // Sesi habis / belum login: rincian memang dibatasi.
           setDetail(null);
-          router.push('/login?callbackUrl=%2Fjendela-kinerja');
+          router.push('/login?callbackUrl=%2Fdashboard');
           return;
         }
         const j = await r.json();
@@ -176,7 +176,7 @@ export default function Container() {
     })();
   }, []);
 
-  // Setiap filter berubah → muat ulang rekap (peta, kartu angka, tabel per kab/kota).
+  // Setiap filter berubah \u2192 muat ulang rekap (peta, kartu angka, tabel per kab/kota).
   useEffect(() => {
     if (pilihan === null) return undefined; // tunggu opsi siap (tahun default sudah dipasang)
     let batal = false;
@@ -264,8 +264,8 @@ export default function Container() {
   }, [ringkasan]);
 
   // Sebaran sarana dipotong jadi DUA kelompok: Distribusi dan Produksi.
-  // `per_jenis_sarana` dari API memuat SEMUA jenis_sarana apa adanya —
-  // termasuk komoditi sampel (Obat, Kosmetika, …) karena view memakai
+  // `per_jenis_sarana` dari API memuat SEMUA jenis_sarana apa adanya \u2014
+  // termasuk komoditi sampel (Obat, Kosmetika, \u2026) karena view memakai
   // kolom `jenis_sarana` untuk keduanya. Di panel ini baris sampel dibuang
   // (kegiatan 'Sampling' bukan sarana; jumlahnya sudah tampil di panel
   // "Hasil Pengujian Laboratorium" dan "Kepatuhan per Kelompok Komoditas").
@@ -289,7 +289,7 @@ export default function Container() {
     <div className="app-surface min-h-screen">
       {/* ================= Kepala ================= */}
       {/* Navbar publik dipakai bersama semua menu (Jendela Kinerja, Prestasi
-          Unit Kerja, Anggaran, Dokumen PK/RAPK, Sumber Daya) — lihat
+          Unit Kerja, Anggaran, Dokumen PK/RAPK, Sumber Daya) \u2014 lihat
           components/navbar/Navbar.js. Menu aktif ditentukan dari pathname. */}
       <Navbar />
 
@@ -316,7 +316,7 @@ export default function Container() {
               </p>
               <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
                 Sedang menampilkan: <strong className="font-semibold">{labelFilter(filter, pilihan)}</strong>
-                {ringkasan && ` — ${formatAngka(total.sarana_diperiksa)} sarana diperiksa`}
+                {ringkasan && ` \u2014 ${formatAngka(total.sarana_diperiksa)} sarana diperiksa`}
               </p>
             </div>
 
@@ -435,8 +435,8 @@ export default function Container() {
               <span className="stat-label">Jenis Sarana</span>
               <select className="input mt-1" value={filter.jenis} onChange={(e) => ubahFilter('jenis', e.target.value)}>
                 <option value="">Semua jenis sarana</option>
-                {/* Opsi mengikuti data yang masuk — impor jenis baru
-                    (Kosmetik, Pangan MD, Pangan IRT, …) otomatis muncul. */}
+                {/* Opsi mengikuti data yang masuk \u2014 impor jenis baru
+                    (Kosmetik, Pangan MD, Pangan IRT, \u2026) otomatis muncul. */}
                 {(pilihan?.jenis_sarana || []).map((j) => (
                   <option key={j.jenis_sarana} value={j.jenis_sarana}>
                     {j.jenis_sarana} ({j.jumlah})
@@ -497,7 +497,7 @@ export default function Container() {
               <div className="flex items-center gap-2">
                 <FaMapMarkedAlt className="h-3.5 w-3.5 text-accent-600 dark:text-accent-400" />
                 <h3 className="text-sm font-bold text-slate-800 dark:text-white">
-                  Peta Kalimantan Tengah — per Kabupaten/Kota
+                  Peta Kalimantan Tengah \u2014 per Kabupaten/Kota
                 </h3>
               </div>
               <span className="chip hidden sm:inline-flex">klik wilayah untuk memfilter</span>
@@ -557,11 +557,11 @@ export default function Container() {
                       />
                     </div>
                     <p className="mt-1 text-[10.5px] text-slate-400 dark:text-slate-500">
-                      Produksi {formatAngka(k.produksi)} · Distribusi {formatAngka(k.distribusi)}
+                      Produksi {formatAngka(k.produksi)} \xb7 Distribusi {formatAngka(k.distribusi)}
                       {angka(k.tidak_memenuhi) > 0 && (
                         <span className="text-rose-500 dark:text-rose-400">
                           {' '}
-                          · {formatAngka(k.tidak_memenuhi)} tidak MK
+                          \xb7 {formatAngka(k.tidak_memenuhi)} tidak MK
                         </span>
                       )}
                     </p>
@@ -581,7 +581,7 @@ export default function Container() {
 
         {/* ============ Kepatuhan mutu per kelompok komoditas ============ */}
         {/* Berdiri sendiri di bawah "Peringkat Sarana Diperiksa" (permintaan
-            pemilik aplikasi) — bukan menempel di panel peta. */}
+            pemilik aplikasi) \u2014 bukan menempel di panel peta. */}
         <KepatuhanKomoditas data={sampel} memuat={memuat} />
 
         {/* ================= Sebaran jenis sarana + bulan ================= */}
@@ -592,14 +592,14 @@ export default function Container() {
               <span className="chip">2 kelompok</span>
             </div>
             <div className="space-y-4 p-4">
-              {/* Hanya dua kelompok yang ditampilkan — permintaan pemilik
+              {/* Hanya dua kelompok yang ditampilkan \u2014 permintaan pemilik
                   aplikasi: "harusnya terbagi 2 Sarana Distribusi dan Sarana
                   Produksi". Baris SAMPEL_* (kegiatan "Sampling") sengaja TIDAK
                   masuk daftar ini: berkas sampel tidak menilai sarana, satu
                   sampel = satu produk, dan jumlahnya sudah tampil di panel
                   "Hasil Pengujian Laboratorium" + "Kepatuhan per Kelompok
                   Komoditas". Kalau sampel ikut dihitung, "jenis sarana" di
-                  panel ini tercampur komoditi (Obat, Kosmetika, …) dengan
+                  panel ini tercampur komoditi (Obat, Kosmetika, \u2026) dengan
                   jenis sarana sungguhan (PBF, IRTP, CPOTB). */}
               {kelompokSarana.length === 0 && (
                 <p className="py-6 text-center text-[13px] text-slate-400 dark:text-slate-500">Belum ada data.</p>
@@ -630,7 +630,7 @@ export default function Container() {
                         ? 'Belum ada data.'
                         : k.rincian
                             .map((r) => `${r.jenis_sarana} ${formatAngka(angka(r.jumlah))}`)
-                            .join(' · ')}
+                            .join(' \xb7 ')}
                     </p>
                   </div>
                 );
@@ -777,7 +777,7 @@ export default function Container() {
                           </button>
                         ) : (
                           <Link
-                            href="/login?callbackUrl=%2Fjendela-kinerja"
+                            href="/login?callbackUrl=%2Fdashboard"
                             title="Masuk untuk melihat rincian sarana"
                             className="btn-ghost inline-flex items-center gap-1.5"
                           >
@@ -839,13 +839,13 @@ export default function Container() {
             <div className="space-y-1">
               <p className="text-[11.5px] text-slate-500 dark:text-slate-400">
                 MK = Memenuhi Ketentuan, TMK = Tidak Memenuhi Ketentuan. Indeks kepatuhan =
-                MK ÷ (MK + TMK) × 100.
+                MK \xf7 (MK + TMK) \xd7 100.
               </p>
               {!sudahLogin && (
                 <p className="text-[11.5px] text-slate-400 dark:text-slate-500">
-                  Rincian sarana hanya untuk pengguna yang login —{' '}
+                  Rincian sarana hanya untuk pengguna yang login \u2014{' '}
                   <Link
-                    href="/login?callbackUrl=%2Fjendela-kinerja"
+                    href="/login?callbackUrl=%2Fdashboard"
                     className="font-semibold text-accent-600 hover:underline dark:text-accent-400"
                   >
                     masuk di sini
@@ -864,7 +864,7 @@ export default function Container() {
         <footer className="flex flex-col items-center gap-1.5 pb-4 pt-1 text-center">
           <BrandMark size="sm" glow={false} />
           <p className="text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-            {BRAND.name} — Balai Besar POM di Palangka Raya
+            {BRAND.name} \u2014 Balai Besar POM di Palangka Raya
             <br />
             Data diperbarui{' '}
             {pilihan?.terakhir_diunggah
@@ -872,7 +872,7 @@ export default function Container() {
                   dateStyle: 'long',
                   timeStyle: 'short',
                 })
-              : '—'}
+              : '\u2014'}
             . Halaman publik ini hanya menampilkan rekap; rincian sarana per baris
             hanya untuk pengguna yang login.
           </p>

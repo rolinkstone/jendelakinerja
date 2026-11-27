@@ -1,6 +1,6 @@
 // pages/dokumen-pk-rapk/index.js
 /**
- * HALAMAN PUBLIK — Dokumen PK dan RAPK
+ * HALAMAN PUBLIK \u2014 Dokumen PK dan RAPK
  * -----------------------------------------
  * Menu ini sudah tampil di navbar tetapi modulnya belum selesai. Halaman ini
  * menjaga tautan menu tetap hidup (bukan 404) memakai komponen bersama

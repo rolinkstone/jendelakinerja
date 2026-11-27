@@ -1,16 +1,16 @@
 // pages/api/publik/[...path].js
 /**
- * PROXY BACKEND — /api/publik/*
+ * PROXY BACKEND \u2014 /api/publik/*
  * -----------------------------
  * Dipakai halaman PUBLIK /jendela-kinerja (di luar dashboard ber-SSO).
  *
- *   browser  →  /api/publik/<path>          (tanpa cookie sesi, kecuali rincian)
- *             →  backend /api/publik/<path> (route publik, tanpa token)
+ *   browser  \u2192  /api/publik/<path>          (tanpa cookie sesi, kecuali rincian)
+ *             \u2192  backend /api/publik/<path> (route publik, tanpa token)
  *
  * Rekap (pilihan, ringkasan, sampel) memang publik: backend route-nya ada di
  * `publicRoutes` (backend/server.js) dan browser tidak perlu sesi.
  *
- * PENGECUALIAN — RINCIAN SARANA PERLU LOGIN
+ * PENGECUALIAN \u2014 RINCIAN SARANA PERLU LOGIN
  * -----------------------------------------
  * `/api/publik/kinerja/sarana` membuka daftar NAMA sarana per baris (modal
  * "Rincian" pada tabel per kab/kota). Endpoint itu dibatasi untuk pengguna
@@ -18,7 +18,7 @@
  * meneruskan `Authorization: Bearer <accessToken>` ke backend, yang juga
  * menolak tanpa pengguna sah. Tamu tetap bisa melihat peta & tabel rekap.
  *
- * Hanya method GET yang diteruskan — dashboard publik bersifat read-only.
+ * Hanya method GET yang diteruskan \u2014 dashboard publik bersifat read-only.
  */
 import { ambilToken } from '../../../utils/authCookies';
 import { BACKEND } from '../../../utils/backendUrl';
@@ -27,7 +27,7 @@ import { balasKosong } from '../../../utils/balasBackend';
 /** Rute rincian yang mewajibkan sesi login (rekap tetap terbuka). */
 const RUTE_WAJIB_LOGIN = ['kinerja/sarana'];
 
-/** Satu balasan JSON baku — klien selalu memanggil res.json(). */
+/** Satu balasan JSON baku \u2014 klien selalu memanggil res.json(). */
 const balasJson = (res, status, isi) => {
   if (res.headersSent) return res.end();
   res.status(status).setHeader('content-type', 'application/json; charset=utf-8');
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
     res.status(jawaban.status);
     res.setHeader('content-type', jawaban.headers.get('content-type') || 'application/json');
     if (perluLogin) {
-      // Balasan berisi nama sarana per baris — jangan disimpan di cache bersama.
+      // Balasan berisi nama sarana per baris \u2014 jangan disimpan di cache bersama.
       res.setHeader('cache-control', 'private, no-store');
     } else {
       // Data publik boleh di-cache singkat di CDN/browser agar peta terasa cepat.

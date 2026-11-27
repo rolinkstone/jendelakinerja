@@ -7,10 +7,10 @@
  *
  * Alur:
  *   1. Pilih filter (tahun, bulan, kegiatan, jenis sarana, kab/kota).
- *   2. "Ambil data & buat naskah" → angka dashboard filter itu + naskah
+ *   2. "Ambil data & buat naskah" \u2192 angka dashboard filter itu + naskah
  *      otomatis dari LAURA AI (LLM; kalau LLM mati, naskah template).
  *   3. Periksa angkanya di panel "Angka sumber naskah". Kalau ada yang salah,
- *      perbaiki di datanya (modul asal) — bukan di naskah.
+ *      perbaiki di datanya (modul asal) \u2014 bukan di naskah.
  *   4. Koreksi kalimat/naskah di kotak teks, lalu "Simpan koreksi".
  *   5. Widget di /jendela-kinerja memakai naskah koreksi itu HANYA untuk
  *      kombinasi filter yang sama. Filter lain tetap naskah otomatis.
@@ -30,7 +30,7 @@ import {
 import { useSuaraLaura } from '../../lib/tts';
 import PengaturanSuara from '../laura/PengaturanSuara';
 
-/** Filter kosong — kunci harus sama dengan backend (lib/narasi.js). */
+/** Filter kosong \u2014 kunci harus sama dengan backend (lib/narasi.js). */
 const FILTER_KOSONG = { tahun: '', bulan: '', kegiatan: '', jenis: '', kab: '' };
 
 const angka = (v) => {
@@ -58,7 +58,7 @@ const queryFilter = (filter) => {
 
 /**
  * Definisi lima filter (kunci = kolom backend, lihat lib/narasi.js).
- * Dibungkus array supaya JSX tidak menyalin blok <label>+<select> lima kali —
+ * Dibungkus array supaya JSX tidak menyalin blok <label>+<select> lima kali \u2014
  * dan filter baru cukup ditambah di sini.
  */
 const DAFTAR_FILTER = [
@@ -98,15 +98,15 @@ export default function NarasiPresentasiContainer() {
   const [galat, setGalat] = useState('');
   const [pesan, setPesan] = useState('');
 
-  // Pengaturan suara yang SAMA dengan widget publik (lib/tts.js) — supaya yang
+  // Pengaturan suara yang SAMA dengan widget publik (lib/tts.js) \u2014 supaya yang
   // didengar operator di sini persis yang akan didengar pengunjung.
   const suara = useSuaraLaura();
   const [panelSuara, setPanelSuara] = useState(false);
 
-  // True bila minimal satu filter dipilih → tombol "Reset filter" tampil.
+  // True bila minimal satu filter dipilih \u2192 tombol "Reset filter" tampil.
   // CATATAN: dihitung SETELAH `pilihan` dideklarasikan. Menaruhnya di atas
   // deklarasi useState `pilihan` membuat `pilihan` masih di zona TDZ
-  // (ReferenceError: Cannot access 'pilihan' before initialization) — halaman
+  // (ReferenceError: Cannot access 'pilihan' before initialization) \u2014 halaman
   // langsung "Application error" begitu filter diubah.
   const adaFilter = Object.values(filter).some((v) => v !== '' && v !== null && v !== undefined);
 
@@ -163,7 +163,7 @@ export default function NarasiPresentasiContainer() {
 
   useEffect(() => {
     cekKoreksi(filter);
-    // Naskah lama tidak boleh tertinggal saat filter diganti — bisa
+    // Naskah lama tidak boleh tertinggal saat filter diganti \u2014 bisa
     // disimpan untuk filter yang salah tanpa disadari.
     setNaskah('');
     setSumber('');
@@ -196,7 +196,7 @@ export default function NarasiPresentasiContainer() {
       setSumber(jl.data.sumber);
       setPesan(
         jl.data.sumber === 'llm'
-          ? `Naskah dibuat LAURA AI (${jl.data.jumlah_kata} kata, ±${jl.data.perkiraan_detik} detik).`
+          ? `Naskah dibuat LAURA AI (${jl.data.jumlah_kata} kata, \xb1${jl.data.perkiraan_detik} detik).`
           : `Naskah dibuat dari angka dashboard (LLM tidak tersedia: ${jl.data.catatan || '-'}).`
       );
     } catch (e) {
@@ -308,13 +308,13 @@ export default function NarasiPresentasiContainer() {
             </h1>
             <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
               Widget LAURA di halaman publik <strong>/jendela-kinerja</strong> membacakan ringkasan
-              dashboard selama ±1 menit. Kalau ada angka atau kalimat yang belum sesuai, periksa di
+              dashboard selama \xb11 menit. Kalau ada angka atau kalimat yang belum sesuai, periksa di
               sini lalu simpan koreksinya. Koreksi berlaku untuk{' '}
-              <strong>kombinasi filter yang sama saja</strong> — filter lain tetap memakai naskah
+              <strong>kombinasi filter yang sama saja</strong> \u2014 filter lain tetap memakai naskah
               otomatis.
             </p>
             <p className="mt-2 text-[11.5px] text-slate-400">
-              Sumber angka: route publik <code>/api/publik/kinerja/*</code> — sama dengan yang tampil
+              Sumber angka: route publik <code>/api/publik/kinerja/*</code> \u2014 sama dengan yang tampil
               di halaman publik, jadi naskah tidak pernah memakai angka berbeda.
             </p>
           </div>
@@ -418,7 +418,7 @@ export default function NarasiPresentasiContainer() {
             className="btn-primary-sm inline-flex items-center gap-2 disabled:opacity-50"
           >
             <FaSyncAlt className={membuat ? 'h-3 w-3 animate-spin' : 'h-3 w-3'} />
-            {membuat ? 'Menyiapkan naskah…' : 'Ambil data & buat naskah'}
+            {membuat ? 'Menyiapkan naskah\u2026' : 'Ambil data & buat naskah'}
           </button>
           <button
             type="button"
@@ -464,7 +464,7 @@ export default function NarasiPresentasiContainer() {
             <div>
               <h2 className="text-[13px] font-bold text-slate-900 dark:text-white">Angka sumber naskah</h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Angka inilah yang dipakai narasi. Kalau ada yang salah, perbaiki di modul asalnya —
+                Angka inilah yang dipakai narasi. Kalau ada yang salah, perbaiki di modul asalnya \u2014
                 bukan di naskah.
               </p>
             </div>
@@ -486,7 +486,7 @@ export default function NarasiPresentasiContainer() {
           <div>
             <h2 className="text-[13px] font-bold text-slate-900 dark:text-white">Naskah presentasi</h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              ±150 kata = ±60 detik bicara. Sunting seperlunya, lalu simpan koreksi.
+              \xb1150 kata = \xb160 detik bicara. Sunting seperlunya, lalu simpan koreksi.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -520,7 +520,7 @@ export default function NarasiPresentasiContainer() {
               className="btn-primary-sm inline-flex items-center gap-2 disabled:opacity-50"
             >
               <FaSave className="h-3 w-3" />
-              {menyimpan ? 'Menyimpan…' : 'Simpan koreksi'}
+              {menyimpan ? 'Menyimpan\u2026' : 'Simpan koreksi'}
             </button>
           </div>
         </div>
@@ -539,14 +539,14 @@ export default function NarasiPresentasiContainer() {
             value={naskah}
             onChange={(e) => setNaskah(e.target.value)}
             rows={10}
-            placeholder="Klik “Ambil data & buat naskah” untuk membuat naskah otomatis dari angka dashboard, atau tulis sendiri naskahnya di sini."
+            placeholder="Klik \u201cAmbil data & buat naskah\u201d untuk membuat naskah otomatis dari angka dashboard, atau tulis sendiri naskahnya di sini."
             className="w-full resize-y rounded-xl border border-paper-200 bg-white p-3 text-[12.5px] leading-relaxed text-slate-800 outline-none transition focus:border-accent-500 dark:border-white/[0.12] dark:bg-white/[0.04] dark:text-white"
           />
 
           <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
-            <span>{kata} kata · ±{detik} detik</span>
+            <span>{kata} kata \xb7 \xb1{detik} detik</span>
             <span className={detik < 40 || detik > 90 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
-              {detik === 0 ? 'belum ada naskah' : detik < 40 ? 'terlalu singkat untuk 1 menit' : detik > 90 ? 'terlalu panjang untuk 1 menit' : 'panjang sesuai (±1 menit)'}
+              {detik === 0 ? 'belum ada naskah' : detik < 40 ? 'terlalu singkat untuk 1 menit' : detik > 90 ? 'terlalu panjang untuk 1 menit' : 'panjang sesuai (\xb11 menit)'}
             </span>
             {terlaluPendek && (
               <span className="text-rose-600 dark:text-rose-400">minimal 80 karakter agar bisa disimpan</span>
@@ -584,7 +584,7 @@ export default function NarasiPresentasiContainer() {
               Koreksi tersimpan ({daftar.length})
             </h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Hapus koreksi → naskah otomatis dipakai lagi untuk filter itu.
+              Hapus koreksi \u2192 naskah otomatis dipakai lagi untuk filter itu.
             </p>
           </div>
         </div>
@@ -655,8 +655,8 @@ export default function NarasiPresentasiContainer() {
             <strong>Presentasi Dashboard</strong>.
           </li>
           <li className="list-decimal">
-            Widget menanyakan koreksi untuk filter yang sedang aktif di halaman itu. Ada koreksi → yang
-            dibacakan naskah koreksi; belum ada → naskah otomatis dari angka dashboard.
+            Widget menanyakan koreksi untuk filter yang sedang aktif di halaman itu. Ada koreksi \u2192 yang
+            dibacakan naskah koreksi; belum ada \u2192 naskah otomatis dari angka dashboard.
           </li>
           <li className="list-decimal">
             Setelah narasi selesai, panel <strong>Tanya Laura</strong> terbuka: pertanyaan diketik atau

@@ -1,6 +1,6 @@
 // components/navbar/helper.js
 /**
- * HELPER NAVBAR PUBLIK — "Jendela Kinerja"
+ * HELPER NAVBAR PUBLIK \u2014 "Jendela Kinerja"
  * ----------------------------------------
  * Satu sumber kebenaran untuk daftar menu di navbar publik. Konstanta saja,
  * tanpa state/API (konvensi `components/<kelompok>/<modul>/helper.js`).
@@ -13,7 +13,7 @@
 export const MENU_PUBLIK = [
   {
     label: 'Jendela Kinerja',
-    href: '/jendela-kinerja',
+    href: '/dashboard',
     icon: 'FaRegWindowMaximize',
     siap: true,
   },
@@ -46,11 +46,12 @@ export const MENU_PUBLIK = [
 /** True bila `pathname` masih bagian dari menu ini (termasuk sub-halaman). */
 export function menuAktif(href, pathname) {
   if (!pathname) return false;
-  if (href === '/jendela-kinerja') return pathname.startsWith('/jendela-kinerja');
+  // Cocok untuk alamat baru maupun lama (redirect 308) agar menu tetap aktif.
+  if (href === '/dashboard') return pathname.startsWith('/dashboard') || pathname.startsWith('/jendela-kinerja');
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Menu yang belum selesai — dipakai halaman "segera hadir". */
+/** Menu yang belum selesai \u2014 dipakai halaman "segera hadir". */
 export function cariMenu(href) {
   return MENU_PUBLIK.find((m) => m.href === href) || null;
 }

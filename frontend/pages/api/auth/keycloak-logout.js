@@ -1,6 +1,6 @@
 // pages/api/auth/keycloak-logout.js
 /**
- * LOGOUT SSO KEYCLOAK — dijalankan di sisi SERVER
+ * LOGOUT SSO KEYCLOAK \u2014 dijalankan di sisi SERVER
  * -----------------------------------------------
  * Dipanggil browser dengan navigasi biasa:
  *     window.location.href = '/api/auth/keycloak-logout';
@@ -19,7 +19,7 @@
  *   dari token itu juga masuk riwayat browser. Dengan route ini, token hanya
  *   berada di cookie JWE httpOnly dan di sisi server.
  *
- * Route ini publik (cookie sesi belum tentu ada) — middleware.js memang
+ * Route ini publik (cookie sesi belum tentu ada) \u2014 middleware.js memang
  * mengecualikan seluruh path /api/auth.
  */
 import { ambilToken } from '../../../utils/authCookies';
@@ -27,11 +27,11 @@ import { ambilToken } from '../../../utils/authCookies';
 /**
  * Susun daftar Set-Cookie penghapus, nama mengikuti konvensi NextAuth.
  *
- * PENTING — cookie sesi BISA TERPECAH. next-auth memecah nilai cookie sesi
- * yang melebihi ±4 KB menjadi `next-auth.session-token.0`, `.1`, `.2`, … dan
+ * PENTING \u2014 cookie sesi BISA TERPECAH. next-auth memecah nilai cookie sesi
+ * yang melebihi \xb14 KB menjadi `next-auth.session-token.0`, `.1`, `.2`, \u2026 dan
  * menyambungnya kembali saat membaca sesi. Sesi Keycloak (id_token +
  * access_token + refresh_token) hampir selalu melewati batas itu, jadi
- * menghapus HANYA `next-auth.session-token` menyisakan potongannya →
+ * menghapus HANYA `next-auth.session-token` menyisakan potongannya \u2192
  * sesi tetap dianggap sah dan pengguna masih bisa masuk dashboard setelah
  * menekan Logout. Karena itu semua nama berawalan `next-auth.session-token`
  * (dasar + potongan) ikut dihapus.
@@ -42,7 +42,7 @@ function clearAuthCookies(req, res, useSecureCookies) {
   const secure = useSecureCookies ? '; Secure' : '';
   const kedaluwarsa = 'Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
 
-  // Nama yang benar-benar dikirim browser (potongan .0/.1/… ikut tertangkap).
+  // Nama yang benar-benar dikirim browser (potongan .0/.1/\u2026 ikut tertangkap).
   const namaSesi = new Set(
     Object.keys(req.cookies || {}).filter((nama) => nama.startsWith('next-auth.session-token'))
   );
@@ -62,7 +62,7 @@ function clearAuthCookies(req, res, useSecureCookies) {
 
 /**
  * Kirim 302 TANPA body.
- * `res.redirect()` bawaan Next.js menulis body HTML berisi URL tujuan — artinya
+ * `res.redirect()` bawaan Next.js menulis body HTML berisi URL tujuan \u2014 artinya
  * id_token_hint bisa ikut terbaca lewat fetch/XHR. Dengan status + Location saja,
  * token hanya ada di header Location (dipakai browser untuk navigasi biasa).
  */
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
   try {
     token = await ambilToken(req);
   } catch (error) {
-    console.error('❌ [keycloak-logout] Gagal membaca sesi:', error.message);
+    console.error('\u274c [keycloak-logout] Gagal membaca sesi:', error.message);
   }
 
   // 2. Bersihkan sesi lokal apa pun kondisinya (termasuk cookie sesi terpecah).

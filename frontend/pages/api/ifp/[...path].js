@@ -1,13 +1,13 @@
 // pages/api/ifp/[...path].js
 /**
- * PROXY BACKEND — /api/ifp/*
+ * PROXY BACKEND \u2014 /api/ifp/*
  * --------------------------
  * Token Keycloak SENGAJA tidak pernah dikirim ke browser (lihat catatan di
  * utils/axiosInstance.js). Semua permintaan modul Distribusi IFP karena itu
  * lewat route server ini:
  *
- *   browser  →  /api/ifp/<path>          (cookie sesi NextAuth, httpOnly)
- *            →  backend /api/ifp/<path>  (header Authorization: Bearer <access_token>)
+ *   browser  \u2192  /api/ifp/<path>          (cookie sesi NextAuth, httpOnly)
+ *            \u2192  backend /api/ifp/<path>  (header Authorization: Bearer <access_token>)
  *
  * Body multipart (unggah berkas) diteruskan apa adanya sebagai buffer, jadi
  * boundary dari browser tidak perlu diurai ulang.

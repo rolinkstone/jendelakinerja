@@ -1,6 +1,6 @@
 // pages/prestasi-unit-kerja/index.js
 /**
- * HALAMAN PUBLIK — Prestasi Unit Kerja
+ * HALAMAN PUBLIK \u2014 Prestasi Unit Kerja
  * -----------------------------------------
  * Menu ini sudah tampil di navbar tetapi modulnya belum selesai. Halaman ini
  * menjaga tautan menu tetap hidup (bukan 404) memakai komponen bersama

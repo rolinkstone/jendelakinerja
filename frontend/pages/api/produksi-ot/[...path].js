@@ -1,13 +1,13 @@
 // pages/api/produksi-ot/[...path].js
 /**
- * PROXY BACKEND — /api/produksi-ot/*
+ * PROXY BACKEND \u2014 /api/produksi-ot/*
  * ----------------------------------
  * Token Keycloak SENGAJA tidak pernah dikirim ke browser (lihat catatan di
- * utils/axiosInstance.js). Semua permintaan modul Produksi — Obat Tradisional
+ * utils/axiosInstance.js). Semua permintaan modul Produksi \u2014 Obat Tradisional
  * karena itu lewat route server ini:
  *
- *   browser  →  /api/produksi-ot/<path>          (cookie sesi NextAuth, httpOnly)
- *            →  backend /api/produksi-ot/<path>  (header Authorization: Bearer ***
+ *   browser  \u2192  /api/produksi-ot/<path>          (cookie sesi NextAuth, httpOnly)
+ *            \u2192  backend /api/produksi-ot/<path>  (header Authorization: Bearer ***
  *
  * Body multipart (unggah berkas Excel) diteruskan apa adanya sebagai buffer,
  * jadi boundary dari browser tidak perlu diurai ulang.

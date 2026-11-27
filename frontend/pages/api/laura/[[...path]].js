@@ -1,15 +1,15 @@
 // pages/api/laura/[[...path]].js
 /**
- * PROXY LAURA AI — jalur publik, same-origin
+ * PROXY LAURA AI \u2014 jalur publik, same-origin
  * ------------------------------------------
  *   browser (halaman /jendela-kinerja)
- *     → /api/laura/<path>            (tanpa cookie sesi, tanpa CORS)
- *       → LAURA backend /api/public/<path>
+ *     \u2192 /api/laura/<path>            (tanpa cookie sesi, tanpa CORS)
+ *       \u2192 LAURA backend /api/public/<path>
  *
  * Kenapa lewat proxy, bukan fetch langsung ke LAURA:
  *  1. Browser tidak perlu tahu alamat LAURA (bisa berubah tanpa build ulang).
- *  2. Same-origin → tidak perlu izin CORS tambahan di LAURA.
- *  3. Balasan SELALU JSON — kalau LAURA mati, pengguna melihat pesan jelas,
+ *  2. Same-origin \u2192 tidak perlu izin CORS tambahan di LAURA.
+ *  3. Balasan SELALU JSON \u2014 kalau LAURA mati, pengguna melihat pesan jelas,
  *     bukan error "Unexpected token '<'" seperti kasus link-api sebelumnya.
  *
  * Keamanan: hanya rute publik LAURA yang boleh lewat sini. Daftar putih
@@ -44,7 +44,7 @@ const cariKoreksi = async (filter) => {
     const j = await r.json();
     return j.success ? j.data : null;
   } catch (e) {
-    // Koreksi tidak wajib: backend JK mati → tetap lanjut ke LAURA.
+    // Koreksi tidak wajib: backend JK mati \u2192 tetap lanjut ke LAURA.
     return null;
   }
 };
@@ -54,16 +54,16 @@ const cariKoreksi = async (filter) => {
  * Menambah entri di sini = membuka jalur baru dari internet, jadi eksplisit.
  */
 const RUTE_DIIZINKAN = new Set([
-  'chat',          // POST — tanya jawab RAG (tamu, tanpa login)
-  'chat/stream',   // POST — versi streaming
-  'presentasi',    // POST — naskah narasi dashboard
-  'feedback',      // POST — umpan balik jawaban
+  'chat',          // POST \u2014 tanya jawab RAG (tamu, tanpa login)
+  'chat/stream',   // POST \u2014 versi streaming
+  'presentasi',    // POST \u2014 naskah narasi dashboard
+  'feedback',      // POST \u2014 umpan balik jawaban
 ]);
 
 /** Batas waktu panggilan ke LAURA (ms). LLM bisa lambat, jangan terlalu ketat. */
 const BATAS_MS = 90000;
 
-/** Kirim JSON apa pun ke browser — tidak pernah HTML. */
+/** Kirim JSON apa pun ke browser \u2014 tidak pernah HTML. */
 const balasJson = (res, status, obj) => {
   res.status(status);
   res.setHeader('content-type', 'application/json; charset=utf-8');
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
   }
 
   if (!RUTE_DIIZINKAN.has(bagian)) {
-    // Jangan bocorkan rute apa yang ada — cukup tolak.
+    // Jangan bocorkan rute apa yang ada \u2014 cukup tolak.
     return balasJson(res, 403, {
       success: false,
       message: 'Rute ini tidak dibuka untuk halaman publik. Hubungi admin bila diperlukan.',
@@ -95,7 +95,7 @@ export default async function handler(req, res) {
 
   // PRESENTASI: koreksi operator (bila ada) MENANG atas naskah otomatis.
   // Filter diambil dari body.filter; kalau tidak dikirim, pakai filter yang
-  // tercatat di payload dashboard. Tanpa koreksi → lanjut ke LAURA AI.
+  // tercatat di payload dashboard. Tanpa koreksi \u2192 lanjut ke LAURA AI.
   if (bagian === 'presentasi') {
     const filter = (req.body && req.body.filter) || (req.body?.dashboard && req.body.dashboard.filter) || null;
     const koreksi = await cariKoreksi(filter);
@@ -131,7 +131,7 @@ export default async function handler(req, res) {
     const tipe = jawaban.headers.get('content-type') || '';
 
     // Balasan LAURA yang bukan JSON (mis. halaman error HTML dari reverse proxy)
-    // dibungkus jadi JSON — kelas bug "Unexpected token '<'" tidak boleh terulang.
+    // dibungkus jadi JSON \u2014 kelas bug "Unexpected token '<'" tidak boleh terulang.
     if (!tipe.includes('application/json')) {
       return balasJson(res, 502, {
         success: false,

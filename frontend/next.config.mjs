@@ -12,6 +12,12 @@ const nextConfig = {
 
   async redirects() {
     return [
+      // Rute publik dulu bernama /jendela-kinerja. Nama itu mirip dengan
+      // halaman internal /beranda sehingga membingungkan; rute publiknya kini
+      // /dashboard. Alamat lama tetap hidup lewat redirect permanen (308) —
+      // tautan yang sudah tersebar, bookmark, dan dokumen lama tidak rusak.
+      { source: '/jendela-kinerja', destination: '/dashboard', permanent: true },
+      { source: '/jendela-kinerja/:path*', destination: '/dashboard', permanent: true },
       { source: '/beranda/integrasi-laura', destination: '/setting/laura-ai', permanent: true },
       { source: '/beranda/narasi-presentasi', destination: '/setting/narasi-presentasi', permanent: true },
     ];

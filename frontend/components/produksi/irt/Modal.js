@@ -1,6 +1,6 @@
 // components/produksi/irt/Modal.js
 /**
- * MODAL — Modul Produksi: Pangan IRT (CPPB - IRT)
+ * MODAL \u2014 Modul Produksi: Pangan IRT (CPPB - IRT)
  * ----------------------------------------------
  * Dialog milik modul ditaruh terpisah di `components/<kelompok>/<modul>/Modal.js`,
  * sedangkan state & request API tetap di `Container.js` (file ini murni tampilan).
@@ -89,7 +89,7 @@ export function DetailLaporanModal({ data, loading, onClose }) {
         <div className="min-w-0">
           <p className="section-label">Rincian Laporan Pemeriksaan Produksi</p>
           <h2 id="judul-detail-irt" className="truncate text-[15px] font-bold text-ink-900 dark:text-ink-50">
-            {loading ? 'Memuat…' : l?.nama_sarana || 'Laporan'}
+            {loading ? 'Memuat\u2026' : l?.nama_sarana || 'Laporan'}
           </h2>
           {!loading && l && (
             <p className="mt-0.5 flex items-center gap-2 text-[11px] text-ink-500 dark:text-ink-300">
@@ -109,7 +109,7 @@ export function DetailLaporanModal({ data, loading, onClose }) {
       </div>
 
       <div className="overflow-y-auto p-4 sm:p-5">
-        {loading && <p className="text-[13px] text-ink-500 dark:text-ink-300">Memuat rincian laporan…</p>}
+        {loading && <p className="text-[13px] text-ink-500 dark:text-ink-300">Memuat rincian laporan\u2026</p>}
 
         {!loading && !l && (
           <p className="text-[13px] text-ink-500 dark:text-ink-300">Data laporan tidak tersedia.</p>
@@ -169,7 +169,7 @@ export function DetailLaporanModal({ data, loading, onClose }) {
               </div>
             </section>
 
-            {/* Daftar penyimpangan — kolom khas berkas Pangan IRT */}
+            {/* Daftar penyimpangan \u2014 kolom khas berkas Pangan IRT */}
             <section className="rounded-lg border border-paper-200 bg-paper-50 p-3 dark:border-ink-800 dark:bg-ink-850/60">
               <p className="section-label flex items-center gap-2">
                 <FaExclamationTriangle /> Ketidaksesuaian / Penyimpangan
@@ -202,19 +202,19 @@ export function DetailLaporanModal({ data, loading, onClose }) {
               <Baris label="Tgl Kirim Ka. Balai" nilai={l.tgl_kirim_ka_balai} />
               <Baris
                 label="Verifikasi Operator Pusat"
-                nilai={[l.verif_operator_pusat, l.verif_tgl_operator].filter(Boolean).join(' · ')}
+                nilai={[l.verif_operator_pusat, l.verif_tgl_operator].filter(Boolean).join(' \xb7 ')}
               />
               <Baris
                 label="Supervisor Satu Pusat"
-                nilai={[l.verif_supervisor_1, l.verif_tgl_supervisor_1].filter(Boolean).join(' · ')}
+                nilai={[l.verif_supervisor_1, l.verif_tgl_supervisor_1].filter(Boolean).join(' \xb7 ')}
               />
               <Baris
                 label="Supervisor Dua Pusat"
-                nilai={[l.verif_supervisor_2, l.verif_tgl_supervisor_2].filter(Boolean).join(' · ')}
+                nilai={[l.verif_supervisor_2, l.verif_tgl_supervisor_2].filter(Boolean).join(' \xb7 ')}
               />
               <Baris
                 label="Direktur"
-                nilai={[l.direktur, l.verif_tgl_direktur].filter(Boolean).join(' · ')}
+                nilai={[l.direktur, l.verif_tgl_direktur].filter(Boolean).join(' \xb7 ')}
               />
               <Baris
                 label="Kesimpulan Verifikasi Pusat"
@@ -229,7 +229,7 @@ export function DetailLaporanModal({ data, loading, onClose }) {
 
             <p className="flex items-start gap-2 rounded-lg bg-paper-100 px-3 py-2 text-[11px] leading-relaxed text-ink-500 dark:bg-ink-850 dark:text-ink-300">
               <FaUserCheck className="mt-0.5 shrink-0" />
-              Berkas laporan Produksi Pangan IRT tidak memuat baris rincian fokus pemeriksaan —
+              Berkas laporan Produksi Pangan IRT tidak memuat baris rincian fokus pemeriksaan \u2014
               temuan sudah diringkas pada kolom M/m/S/C dan daftar penyimpangan di atas.
             </p>
           </div>

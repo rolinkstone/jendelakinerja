@@ -1,18 +1,18 @@
 // pages/api/narasi/[[...path]].js
 /**
- * PROXY BACKEND — /api/narasi-presentasi (dashboard ber-SSO)
+ * PROXY BACKEND \u2014 /api/narasi-presentasi (dashboard ber-SSO)
  * ---------------------------------------------------------
- * Halaman Beranda → Narasi Presentasi memakai proxy ini untuk:
+ * Halaman Beranda \u2192 Narasi Presentasi memakai proxy ini untuk:
  *
- *   browser  →  /api/narasi?limit=50          (cookie sesi NextAuth)
- *            →  backend /api/narasi-presentasi (Authorization: Bearer ***)
+ *   browser  \u2192  /api/narasi?limit=50          (cookie sesi NextAuth)
+ *            \u2192  backend /api/narasi-presentasi (Authorization: Bearer ***)
  *
  * Token Keycloak tidak boleh sampai ke browser, dan nama route backend
  * (`narasi-presentasi`) sengaja dipendekkan jadi `/api/narasi` di frontend
  * supaya konsisten dengan proxy lain yang juga memakai nama pendek.
  *
  * CATATAN: jalur publik (widget di /jendela-kinerja) memakai backend langsung
- * lewat proxy /api/laura/*, bukan lewat sini — jadi halaman publik tidak
+ * lewat proxy /api/laura/*, bukan lewat sini \u2014 jadi halaman publik tidak
  * bergantung pada sesi ini.
  *
  * ATURAN: selalu balas JSON (lihat pages/api/link-api/[[...path]].js).
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
 
   // BACA PUBLIK: daftar naskah aktif untuk satu filter dipakai juga oleh widget
   // di halaman publik /jendela-kinerja (tanpa sesi). Naskah presentasi bukan
-  // data pribadi — memang dibacakan ke pengunjung. Tanpa pengecualian ini,
+  // data pribadi \u2014 memang dibacakan ke pengunjung. Tanpa pengecualian ini,
   // widget publik ditolak 401 dan koreksi operator tidak pernah terdengar.
   // TULIS (POST/DELETE) dan daftar penuh tetap WAJIB sesi.
   const bagian = [].concat(req.query.path || []).join('/');

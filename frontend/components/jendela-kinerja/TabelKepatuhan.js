@@ -1,6 +1,6 @@
 // components/jendela-kinerja/TabelKepatuhan.js
 /**
- * TABEL KEPATUHAN MUTU — komponen bersama
+ * TABEL KEPATUHAN MUTU \u2014 komponen bersama
  * --------------------------------------
  * Dipakai dua tempat di Jendela Kinerja:
  *   1. "Jumlah Sampel Diuji per Tahun"  (SampelLab.js)
@@ -14,7 +14,7 @@
  * - Kolom angka selalu rata kanan + `tnum` supaya digit sejajar vertikal.
  * - Kolom "Kepatuhan" memakai lebar persen tetap (52px) + batang, jadi angkanya
  *   tidak melompat saat nilainya berubah dari 9,9% ke 100%.
- * - Baris jumlah hanya muncul kalau baris data lebih dari satu — kalau cuma
+ * - Baris jumlah hanya muncul kalau baris data lebih dari satu \u2014 kalau cuma
  *   satu baris, baris jumlah hanya mengulang angka yang sama.
  */
 import { angka, formatAngka } from './helper';
@@ -75,7 +75,7 @@ export default function TabelKepatuhan({
   if (baris.length === 0) {
     return (
       <p className="px-4 py-8 text-center text-[13px] text-slate-400 dark:text-slate-500">
-        {memuat ? 'Memuat data…' : pesanKosong}
+        {memuat ? 'Memuat data\u2026' : pesanKosong}
       </p>
     );
   }
@@ -92,17 +92,105 @@ export default function TabelKepatuhan({
   );
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[560px] table-fixed border-collapse text-left">
+    <>
+      {/* ============ Ponsel: kartu bertumpuk ============
+          Tabel 5 kolom tidak mungkin terbaca di lebar 390 px: kolom angka yang
+          dikunci (92-150 px) menghabiskan seluruh layar, sehingga tahun/nama
+          komoditas terdorong keluar dan pembaca harus menggeser kiri-kanan
+          untuk mencocokkan angka dengan barisnya. Di bawah `md` setiap baris
+          jadi satu kartu: judul, lalu angka dalam kisi 2 kolom, lalu batang
+          kepatuhan selebar kartu. Tidak ada geser mendatar sama sekali. */}
+      <ul className="divide-y divide-paper-200 md:hidden dark:divide-white/[0.06]">
+        {baris.map((b) => {
+          const memenuhi = angka(b.memenuhi);
+          const tidakMemenuhi = angka(b.tidak_memenuhi);
+          const persen = persenKepatuhan(memenuhi, angka(b.sampel));
+          return (
+            <li key={String(b[kolomNama])} className="px-4 py-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="break-words text-[13px] font-bold leading-snug text-slate-800 dark:text-white">
+                  {b[kolomNama] || '\u2014'}
+                </p>
+                <span className="tnum shrink-0 text-[13px] font-bold text-slate-700 dark:text-slate-200">
+                  {persen}%
+                </span>
+              </div>
+              {sub && sub(b) ? (
+                <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">{sub(b)}</p>
+              ) : null}
+
+              {/* Nama kolom ditulis ulang di tiap kartu - tanpa itu angka
+                  "871" tidak punya arti apa pun bagi pembaca. */}
+              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
+                <div>
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
+                    Sampel
+                  </dt>
+                  <dd className="tnum text-[13px] font-semibold text-slate-800 dark:text-white">
+                    {formatAngka(angka(b.sampel))}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
+                    Memenuhi
+                  </dt>
+                  <dd className="tnum text-[13px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    {formatAngka(memenuhi)}
+                  </dd>
+                </div>
+                <div className="col-span-2">
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
+                    Tidak memenuhi
+                  </dt>
+                  <dd className="tnum text-[13px] font-semibold text-rose-600 dark:text-rose-400">
+                    {tidakMemenuhi > 0 ? formatAngka(tidakMemenuhi) : '\u2014'}
+                  </dd>
+                </div>
+              </dl>
+
+              <span className="mt-2 block h-1.5 w-full overflow-hidden rounded-full bg-paper-200 dark:bg-white/10">
+                <span
+                  className={`block h-full rounded-full ${warnaBatang(tidakMemenuhi)}`}
+                  style={{ width: `${persen}%` }}
+                />
+              </span>
+            </li>
+          );
+        })}
+        {pakaiJumlah && (
+          <li className="bg-paper-50/70 px-4 py-3 dark:bg-white/[0.03]">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Jumlah
+            </p>
+            <div className="mt-2 flex items-baseline justify-between gap-3">
+              <span className="tnum text-[12.5px] font-bold text-slate-800 dark:text-white">
+                {formatAngka(jumlah.sampel)} sampel
+              </span>
+              <span className="tnum text-[12.5px] font-bold text-emerald-600 dark:text-emerald-400">
+                {formatAngka(jumlah.memenuhi)} memenuhi
+              </span>
+              <span className="tnum text-[12.5px] font-bold text-rose-600 dark:text-rose-400">
+                {jumlah.tidak > 0 ? `${formatAngka(jumlah.tidak)} tidak` : '0 tidak'}
+              </span>
+            </div>
+          </li>
+        )}
+      </ul>
+
+      {/* ============ Layar sedang ke atas: tabel penuh ============ */}
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full table-fixed border-collapse text-left">
         <thead>
           <tr className="border-b border-paper-200 bg-paper-50/70 dark:border-white/[0.08] dark:bg-white/[0.03]">
-            {/* Kolom angka lebarnya dikunci: kalau dibiarkan melar, digit
-                satu baris berjauhan sampai sulit dibaca di layar lebar. */}
-            <th className="th w-auto text-left">{label}</th>
-            <th className="th w-[110px] text-right">Sampel</th>
-            <th className="th w-[120px] text-right">Memenuhi</th>
-            <th className="th w-[150px] text-right">Tidak Memenuhi</th>
-            <th className="th w-[210px] text-left">Kepatuhan</th>
+            {/* Kolom label HARUS punya lebar eksplisit. Dengan `table-fixed`,
+                `w-auto` tidak mengambil sisa ruang - ia jadi lebar 0 px, dan
+                isi kolom pertama (tahun / nama komoditas) hilang sama sekali.
+                Sisanya dibagi rata ke kolom angka yang lebarnya dikunci. */}
+            <th className="th min-w-[104px] text-left">{label}</th>
+            <th className="th w-[92px] text-right">Sampel</th>
+            <th className="th w-[96px] text-right">Memenuhi</th>
+            <th className="th w-[104px] text-right">Tidak Memenuhi</th>
+            <th className="th w-[150px] text-left">Kepatuhan</th>
           </tr>
         </thead>
         <tbody>
@@ -116,7 +204,7 @@ export default function TabelKepatuhan({
               >
                 <td className="px-4 py-2.5">
                   <p className="break-words text-[12.5px] font-semibold leading-snug text-slate-700 dark:text-slate-200">
-                    {b[kolomNama] || '—'}
+                    {b[kolomNama] || '\u2014'}
                   </p>
                   {sub && sub(b) ? (
                     <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">{sub(b)}</p>
@@ -129,7 +217,7 @@ export default function TabelKepatuhan({
                   {formatAngka(memenuhi)}
                 </td>
                 <td className="tnum px-4 py-2.5 text-right text-[12.5px] font-semibold text-rose-600 dark:text-rose-400">
-                  {tidakMemenuhi > 0 ? formatAngka(tidakMemenuhi) : '—'}
+                  {tidakMemenuhi > 0 ? formatAngka(tidakMemenuhi) : '\u2014'}
                 </td>
                 <KolomKepatuhan
                   memenuhi={memenuhi}
@@ -153,13 +241,14 @@ export default function TabelKepatuhan({
                 {formatAngka(jumlah.memenuhi)}
               </td>
               <td className="tnum px-4 py-2.5 text-right text-[12.5px] font-bold text-rose-600 dark:text-rose-400">
-                {jumlah.tidak > 0 ? formatAngka(jumlah.tidak) : '—'}
+                {jumlah.tidak > 0 ? formatAngka(jumlah.tidak) : '\u2014'}
               </td>
               <KolomKepatuhan memenuhi={jumlah.memenuhi} sampel={jumlah.sampel} tidakMemenuhi={jumlah.tidak} />
             </tr>
           </tfoot>
         )}
       </table>
-    </div>
+      </div>
+    </>
   );
 }

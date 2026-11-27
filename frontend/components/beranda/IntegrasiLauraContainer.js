@@ -1,6 +1,6 @@
 // components/beranda/IntegrasiLauraContainer.js
 /**
- * PENGELOLA LINK API — INTEGRASI LAURA AI (dashboard ber-SSO)
+ * PENGELOLA LINK API \u2014 INTEGRASI LAURA AI (dashboard ber-SSO)
  * ----------------------------------------------------------
  * Halaman ini adalah TEMPAT MENERBITKAN dan MENGELOLA link API:
  *
@@ -798,14 +798,14 @@ export default function IntegrasiLauraContainer() {
         <div className="border-b border-paper-200 px-4 py-2.5 dark:border-white/[0.08]">
           <p className="text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400">
             Daftar rute <code className="font-mono">/api/publik/kinerja/*</code> yang dipakai halaman
-            depan <strong>/jendela-kinerja</strong>. Semuanya <strong>tetap publik</strong> — tidak
+            depan <strong>/jendela-kinerja</strong>. Semuanya <strong>tetap publik</strong> \u2014 tidak
             terpengaruh pengaturan publik/private pada link di tabel atas.
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <input
               value={saringPublik}
               onChange={(ev2) => setSaringPublik(ev2.target.value)}
-              placeholder="Cari modul / path / nama…"
+              placeholder="Cari modul / path / nama\u2026"
               className="w-full max-w-xs rounded-lg border border-paper-300 px-2.5 py-1.5 text-[12px] dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-slate-200"
             />
             <span className="text-[11px] text-slate-400">

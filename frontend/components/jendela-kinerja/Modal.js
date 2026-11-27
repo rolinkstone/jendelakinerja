@@ -1,6 +1,6 @@
 // components/jendela-kinerja/Modal.js
 /**
- * MODAL — Dashboard publik "Jendela Kinerja"
+ * MODAL \u2014 Dashboard publik "Jendela Kinerja"
  * ------------------------------------------
  * Konvensi modul: dialog ditaruh terpisah di `components/<modul>/Modal.js`,
  * state & permintaan API tetap di `Container.js` (file ini murni tampilan).
@@ -10,7 +10,7 @@
  *   RincianKabupatenModal  -> daftar sarana satu kab/kota: nama sarana, kegiatan,
  *                             jenis sarana, periode periksa, status MK/TMK.
  *                             Kolom "Produk" menampilkan NAMA PRODUK (tanpa kode
- *                             sampel — kode membuat kolom melebar) untuk baris
+ *                             sampel \u2014 kode membuat kolom melebar) untuk baris
  *                             sampel, supaya beberapa sampel dari sarana &
  *                             tanggal yang sama (satu kunjungan bisa mengambil
  *                             banyak produk) tidak terbaca sebagai data ganda.
@@ -91,7 +91,7 @@ export default function RincianKabupatenModal({ detail, onClose }) {
       <div className="min-h-[180px] flex-1 overflow-auto">
         {detail?.memuat && (
           <p className="px-4 py-10 text-center text-[13px] text-slate-400 dark:text-slate-500">
-            Memuat rincian sarana…
+            Memuat rincian sarana\u2026
           </p>
         )}
 
@@ -132,7 +132,7 @@ export default function RincianKabupatenModal({ detail, onClose }) {
                   </td>
                   <td className="px-4 py-2.5 text-[12.5px] text-slate-600 dark:text-slate-300">
                     {b.produk_sampel || (
-                      <span className="text-slate-400 dark:text-slate-500">—</span>
+                      <span className="text-slate-400 dark:text-slate-500">\u2014</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">
@@ -146,7 +146,7 @@ export default function RincianKabupatenModal({ detail, onClose }) {
                   <td className="whitespace-nowrap px-4 py-2.5 text-[12px] text-slate-500 dark:text-slate-400">
                     {b.tgl_periksa_mulai || '-'}
                     {b.tgl_periksa_selesai && b.tgl_periksa_selesai !== b.tgl_periksa_mulai
-                      ? ` – ${b.tgl_periksa_selesai}`
+                      ? ` \u2013 ${b.tgl_periksa_selesai}`
                       : ''}
                   </td>
                   <td className="px-4 py-2.5">

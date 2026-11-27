@@ -1,8 +1,8 @@
 // pages/distribusi/ifp/index.js
 /**
- * HALAMAN: DISTRIBUSI — IFP (Instalasi Farmasi Pemerintah)
+ * HALAMAN: DISTRIBUSI \u2014 IFP (Instalasi Farmasi Pemerintah)
  * -------------------------------------------------------
- * Halaman TIPIS — hanya <Head> + layout global. Seluruh logika & tampilan ada
+ * Halaman TIPIS \u2014 hanya <Head> + layout global. Seluruh logika & tampilan ada
  * di components/distribusi/ifp/{Container,helper,Modal}.js.
  * Backend: backend/routes/ifp.js (prefix /api/ifp).
  *
@@ -22,7 +22,7 @@ export default function DistribusiIfpPage() {
         <title>{`Distribusi IFP | ${BRAND.name}`}</title>
       </Head>
 
-      <DashboardLayout pageTitle="Distribusi — IFP">
+      <DashboardLayout pageTitle="Distribusi \u2014 IFP">
         <DistribusiIfpContainer />
       </DashboardLayout>
     </>

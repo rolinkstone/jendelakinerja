@@ -1,17 +1,17 @@
 // pages/api/sampel/[...path].js
 /**
- * PROXY BACKEND — /api/sampel/<komoditi>/*
+ * PROXY BACKEND \u2014 /api/sampel/<komoditi>/*
  * ----------------------------------------
  * Satu proxy untuk SEMUA sub menu modul Sampel:
  *
- *   browser  →  /api/sampel/ot/summary            (cookie sesi NextAuth, httpOnly)
- *            →  backend /api/sampel-ot/summary    (header Authorization: ***
+ *   browser  \u2192  /api/sampel/ot/summary            (cookie sesi NextAuth, httpOnly)
+ *            \u2192  backend /api/sampel-ot/summary    (header Authorization: ***
  *
- *   browser  →  /api/sampel/sk/summary
- *            →  backend /api/sampel-sk/summary
+ *   browser  \u2192  /api/sampel/sk/summary
+ *            \u2192  backend /api/sampel-sk/summary
  *
- *   browser  →  /api/sampel/ob/summary
- *            →  backend /api/sampel-ob/summary
+ *   browser  \u2192  /api/sampel/ob/summary
+ *            \u2192  backend /api/sampel-ob/summary
  *
  * Token Keycloak SENGAJA tidak pernah dikirim ke browser (lihat catatan di
  * utils/axiosInstance.js). Segmen pertama WAJIB ada di daftar `SEGMEN` supaya

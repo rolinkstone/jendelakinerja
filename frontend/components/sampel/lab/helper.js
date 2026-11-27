@@ -1,14 +1,14 @@
 // components/sampel/lab/helper.js
 /**
- * HELPER — Modul Sampel (dipakai bersama semua komoditi)
+ * HELPER \u2014 Modul Sampel (dipakai bersama semua komoditi)
  * ------------------------------------------------------
  * Konstanta tampilan + formatter + validasi berkas. Modul OT dan SK memakai
- * berkas ini apa adanya — perbedaan antar komoditi hanya ada di config.js.
+ * berkas ini apa adanya \u2014 perbedaan antar komoditi hanya ada di config.js.
  * Tidak ada state / request API di sini (murni fungsi), mengikuti konvensi
  * `components/<kelompok>/<modul>/helper.js`.
  */
 
-/** Batas ukuran unggahan — harus sama dengan `limits.fileSize` di backend/lib/sampel.js */
+/** Batas ukuran unggahan \u2014 harus sama dengan `limits.fileSize` di backend/lib/sampel.js */
 export const MAKS_BERKAS = 15 * 1024 * 1024;
 export const EKSTENSI_DIIZINKAN = ['.xlsx', '.xls', '.xlsm'];
 
@@ -41,7 +41,7 @@ export function formatAngka(nilai) {
   return n.toLocaleString('id-ID');
 }
 
-/** "2026-11-15T06:35:59.000Z" → "15 November 2026, 13:35" */
+/** "2026-11-15T06:35:59.000Z" \u2192 "15 November 2026, 13:35" */
 const BULAN = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
@@ -60,7 +60,7 @@ export function formatWaktu(iso) {
 export function ringkas(teks, maks = 90) {
   const s = String(teks || '').replace(/\s+/g, ' ').trim();
   if (!s) return '-';
-  return s.length > maks ? `${s.slice(0, maks - 1)}…` : s;
+  return s.length > maks ? `${s.slice(0, maks - 1)}\u2026` : s;
 }
 
 /**
@@ -76,7 +76,7 @@ export function kelasKesimpulan(nilai) {
   return 'bg-paper-200/70 text-ink-600 dark:bg-ink-800 dark:text-ink-300';
 }
 
-/** Kelas badge untuk grading/kriteria (A, B, C, …). */
+/** Kelas badge untuk grading/kriteria (A, B, C, \u2026). */
 export function kelasGrading(nilai) {
   const s = String(nilai || '').trim().toUpperCase();
   if (s === 'A') return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300';
@@ -106,7 +106,7 @@ export function kelasTemuan(jumlah, tingkat) {
  */
 export function kesimpulanPenuh(nilai) {
   const s = String(nilai || '').trim();
-  if (!s) return '—';
+  if (!s) return '\u2014';
   const kecil = s.toLowerCase();
   if (['ms', 'mk', 'memenuhi kriteria'].includes(kecil)) return 'Memenuhi Syarat';
   if (['tms', 'tmk', 'tidak memenuhi kriteria'].includes(kecil)) return 'Tidak Memenuhi Syarat';
@@ -135,7 +135,7 @@ export function metaUnggahan(impor) {
 }
 
 // ---------------------------------------------------------------------------
-// Tahun data — modul ini menyimpan data beberapa tahun sekaligus, jadi UI punya
+// Tahun data \u2014 modul ini menyimpan data beberapa tahun sekaligus, jadi UI punya
 // filter tahun (null = semua) dan pemilih tahun saat mengunggah ('otomatis' =
 // tahun dibaca dari isi berkas oleh backend).
 // ---------------------------------------------------------------------------
@@ -180,10 +180,10 @@ export const TONE_TILE = {
 };
 
 // ---------------------------------------------------------------------------
-// Filter kesimpulan — pilihan tetap supaya pengguna tidak perlu mengetik.
+// Filter kesimpulan \u2014 pilihan tetap supaya pengguna tidak perlu mengetik.
 // Berkas menulis campuran "Memenuhi Syarat" dan "MS" (begitu pula TMS); backend
 // (lib/sampel.js) menyamakan keduanya sebelum menyaring, jadi cukup SATU pilihan
-// per hasil — kalau "MS" didaftarkan terpisah, daftar yang tampil jadi kembar.
+// per hasil \u2014 kalau "MS" didaftarkan terpisah, daftar yang tampil jadi kembar.
 // ---------------------------------------------------------------------------
 export const OPSI_KESIMPULAN = [
   { nilai: '', label: 'Semua kesimpulan' },

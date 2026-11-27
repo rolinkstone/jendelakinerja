@@ -3,7 +3,7 @@
  * KONFIGURASI MODUL SAMPEL PER KOMODITI
  * -------------------------------------
  * Modul Sampel punya beberapa sub menu (Obat Tradisional, Suplemen Kesehatan,
- * Obat, Kosmetika, Produk Pangan, Kemasan Pangan, Obat Kuasi). Komponennya sama — yang berbeda hanya:
+ * Obat, Kosmetika, Produk Pangan, Kemasan Pangan, Obat Kuasi). Komponennya sama \u2014 yang berbeda hanya:
  * prefix API, judul halaman, label komoditi, dan ikon. Berkas Excel-nya TIDAK
  * selalu sama tata letaknya (Obat 59 kolom dengan Kriteria Resiko & ATC,
  * Kosmetika & Produk Pangan 54 kolom tanpa Jenis Sarana), tetapi perbedaan itu

@@ -1,12 +1,12 @@
 // components/navbar/Segera.js
 /**
- * HALAMAN "SEGERA HADIR" — menu publik yang belum selesai
+ * HALAMAN "SEGERA HADIR" \u2014 menu publik yang belum selesai
  * -------------------------------------------------------
  * Menu di navbar publik sudah lengkap, tetapi empat di antaranya masih dalam
  * pengerjaan. Halaman ini menjaga supaya tautan menu tetap hidup (bukan 404)
  * dan memberi tahu modul mana yang sedang dikerjakan lebih dulu.
  *
- * Menu yang sudah siap: Jendela Kinerja (`/jendela-kinerja`).
+ * Menu yang sudah siap: Jendela Kinerja (`/dashboard`).
  */
 import Head from 'next/head';
 import Link from 'next/link';
@@ -23,7 +23,7 @@ export default function Segera({ href }) {
   return (
     <>
       <Head>
-        <title>{`${menu.label} — segera hadir | ${BRAND.name}`}</title>
+        <title>{`${menu.label} \u2014 segera hadir | ${BRAND.name}`}</title>
         <meta name="description" content={`${menu.label} masih dalam pengerjaan.`} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
@@ -31,7 +31,7 @@ export default function Segera({ href }) {
       <div className="app-surface min-h-screen">
         <Navbar />
 
-        {/* Maskot Laura AI juga tampil di halaman "segera hadir" — pengunjung
+        {/* Maskot Laura AI juga tampil di halaman "segera hadir" \u2014 pengunjung
             yang nyasar tetap bisa bertanya lewat Laura. */}
         <LauraAI />
 
@@ -46,7 +46,7 @@ export default function Segera({ href }) {
             </h1>
             <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
               Menu ini masih dalam pengerjaan. Yang sedang dibangun lebih dulu adalah
-              <strong className="font-semibold text-slate-800 dark:text-slate-100"> Jendela Kinerja</strong> —
+              <strong className="font-semibold text-slate-800 dark:text-slate-100"> Jendela Kinerja</strong> \u2014
               menu lain menyusul setelah modulnya siap.
             </p>
 
@@ -67,7 +67,7 @@ export default function Segera({ href }) {
               </ul>
             </div>
 
-            <Link href="/jendela-kinerja" className="btn-primary mt-6">
+            <Link href="/dashboard" className="btn-primary mt-6">
               <FaArrowLeft className="h-3 w-3" />
               Buka Jendela Kinerja
             </Link>

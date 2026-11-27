@@ -1,6 +1,6 @@
 // components/navbar/Navbar.js
 /**
- * NAVBAR PUBLIK — "Jendela Kinerja"
+ * NAVBAR PUBLIK \u2014 "Jendela Kinerja"
  * --------------------------------
  * Dipakai SEMUA halaman publik (di luar dashboard ber-SSO): Jendela Kinerja,
  * Prestasi Unit Kerja, Anggaran dan Realisasi, Dokumen PK dan RAPK, Sumber Daya.
@@ -47,7 +47,7 @@ export default function Navbar({ subjudul = 'Balai Besar POM di Palangka Raya' }
     <header className="sticky top-0 z-30 border-b border-paper-200/80 bg-white/85 backdrop-blur dark:border-white/[0.08] dark:bg-ink-900/85">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
         {/* Identitas aplikasi */}
-        <Link href="/jendela-kinerja" className="flex min-w-0 items-center gap-2.5">
+        <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5">
           <BrandMark size="md" />
           <div className="min-w-0">
             <p className="truncate text-sm font-extrabold tracking-tight text-slate-900 dark:text-white">

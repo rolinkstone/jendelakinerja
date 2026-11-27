@@ -1,13 +1,13 @@
 // pages/api/distribusi-ipk/[...path].js
 /**
- * PROXY BACKEND — /api/distribusi-ipk/*
+ * PROXY BACKEND \u2014 /api/distribusi-ipk/*
  * --------------------------
  * Token Keycloak SENGAJA tidak pernah dikirim ke browser (lihat catatan di
  * utils/axiosInstance.js). Semua permintaan modul Distribusi KOS karena itu
  * lewat route server ini:
  *
- *   browser  →  /api/distribusi-ipk/<path>          (cookie sesi NextAuth, httpOnly)
- *            →  backend /api/distribusi-ipk/<path>  (header Authorization: Bearer <access_token>)
+ *   browser  \u2192  /api/distribusi-ipk/<path>          (cookie sesi NextAuth, httpOnly)
+ *            \u2192  backend /api/distribusi-ipk/<path>  (header Authorization: Bearer <access_token>)
  *
  * Body multipart (unggah berkas) diteruskan apa adanya sebagai buffer, jadi
  * boundary dari browser tidak perlu diurai ulang.

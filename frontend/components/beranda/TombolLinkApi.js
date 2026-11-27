@@ -1,6 +1,6 @@
 // components/beranda/TombolLinkApi.js
 /**
- * TOMBOL "LINK API" PER MODUL — muncul di top bar dashboard.
+ * TOMBOL "LINK API" PER MODUL \u2014 muncul di top bar dashboard.
  * ------------------------------------------------------------
  * Membaca path halaman yang sedang dibuka (mis. /sampel/ot), lalu menanyakan
  * katalog backend: GET /api/publik/kinerja/api-modul?modul=sampel/ot
@@ -11,7 +11,7 @@
  * Kenapa per modul, bukan satu daftar panjang: operator yang sedang membuka
  * modul Sampel OT hanya perlu link modul itu; link modul lain jadi derau.
  *
- * Modul yang butuh Bearer (semua modul internal) diberi tanda kunci —
+ * Modul yang butuh Bearer (semua modul internal) diberi tanda kunci \u2014
  * LAURA AI-lah yang menerbitkan tokennya beserta masa berlaku, bukan JK.
  */
 import { useCallback, useEffect, useState } from 'react';
@@ -34,7 +34,7 @@ const BADGE = {
 
 export default function TombolLinkApi() {
   const router = useRouter();
-  // Modul diturunkan dari path: /sampel/ot → sampel/ot
+  // Modul diturunkan dari path: /sampel/ot \u2192 sampel/ot
   const modul = (router.pathname || '').replace(/^\/+|\/+$/g, '');
 
   const [buka, setBuka] = useState(false);
@@ -122,10 +122,10 @@ export default function TombolLinkApi() {
                   Integrasi knowledge
                 </p>
                 <h2 className="mt-1 text-base font-bold text-slate-900 dark:text-white">
-                  Link API — {modul}
+                  Link API \u2014 {modul}
                 </h2>
                 <p className="mt-1 text-[12px] text-slate-500 dark:text-slate-400">
-                  Salin link modul ini, lalu tempel di <strong>LAURA AI → Integrasi JK</strong> dan
+                  Salin link modul ini, lalu tempel di <strong>LAURA AI \u2192 Integrasi JK</strong> dan
                   tekan Sinkron. Token & masa berlakunya diatur di LAURA.
                 </p>
               </div>
@@ -184,7 +184,7 @@ export default function TombolLinkApi() {
                   {galat}
                 </p>
               )}
-              {memuat && !data && <p className="text-[12px] text-slate-400">Memuat link…</p>}
+              {memuat && !data && <p className="text-[12px] text-slate-400">Memuat link\u2026</p>}
               {!memuat && data && !daftar.length && (
                 <p className="text-[12px] text-slate-400">
                   Modul ini belum punya endpoint katalog API.

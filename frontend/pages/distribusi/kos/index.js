@@ -1,13 +1,13 @@
 // pages/distribusi/kos/index.js
 /**
- * HALAMAN: DISTRIBUSI — KOSMETIKA
+ * HALAMAN: DISTRIBUSI \u2014 KOSMETIKA
  * ---------------------------------------------------------------
  * Halaman TIPIS: seluruh logika & tampilan ada di
  * components/distribusi/kos/{Container,helper,Modal}.js
  * Backend: backend/routes/distribusi-kos.js (engine lib/distribusi.js).
  *
  * Berkas sumber: "Laporan Hasil Pemeriksaan Sarana Distribusi - Kosmetika".
- * Tata letaknya BERBEDA dari PBF — karena itu memakai engine tersendiri
+ * Tata letaknya BERBEDA dari PBF \u2014 karena itu memakai engine tersendiri
  * dengan pemetaan kolom per komoditi.
  */
 import Head from 'next/head';
@@ -22,7 +22,7 @@ export default function DistribusiKosPage() {
         <title>{`Distribusi Kosmetika | ${BRAND.name}`}</title>
       </Head>
 
-      <DashboardLayout pageTitle="Distribusi — Kosmetika">
+      <DashboardLayout pageTitle="Distribusi \u2014 Kosmetika">
         <DistribusiKosContainer />
       </DashboardLayout>
     </>

@@ -1,16 +1,16 @@
 // pages/distribusi/pbf/index.js
 /**
- * HALAMAN: DISTRIBUSI — PBF
+ * HALAMAN: DISTRIBUSI \u2014 PBF
  * -------------------------
- * Halaman ini sengaja TIPIS — hanya menyiapkan <Head> + layout global.
+ * Halaman ini sengaja TIPIS \u2014 hanya menyiapkan <Head> + layout global.
  * Seluruh logika & tampilan modul ada di:
  *   components/distribusi/pbf/Container.js
  *   components/distribusi/pbf/helper.js
  *   components/distribusi/pbf/Modal.js
  * Backend: backend/routes/pbf.js (prefix /api/pbf).
  *
- * Menu dashboard dibagi dua kelompok: Distribusi → PBF dan
- * Produksi → Obat Tradisional. Karena itu folder halaman mengikuti menu.
+ * Menu dashboard dibagi dua kelompok: Distribusi \u2192 PBF dan
+ * Produksi \u2192 Obat Tradisional. Karena itu folder halaman mengikuti menu.
  */
 import Head from 'next/head';
 import DashboardLayout from '../../../components/DashboardLayout';
@@ -24,7 +24,7 @@ export default function DistribusiPbfPage() {
         <title>{`Distribusi PBF | ${BRAND.name}`}</title>
       </Head>
 
-      <DashboardLayout pageTitle="Distribusi — PBF">
+      <DashboardLayout pageTitle="Distribusi \u2014 PBF">
         <DistribusiPbfContainer />
       </DashboardLayout>
     </>

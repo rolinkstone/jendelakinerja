@@ -1,6 +1,6 @@
 // pages/distribusi/ifk/index.js
 /**
- * HALAMAN: DISTRIBUSI — IFK
+ * HALAMAN: DISTRIBUSI \u2014 IFK
  * ---------------------------------------------------------------
  * IFK = Instalasi Farmasi Pemerintah KOTA/KABUPATEN.
  * Berkasnya identik dengan PBF/IFP (44 kolom, ada rincian fokus pemeriksaan),
@@ -22,7 +22,7 @@ export default function DistribusiIfkPage() {
         <title>{`Distribusi IFK | ${BRAND.name}`}</title>
       </Head>
 
-      <DashboardLayout pageTitle="Distribusi — IFK">
+      <DashboardLayout pageTitle="Distribusi \u2014 IFK">
         <DistribusiIfkContainer />
       </DashboardLayout>
     </>

@@ -1,13 +1,13 @@
 // components/distribusi/ipk/helper.js
 /**
- * HELPER — Modul Distribusi IPK
+ * HELPER \u2014 Modul Distribusi IPK
  * -----------------------------
  * Konstanta tampilan + formatter + validasi berkas.
  * Tidak ada state / request API di sini (murni fungsi), mengikuti konvensi
  * `components/<modul>/helper.js`.
  */
 
-/** Batas ukuran unggahan — harus sama dengan `limits.fileSize` di backend/routes/kos.js */
+/** Batas ukuran unggahan \u2014 harus sama dengan `limits.fileSize` di backend/routes/kos.js */
 export const MAKS_BERKAS = 15 * 1024 * 1024;
 export const EKSTENSI_DIIZINKAN = ['.xlsx', '.xls', '.xlsm'];
 
@@ -40,7 +40,7 @@ export function formatAngka(nilai) {
   return n.toLocaleString('id-ID');
 }
 
-/** "2026-11-15T06:35:59.000Z" → "15 November 2026, 13:35" */
+/** "2026-11-15T06:35:59.000Z" \u2192 "15 November 2026, 13:35" */
 const BULAN = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
@@ -59,7 +59,7 @@ export function formatWaktu(iso) {
 export function ringkas(teks, maks = 90) {
   const s = String(teks || '').replace(/\s+/g, ' ').trim();
   if (!s) return '-';
-  return s.length > maks ? `${s.slice(0, maks - 1)}…` : s;
+  return s.length > maks ? `${s.slice(0, maks - 1)}\u2026` : s;
 }
 
 /** Kelas badge untuk nilai kesimpulan akhir. */
@@ -79,7 +79,7 @@ export function kelasKekritisan(nilai) {
   return 'bg-accent-500/10 text-accent-700 dark:text-accent-300';
 }
 
-/** Baris ringkas kolom M/m/C: "1 mayor · 3 minor · 0 kritis". */
+/** Baris ringkas kolom M/m/C: "1 mayor \xb7 3 minor \xb7 0 kritis". */
 export function ringkasTemuan(row) {
   return [
     { label: 'mayor', nilai: row?.jumlah_mayor },
@@ -97,15 +97,15 @@ export function metaUnggahan(impor) {
     { label: 'Sheet', nilai: impor.sheet },
     { label: 'Jenis Sarana', nilai: impor.jenis_sarana },
     { label: 'Balai', nilai: impor.balai },
-    { label: 'Periode Pemeriksaan', nilai: `${impor.periode_awal || '-'} — ${impor.periode_akhir || '-'}` },
-    { label: 'Periode Entri', nilai: `${impor.tanggal_entri_awal || '-'} — ${impor.tanggal_entri_akhir || '-'}` },
+    { label: 'Periode Pemeriksaan', nilai: `${impor.periode_awal || '-'} \u2014 ${impor.periode_akhir || '-'}` },
+    { label: 'Periode Entri', nilai: `${impor.tanggal_entri_awal || '-'} \u2014 ${impor.tanggal_entri_akhir || '-'}` },
     { label: 'Diunggah oleh', nilai: impor.diunggah_oleh || '-' },
     { label: 'Diunggah pada', nilai: formatWaktu(impor.diunggah_pada) },
   ];
 }
 
 // ---------------------------------------------------------------------------
-// Tahun data — modul ini menyimpan data beberapa tahun sekaligus, jadi UI punya
+// Tahun data \u2014 modul ini menyimpan data beberapa tahun sekaligus, jadi UI punya
 // filter tahun (null = semua) dan pemilih tahun saat mengunggah ('otomatis' =
 // tahun dibaca dari isi berkas oleh backend).
 // ---------------------------------------------------------------------------

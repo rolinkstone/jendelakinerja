@@ -1,6 +1,6 @@
 // components/Brand.js
 /**
- * BRAND — Jendela Kinerja
+ * BRAND \u2014 Jendela Kinerja
  * -----------------------
  * Satu-satunya sumber identitas aplikasi (single source of truth).
  * Ubah nama/tagline di `BRAND` -> seluruh aplikasi (login, sidebar, beranda,
@@ -37,7 +37,7 @@ export const BRAND = {
   footerNote: 'Aplikasi internal',
 };
 
-/** Gradien aksen brand (biru → hijau, warna Badan POM) — dipakai petak logo & aksen. */
+/** Gradien aksen brand (biru \u2192 hijau, warna Badan POM) \u2014 dipakai petak logo & aksen. */
 export const BRAND_GRADIENT = 'from-accent-600 via-accent-500 to-hijau-500';
 
 const MARK_SIZES = {
@@ -131,7 +131,7 @@ export function BrandMark({ size = 'md', glow = true, className = '', title }) {
  *   'onDark' -> untuk latar gelap (sidebar, panel tinta): kata "Jendela" redup,
  *               kata "Kinerja" putih
  *   'onLight' / 'auto' -> untuk latar terang: slate, otomatis terang di dark mode
- * `gradient` -> kata "Kinerja" memakai gradien biru → hijau.
+ * `gradient` -> kata "Kinerja" memakai gradien biru \u2192 hijau.
  */
 export function BrandWordmark({
   size = 'md',

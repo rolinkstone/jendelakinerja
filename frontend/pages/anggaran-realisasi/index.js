@@ -1,6 +1,6 @@
 // pages/anggaran-realisasi/index.js
 /**
- * HALAMAN PUBLIK — Anggaran dan Realisasi
+ * HALAMAN PUBLIK \u2014 Anggaran dan Realisasi
  * --------------------------------------------
  * Menu ini sudah tampil di navbar tetapi modulnya belum selesai. Halaman ini
  * menjaga tautan menu tetap hidup (bukan 404) memakai komponen bersama

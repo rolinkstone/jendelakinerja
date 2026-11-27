@@ -1,6 +1,6 @@
 // components/sampel/lab/Modal.js
 /**
- * MODAL — Modul Sampel (dipakai bersama semua komoditi)
+ * MODAL \u2014 Modul Sampel (dipakai bersama semua komoditi)
  * -----------------------------------------------------
  * Dua komponen:
  *   - `Modal`            : kerangka dialog (overlay + kepala + tombol tutup)
@@ -8,9 +8,9 @@
  *
  * Berkas sampel punya 55 kolom, jadi rincian dikelompokkan (identitas, tempat,
  * laboratorium, kesimpulan UPT vs Pusat, tindak lanjut) alih-alih satu daftar
- * panjang — supaya bisa dibaca sekilas.
+ * panjang \u2014 supaya bisa dibaca sekilas.
  *
- * Nilai kosong selalu ditampilkan sebagai "—" supaya pengguna tahu kolomnya ada
+ * Nilai kosong selalu ditampilkan sebagai "\u2014" supaya pengguna tahu kolomnya ada
  * tetapi tidak diisi, bukan kolomnya hilang.
  */
 import { useEffect } from 'react';
@@ -19,7 +19,7 @@ import { kelasKesimpulan, kesimpulanPenuh, formatAngka } from './helper';
 
 /** Satu baris "label : nilai" di dalam blok rincian. */
 function Baris({ label, nilai, lebar = true }) {
-  const tampil = nilai === null || nilai === undefined || String(nilai).trim() === '' ? '—' : nilai;
+  const tampil = nilai === null || nilai === undefined || String(nilai).trim() === '' ? '\u2014' : nilai;
   return (
     <div className={lebar ? 'sm:col-span-2' : ''}>
       <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -96,10 +96,10 @@ export function DetailSampelModal({ sampel, onTutup }) {
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[15px] font-extrabold leading-snug text-slate-900 dark:text-white">
-            {sampel.nama_sampel || '—'}
+            {sampel.nama_sampel || '\u2014'}
           </p>
           <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400">
-            {sampel.nomor_sampel || '—'} · {sampel.tahun || '—'}
+            {sampel.nomor_sampel || '\u2014'} \xb7 {sampel.tahun || '\u2014'}
           </p>
         </div>
         <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${kelas}`}>
@@ -117,7 +117,7 @@ export function DetailSampelModal({ sampel, onTutup }) {
           <Baris label="Netto" nilai={sampel.netto} lebar={false} />
           <Baris label="Harga" nilai={sampel.harga} lebar={false} />
           <Baris label="No. Registrasi" nilai={sampel.no_reg} lebar={false} />
-          {/* Kolom khas berkas Obat; kosong ("—") untuk komoditi lain. */}
+          {/* Kolom khas berkas Obat; kosong ("\u2014") untuk komoditi lain. */}
           <Baris label="Kode ATC" nilai={sampel.atc} lebar={false} />
           <Baris label="No. Bets" nilai={sampel.no_bets} lebar={false} />
           <Baris label="Keterangan ED" nilai={sampel.keterangan_ed} lebar={false} />

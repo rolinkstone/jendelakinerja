@@ -22,7 +22,7 @@ const createAxiosInstance = (baseURL = process.env.NEXT_PUBLIC_API_URL || 'http:
   // sisi server (mis. pages/api/pbf/[...path].js) sehingga browser tidak perlu
   // header Authorization. Bila nanti ada endpoint backend lain yang butuh token,
   // buat route proxy serupa di pages/api/** yang mengambil token dari cookie
-  // httpOnly lewat getToken() lalu meneruskannya ke backend — jangan kirim token
+  // httpOnly lewat getToken() lalu meneruskannya ke backend \u2014 jangan kirim token
   // mentah ke browser.
 
   // Response interceptor untuk handle error autentikasi

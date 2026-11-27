@@ -1,6 +1,6 @@
 // pages/beranda/index.js
 /**
- * BERANDA DASHBOARD — Jendela Kinerja
+ * BERANDA DASHBOARD \u2014 Jendela Kinerja
  * -----------------------------------
  * Halaman ini dulu berada di `/` (pages/index.js). Sejak navbar publik
  * diperkenalkan, `/` diarahkan ke Jendela Kinerja dan beranda dashboard
@@ -8,8 +8,8 @@
  * Halaman ringkasan (executive summary). Identitas brand diambil dari
  * components/Brand.js supaya seragam dengan login, sidebar, dan 404.
  *
- * Tampilan: "executive cockpit" — kartu ringkasan KPI, daftar modul aktif,
- * status sistem. Nilai KPI sengaja masih placeholder ("—") karena modul
+ * Tampilan: "executive cockpit" \u2014 kartu ringkasan KPI, daftar modul aktif,
+ * status sistem. Nilai KPI sengaja masih placeholder ("\u2014") karena modul
  * kinerja belum terpasang; begitu modul jadi, ganti `KPI_SLOTS` dengan data
  * dari backend melalui helper modul terkait.
  *
@@ -65,32 +65,32 @@ const getGreeting = () => {
   return greetings.find((g) => h >= g.range[0] && h < g.range[1]) || greetings[0];
 };
 
-// Kartu KPI — placeholder sampai modul kinerja terpasang
+// Kartu KPI \u2014 placeholder sampai modul kinerja terpasang
 const KPI_SLOTS = [
   {
     label: 'Capaian IKU',
-    value: '—',
+    value: '\u2014',
     unit: '%',
     note: 'Menunggu modul kinerja',
     icon: FaBullseye,
   },
   {
     label: 'Realisasi Anggaran',
-    value: '—',
+    value: '\u2014',
     unit: '%',
     note: 'Menunggu modul anggaran',
     icon: FaWallet,
   },
   {
     label: 'Pegawai Aktif',
-    value: '—',
+    value: '\u2014',
     unit: 'org',
     note: 'Menunggu data kepegawaian',
     icon: FaUsers,
   },
   {
     label: 'Perjanjian Kinerja',
-    value: '—',
+    value: '\u2014',
     unit: 'dok',
     note: 'Menunggu data dokumen',
     icon: FaFileSignature,
@@ -98,7 +98,7 @@ const KPI_SLOTS = [
 ];
 
 // Modul yang sudah terpasang, dikelompokkan mengikuti menu sidebar:
-// Distribusi → PBF, Produksi → Obat Tradisional + Pangan IRT.
+// Distribusi \u2192 PBF, Produksi \u2192 Obat Tradisional + Pangan IRT.
 const MODULES = [
   {
     kelompok: 'Distribusi',
@@ -278,7 +278,7 @@ export default function Home() {
     return (
       <div className="app-surface flex min-h-screen flex-col items-center justify-center gap-4 text-slate-500 dark:text-slate-400">
         <BrandMark size="xl" className="animate-pulse" />
-        <p className="animate-pulse text-sm font-medium tracking-wide">Memuat {BRAND.name}…</p>
+        <p className="animate-pulse text-sm font-medium tracking-wide">Memuat {BRAND.name}\u2026</p>
       </div>
     );
   }
@@ -323,7 +323,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Kartu periode — panel tinta bermotif jendela */}
+              {/* Kartu periode \u2014 panel tinta bermotif jendela */}
               <div className="window-pattern flex flex-col justify-center gap-1 border-t border-paper-200 bg-ink-900 p-5 text-white dark:border-white/[0.08] sm:p-6 lg:border-l lg:border-t-0">
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-400/90">
                   Periode aktif
@@ -489,7 +489,7 @@ export default function Home() {
           <footer className="flex flex-col items-center gap-2 pb-2 pt-1 text-center">
             <BrandMark size="sm" glow={false} />
             <p className="text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-              {BRAND.name} v{BRAND.version} — {BRAND.subtitle}
+              {BRAND.name} v{BRAND.version} \u2014 {BRAND.subtitle}
               <br />
               {BRAND.footerNote}
             </p>

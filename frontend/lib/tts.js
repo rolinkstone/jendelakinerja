@@ -1,6 +1,6 @@
 // lib/tts.js
 /**
- * SUARA LAURA — satu sumber pengaturan TTS untuk SEMUA tempat
+ * SUARA LAURA \u2014 satu sumber pengaturan TTS untuk SEMUA tempat
  * -----------------------------------------------------------
  * Dipakai oleh:
  *  - widget publik `components/jendela-kinerja/LauraAI.js`
@@ -15,9 +15,9 @@
  * localStorage, dan semua pemutaran lewat `bacakan()` di sini.
  *
  * Tiga hal yang bisa diubah:
- *   1. `nama`  — suara mana (dari daftar suara sistem/browser)
- *   2. `laju`  — kecepatan bicara (0.5 – 1.5; 1 = normal)
- *   3. `nada`  — tinggi rendah suara (0.5 – 1.5)
+ *   1. `nama`  \u2014 suara mana (dari daftar suara sistem/browser)
+ *   2. `laju`  \u2014 kecepatan bicara (0.5 \u2013 1.5; 1 = normal)
+ *   3. `nada`  \u2014 tinggi rendah suara (0.5 \u2013 1.5)
  *
  * Suara TIDAK disintesis di server. Yang tersedia = yang terpasang di perangkat
  * pengunjung. Jadi operator bisa memilih, tapi kalau perangkat pengunjung tidak
@@ -28,7 +28,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 /** Kunci penyimpanan preferensi suara. */
 const KUNCI = 'laura-suara-v1';
 
-/** Preferensi awal — Indonesia, tempo sedikit lambat agar jelas. */
+/** Preferensi awal \u2014 Indonesia, tempo sedikit lambat agar jelas. */
 export const PREFERENSI_AWAL = { nama: '', laju: 0.98, nada: 1, lang: 'id-ID' };
 
 /** Batas aman slider. */
@@ -52,7 +52,7 @@ const bacaSimpanan = () => {
 
 /**
  * Pilih voice untuk satu utterance.
- * Urutan: nama tersimpan → bahasa target (id) → suara Indonesia apa pun →
+ * Urutan: nama tersimpan \u2192 bahasa target (id) \u2192 suara Indonesia apa pun \u2192
  * null (biarkan browser memilih). Mengembalikan null berarti utterance memakai
  * suara default sistem.
  */
@@ -60,16 +60,16 @@ const bacaSimpanan = () => {
  * Nama voice yang dikenal WANITA / PRIA.
  *
  * Kenapa perlu daftar eksplisit: Web Speech API tidak menyediakan field gender.
- * Tanpa daftar ini, pemilihan jatuh ke voice pertama yang bahasanya cocok —
+ * Tanpa daftar ini, pemilihan jatuh ke voice pertama yang bahasanya cocok \u2014
  * dan di Windows default-nya `Microsoft David` (PRIYA). Itu sebabnya di satu
  * laptop LAURA bersuara wanita (ada `Microsoft Gadis - id-ID`), di perangkat
- * lain bersuara pria (tidak ada voice Indonesia → default sistem = David).
+ * lain bersuara pria (tidak ada voice Indonesia \u2192 default sistem = David).
  *
  * `Zira`/`Sari`/`Damayanti` dst. adalah nama voice wanita bawaan Windows/Chrome.
  */
 const NAMA_WANITA = /gadis|female|wanita|perempuan|zira|sari|damayanti|andini|dewi|lestari|indah|maya|siti|nova|aria|jenny|sonia|michelle|google\s*bahasa\s*indonesia/i;
 
-/** Voice pria — dipakai sebagai penalti terakhir, bukan larangan mutlak. */
+/** Voice pria \u2014 dipakai sebagai penalti terakhir, bukan larangan mutlak. */
 const NAMA_PRIA = /\bardi\b|\bandika\b|\bmale\b|\bpria\b|david|mark|budi|rizwan|arif|dimas/i;
 
 const wanita = (v) => NAMA_WANITA.test(v.name);
@@ -78,14 +78,14 @@ const pria = (v) => NAMA_PRIA.test(v.name);
 /**
  * Pilih voice untuk satu utterance.
  *
- * Urutan (penting — jangan diacak):
- *   1. nama tersimpan (pilihan operator) — dihormati apa adanya;
- *   2. id-ID WANITA   → Gadis, Google Bahasa Indonesia, dst.
- *   3. bahasa target apa pun (id) — lebih baik daripada suara Inggris;
- *   4. WANITA dengan bahasa apa pun — menjaga karakter suara tetap perempuan
+ * Urutan (penting \u2014 jangan diacak):
+ *   1. nama tersimpan (pilihan operator) \u2014 dihormati apa adanya;
+ *   2. id-ID WANITA   \u2192 Gadis, Google Bahasa Indonesia, dst.
+ *   3. bahasa target apa pun (id) \u2014 lebih baik daripada suara Inggris;
+ *   4. WANITA dengan bahasa apa pun \u2014 menjaga karakter suara tetap perempuan
  *      walau perangkat tidak punya voice Indonesia (mis. Zira en-US);
  *   5. bahasa target/primer apa pun;
- *   6. null → biarkan browser memilih (BISA PRIA; hanya terjadi bila tidak ada
+ *   6. null \u2192 biarkan browser memilih (BISA PRIA; hanya terjadi bila tidak ada
  *      satu pun voice yang dikenali).
  *
  * Poin 4 adalah perbaikan inti: sebelumnya perangkat tanpa voice Indonesia
@@ -98,7 +98,7 @@ function pilihVoice(daftar, pref) {
     const tepat = daftar.find((v) => v.name === pref.nama);
     if (tepat) return tepat;
     // Suara tersimpan tidak ada di perangkat ini (mis. operator memilih suara
-    // di laptopnya, pengunjung membuka dari HP) → jatuh ke pencocokan bahasa.
+    // di laptopnya, pengunjung membuka dari HP) \u2192 jatuh ke pencocokan bahasa.
   }
 
   const target = (pref.lang || 'id-ID').toLowerCase();
@@ -111,7 +111,7 @@ function pilihVoice(daftar, pref) {
     // 3. Indonesia apa pun
     daftar.find((v) => v.lang.toLowerCase() === target) ||
     daftar.find((v) => bahasa(v, kode)) ||
-    // 4. Wanita bahasa apa pun (mis. Zira en-US) — jaga karakter suara
+    // 4. Wanita bahasa apa pun (mis. Zira en-US) \u2014 jaga karakter suara
     daftar.find((v) => wanita(v) && !pria(v)) ||
     // 5. Sisanya, hindari yang jelas pria bila masih ada pilihan lain
     daftar.find((v) => !pria(v)) ||
@@ -174,7 +174,7 @@ export function useSuaraLaura() {
     };
   }, []);
 
-  // Hentikan suara saat halaman ditinggalkan — jangan biarkan TTS menggantung.
+  // Hentikan suara saat halaman ditinggalkan \u2014 jangan biarkan TTS menggantung.
   useEffect(() => () => {
     if (adaSuara()) window.speechSynthesis.cancel();
   }, []);
@@ -247,5 +247,5 @@ export function useSuaraLaura() {
   return { tersedia, daftar, pref, set, reset, bacakan, berhenti, sedangBicara, coba };
 }
 
-/** Label ringkas untuk satu voice: "Microsoft Gadis — id-ID". */
-export const labelVoice = (v) => `${v.name} — ${v.lang}${v.localService ? '' : ' (online)'}`;
+/** Label ringkas untuk satu voice: "Microsoft Gadis \u2014 id-ID". */
+export const labelVoice = (v) => `${v.name} \u2014 ${v.lang}${v.localService ? '' : ' (online)'}`;

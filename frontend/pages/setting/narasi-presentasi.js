@@ -1,12 +1,12 @@
 // pages/setting/narasi-presentasi.js
 /**
- * HALAMAN: SETTING → NARASI PRESENTASI (di dalam dashboard ber-SSO)
+ * HALAMAN: SETTING \u2192 NARASI PRESENTASI (di dalam dashboard ber-SSO)
  * ------------------------------------------------------------------
  * Tempat operator MENGOREKSI naskah 1 menit yang dibacakan widget LAURA di
  * halaman publik /jendela-kinerja. Koreksi disimpan per kombinasi filter
  * dashboard (tahun, bulan, kegiatan, jenis sarana, kab/kota).
  *
- * Data angka diambil dari route publik /api/publik/kinerja/* — sama dengan
+ * Data angka diambil dari route publik /api/publik/kinerja/* \u2014 sama dengan
  * yang tampil di halaman publik, jadi naskah tidak pernah memakai angka lain.
  *
  * Dipindahkan dari `/beranda/narasi-presentasi` ke `/setting/narasi-presentasi`
@@ -22,10 +22,10 @@ export default function PengaturanNarasiPresentasiPage() {
   return (
     <>
       <Head>
-        <title>{`Setting — Narasi Presentasi | ${BRAND.name}`}</title>
+        <title>{`Setting \u2014 Narasi Presentasi | ${BRAND.name}`}</title>
       </Head>
 
-      <DashboardLayout pageTitle="Setting — Narasi Presentasi">
+      <DashboardLayout pageTitle="Setting \u2014 Narasi Presentasi">
         <NarasiPresentasiContainer />
       </DashboardLayout>
     </>

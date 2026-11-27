@@ -1,9 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 /**
- * DESIGN TOKENS — JENDELA KINERJA
+ * DESIGN TOKENS \u2014 JENDELA KINERJA
  * -------------------------------
- * Bahasa visual: "executive cockpit" — kertas hangat (paper) + tinta navy (ink)
- * + aksen BIRU–HIJAU (accent + hijau), mengikuti warna Badan POM.
+ * Bahasa visual: "executive cockpit" \u2014 kertas hangat (paper) + tinta navy (ink)
+ * + aksen BIRU\u2013HIJAU (accent + hijau), mengikuti warna Badan POM.
  * Semua warna brand dipusatkan di sini supaya perubahan palet cukup dilakukan sekali.
  */
 module.exports = {
@@ -15,7 +15,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Tinta navy — sidebar, teks utama mode gelap, permukaan gelap
+        // Tinta navy \u2014 sidebar, teks utama mode gelap, permukaan gelap
         ink: {
           950: '#060a12',
           900: '#0a1220',
@@ -25,7 +25,7 @@ module.exports = {
           600: '#28425f',
           500: '#3c5a7d',
         },
-        // Aksen BIRU (Badan POM) — aksi, penanda aktif, angka penting
+        // Aksen BIRU (Badan POM) \u2014 aksi, penanda aktif, angka penting
         accent: {
           50: '#f0f7fe',
           100: '#dcecfd',
@@ -36,7 +36,7 @@ module.exports = {
           600: '#0f6cb8',
           700: '#0c5591',
         },
-        // Aksen HIJAU (Badan POM) — pelengkap biru: gradien, status baik, penanda
+        // Aksen HIJAU (Badan POM) \u2014 pelengkap biru: gradien, status baik, penanda
         hijau: {
           50: '#eefaf2',
           100: '#d5f3e0',
@@ -47,7 +47,7 @@ module.exports = {
           600: '#148c4d',
           700: '#0f6f3f',
         },
-        // Kertas hangat — latar terang dan garis rambut
+        // Kertas hangat \u2014 latar terang dan garis rambut
         paper: {
           50: '#fbfaf7',
           100: '#f6f5f1',

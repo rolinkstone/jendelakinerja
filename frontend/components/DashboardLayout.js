@@ -1,11 +1,11 @@
 // components/DashboardLayout.js
 /**
- * LAYOUT DASHBOARD — Jendela Kinerja
+ * LAYOUT DASHBOARD \u2014 Jendela Kinerja
  * ----------------------------------
  * Kerangka halaman aplikasi: sidebar + top bar. Identitas brand (nama, logo,
  * tagline) diambil dari components/Brand.js supaya konsisten di semua halaman.
  *
- * Gaya: "executive cockpit" — sidebar TINTA NAVY (selalu gelap) dengan penanda
+ * Gaya: "executive cockpit" \u2014 sidebar TINTA NAVY (selalu gelap) dengan penanda
  * aktif biru, top bar kertas hangat bergaris rambut, konten berlatar blueprint.
  * Mendukung DARK MODE (class "dark" di <html>, tersimpan di localStorage "theme").
  *
@@ -90,7 +90,7 @@ const NAV_GROUPS = [
     label: 'Sampel',
     icon: FaVial,
     // Satu entri per komoditi. Komponen & engine-nya dipakai bersama
-    // (components/sampel/lab/, backend/lib/sampel.js) — sub menu baru cukup
+    // (components/sampel/lab/, backend/lib/sampel.js) \u2014 sub menu baru cukup
     // menambah baris di sini + halaman pages/sampel/<segmen>/.
     items: [
       { label: 'Obat Tradisional', href: '/sampel/ot', icon: FaFlask },
@@ -208,7 +208,7 @@ export default function DashboardLayout({ children, pageTitle = 'Beranda' }) {
     return (
       <div className="app-surface flex min-h-screen flex-col items-center justify-center gap-4 text-slate-500 dark:text-slate-400">
         <BrandMark size="xl" className="animate-pulse" />
-        <p className="animate-pulse text-sm font-medium tracking-wide">Memuat {BRAND.name}…</p>
+        <p className="animate-pulse text-sm font-medium tracking-wide">Memuat {BRAND.name}\u2026</p>
       </div>
     );
   }
@@ -219,7 +219,7 @@ export default function DashboardLayout({ children, pageTitle = 'Beranda' }) {
   const isActive = (href) => router.pathname === href;
 
   // Tutup/buka sub menu kelompok. Saat sidebar diciutkan, klik kelompok justru
-  // membuka sidebar penuh lebih dulu — sub menu tidak muat di lebar 4.75rem.
+  // membuka sidebar penuh lebih dulu \u2014 sub menu tidak muat di lebar 4.75rem.
   const toggleGrup = (label, sedangAktif) => {
     if (isCollapsed) {
       setIsCollapsed(false);
@@ -252,7 +252,7 @@ export default function DashboardLayout({ children, pageTitle = 'Beranda' }) {
             'radial-gradient(22rem 14rem at 0% 0%, rgba(245,158,11,0.10), transparent 62%)',
         }}
       >
-        {/* Brand — Jendela Kinerja */}
+        {/* Brand \u2014 Jendela Kinerja */}
         <div
           className={`flex h-16 shrink-0 items-center border-b border-white/[0.07] ${
             isCollapsed ? 'justify-center px-2' : 'px-4'
@@ -503,7 +503,7 @@ export default function DashboardLayout({ children, pageTitle = 'Beranda' }) {
           </div>
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-            {/* Tombol Link API modul aktif — untuk integrasi knowledge LAURA AI */}
+            {/* Tombol Link API modul aktif \u2014 untuk integrasi knowledge LAURA AI */}
             <TombolLinkApi />
 
             {/* Tanggal */}
@@ -562,7 +562,7 @@ export default function DashboardLayout({ children, pageTitle = 'Beranda' }) {
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-500/10"
                   >
                     <FaSignOutAlt className="h-3.5 w-3.5" />
-                    <span>{isLoggingOut ? 'Keluar…' : 'Keluar'}</span>
+                    <span>{isLoggingOut ? 'Keluar\u2026' : 'Keluar'}</span>
                   </button>
                   <div className="mt-1 flex items-center gap-2 border-t border-paper-200 px-4 pb-1 pt-2.5 text-[11px] text-slate-400 dark:border-white/10 dark:text-slate-500">
                     <BrandMark size="xs" glow={false} />

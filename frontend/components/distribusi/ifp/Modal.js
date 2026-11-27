@@ -1,6 +1,6 @@
 // components/distribusi/ifp/Modal.js
 /**
- * MODAL — Modul Distribusi IFP
+ * MODAL \u2014 Modul Distribusi IFP
  * ----------------------------
  * Dialog milik modul ditaruh terpisah di `components/<modul>/Modal.js`,
  * sedangkan state & request API tetap di `Container.js` (file ini murni tampilan).
@@ -108,7 +108,7 @@ export function DetailLaporanModal({ data, loading, onClose }) {
         <div className="min-w-0">
           <p className="section-label">Rincian Laporan Pemeriksaan</p>
           <h2 id="judul-detail-ifp" className="truncate text-[15px] font-bold text-ink-900 dark:text-ink-50">
-            {loading ? 'Memuat…' : l?.nama_sarana || 'Laporan'}
+            {loading ? 'Memuat\u2026' : l?.nama_sarana || 'Laporan'}
           </h2>
           {!loading && l && (
             <p className="mt-0.5 flex items-center gap-2 text-[11px] text-ink-500 dark:text-ink-300">
@@ -128,7 +128,7 @@ export function DetailLaporanModal({ data, loading, onClose }) {
       </div>
 
       <div className="overflow-y-auto p-4 sm:p-5">
-        {loading && <p className="text-[13px] text-ink-500 dark:text-ink-300">Memuat rincian laporan…</p>}
+        {loading && <p className="text-[13px] text-ink-500 dark:text-ink-300">Memuat rincian laporan\u2026</p>}
 
         {!loading && !l && (
           <p className="text-[13px] text-ink-500 dark:text-ink-300">Data laporan tidak tersedia.</p>
@@ -197,19 +197,19 @@ export function DetailLaporanModal({ data, loading, onClose }) {
               <Baris label="Tgl Kirim Ka. Balai" nilai={l.tgl_kirim_ka_balai} />
               <Baris
                 label="Verifikasi Operator Pusat"
-                nilai={[l.verif_operator_pusat, l.verif_tgl_operator].filter(Boolean).join(' · ')}
+                nilai={[l.verif_operator_pusat, l.verif_tgl_operator].filter(Boolean).join(' \xb7 ')}
               />
               <Baris
                 label="Supervisor Satu Pusat"
-                nilai={[l.verif_supervisor_1, l.verif_tgl_supervisor_1].filter(Boolean).join(' · ')}
+                nilai={[l.verif_supervisor_1, l.verif_tgl_supervisor_1].filter(Boolean).join(' \xb7 ')}
               />
               <Baris
                 label="Supervisor Dua Pusat"
-                nilai={[l.verif_supervisor_2, l.verif_tgl_supervisor_2].filter(Boolean).join(' · ')}
+                nilai={[l.verif_supervisor_2, l.verif_tgl_supervisor_2].filter(Boolean).join(' \xb7 ')}
               />
               <Baris
                 label="Direktur"
-                nilai={[l.verif_direktur, l.verif_tgl_direktur].filter(Boolean).join(' · ')}
+                nilai={[l.verif_direktur, l.verif_tgl_direktur].filter(Boolean).join(' \xb7 ')}
               />
             </section>
 

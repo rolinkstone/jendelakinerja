@@ -1,6 +1,6 @@
 // components/produksi/ot/Container.js
 /**
- * MODUL: PRODUKSI — OBAT TRADISIONAL (OT) — Container
+ * MODUL: PRODUKSI \u2014 OBAT TRADISIONAL (OT) \u2014 Container
  * ---------------------------------------------------
  * Impor laporan hasil pemeriksaan sarana PRODUKSI (Obat Tradisional) dari
  * berkas Excel export SIPT, lalu tampilkan sebagai tabel + rincian per sarana.
@@ -21,7 +21,7 @@
  * Berbeda dengan berkas PBF, berkas OT tidak punya baris rincian fokus
  * pemeriksaan: satu baris bernomor = satu sarana produksi.
  *
- * Permintaan API lewat proxy server `pages/api/produksi-ot/[...path].js` —
+ * Permintaan API lewat proxy server `pages/api/produksi-ot/[...path].js` \u2014
  * token Keycloak tidak pernah menyentuh browser.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -319,7 +319,7 @@ export default function ProduksiOtContainer() {
           )}
         </div>
         <p className="mt-2 text-[11px] leading-relaxed text-ink-500 dark:text-ink-300">
-          Data disimpan terpisah per tahun. Mengunggah berkas tahun 2025 hanya mengganti data 2025 —
+          Data disimpan terpisah per tahun. Mengunggah berkas tahun 2025 hanya mengganti data 2025 \u2014
           data tahun lain (mis. 2024, 2026) tetap utuh.
         </p>
       </section>
@@ -356,7 +356,7 @@ export default function ProduksiOtContainer() {
                 <>
                   <p className="text-[13px] font-bold text-ink-900 dark:text-ink-50">{berkas.name}</p>
                   <p className="text-[11px] text-ink-500 dark:text-ink-300">
-                    {formatUkuran(berkas.size)} · klik untuk mengganti berkas
+                    {formatUkuran(berkas.size)} \xb7 klik untuk mengganti berkas
                   </p>
                 </>
               ) : (
@@ -365,7 +365,7 @@ export default function ProduksiOtContainer() {
                     Lepas berkas di sini atau klik untuk memilih
                   </p>
                   <p className="text-[11px] text-ink-500 dark:text-ink-300">
-                    .xlsx / .xls / .xlsm · maksimal 15 MB
+                    .xlsx / .xls / .xlsm \xb7 maksimal 15 MB
                   </p>
                 </>
               )}
@@ -393,7 +393,7 @@ export default function ProduksiOtContainer() {
                 onChange={(e) => setTahunImpor(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-paper-300 bg-white px-2.5 py-1.5 text-[12px] font-medium text-ink-800 outline-none transition focus:border-accent-400/70 focus:ring-2 focus:ring-accent-400/25 dark:border-white/10 dark:bg-ink-900 dark:text-ink-100"
               >
-                <option value={TAHUN_OTOMATIS}>Otomatis — dibaca dari isi berkas</option>
+                <option value={TAHUN_OTOMATIS}>Otomatis \u2014 dibaca dari isi berkas</option>
                 {daftarPilihanTahun.map((t) => (
                   <option key={t} value={String(t)}>Tahun {t}</option>
                 ))}
@@ -415,12 +415,12 @@ export default function ProduksiOtContainer() {
                   {tahunImpor === TAHUN_OTOMATIS ? (
                     <>
                       Tahun data dibaca dari periode pemeriksaan di dalam berkas. Data tahun lain
-                      tidak tersentuh — tidak ada riwayat versi untuk tahun yang sama.
+                      tidak tersentuh \u2014 tidak ada riwayat versi untuk tahun yang sama.
                     </>
                   ) : (
                     <>
                       Seluruh data <b>tahun {tahunImpor}</b> akan diganti isi berkas ini. Data tahun
-                      lain tidak tersentuh — tidak ada riwayat versi untuk tahun yang sama.
+                      lain tidak tersentuh \u2014 tidak ada riwayat versi untuk tahun yang sama.
                     </>
                   )}
                 </p>
@@ -429,7 +429,7 @@ export default function ProduksiOtContainer() {
                     ? `Tersimpan sekarang: ${formatAngka(ringkasan.daftar_tahun.reduce((t, d) => t + Number(d.jumlah_laporan || 0), 0))} laporan dari ${totalTahunTersedia} tahun.`
                     : isiTahunDipilih
                       ? `Tahun ${tahunImpor} saat ini berisi ${formatAngka(isiTahunDipilih.jumlah_laporan)} laporan.`
-                      : `Tahun ${tahunImpor} belum punya data — unggahan ini akan jadi data pertamanya.`}
+                      : `Tahun ${tahunImpor} belum punya data \u2014 unggahan ini akan jadi data pertamanya.`}
                 </p>
               </div>
             </div>
@@ -442,7 +442,7 @@ export default function ProduksiOtContainer() {
                 className="btn-primary w-full"
               >
                 {mengunggah ? <FaSpinner className="animate-spin" /> : <FaFileExcel />}
-                {mengunggah ? 'Mengimpor…' : 'Unggah & Ganti Data Tahun Ini'}
+                {mengunggah ? 'Mengimpor\u2026' : 'Unggah & Ganti Data Tahun Ini'}
               </button>
               <div className="flex gap-2">
                 <button
@@ -465,7 +465,7 @@ export default function ProduksiOtContainer() {
                 )}
               </div>
 
-              {/* Konfirmasi hapus dua langkah — sengaja di dalam UI, bukan dialog
+              {/* Konfirmasi hapus dua langkah \u2014 sengaja di dalam UI, bukan dialog
                   bawaan browser, supaya tidak terhapus karena klik tak sengaja. */}
               {konfirmasiHapus && (
                 <div className="rounded-lg border border-rose-400/60 bg-rose-500/5 p-2 dark:border-rose-500/40">
@@ -483,7 +483,7 @@ export default function ProduksiOtContainer() {
                       className="btn-ghost flex-1 border-rose-400/70 text-rose-600 hover:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-300"
                     >
                       {menghapus ? <FaSpinner className="animate-spin" /> : <FaTrashAlt />}
-                      {menghapus ? 'Menghapus…' : 'Ya, hapus'}
+                      {menghapus ? 'Menghapus\u2026' : 'Ya, hapus'}
                     </button>
                     <button
                       type="button"
@@ -519,7 +519,7 @@ export default function ProduksiOtContainer() {
       <section className="space-y-2">
         <p className="section-label">
           Ringkasan {labelTahun(tahun)}
-          {tahun && <span className="ml-1 font-normal text-ink-400 dark:text-ink-500">— dikunci ke satu tahun</span>}
+          {tahun && <span className="ml-1 font-normal text-ink-400 dark:text-ink-500">\u2014 dikunci ke satu tahun</span>}
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {kartuStatistik.map((k, i) => (
@@ -623,7 +623,7 @@ export default function ProduksiOtContainer() {
                 type="search"
                 value={cari}
                 onChange={(e) => setCari(e.target.value)}
-                placeholder="Cari sarana, kota, grading…"
+                placeholder="Cari sarana, kota, grading\u2026"
                 className="w-56 rounded-lg border border-paper-300 bg-white py-1.5 pl-7 pr-2 text-[12px] text-ink-800 outline-none transition focus:border-accent-400/70 focus:ring-2 focus:ring-accent-400/25 dark:border-white/10 dark:bg-ink-900 dark:text-ink-100"
               />
             </div>
@@ -635,7 +635,7 @@ export default function ProduksiOtContainer() {
 
         {memuatData ? (
           <div className="flex items-center justify-center gap-2 px-4 py-12 text-[12px] font-medium text-ink-500 dark:text-ink-300">
-            <FaSpinner className="animate-spin" /> Memuat data…
+            <FaSpinner className="animate-spin" /> Memuat data\u2026
           </div>
         ) : tabel.rows.length === 0 ? (
           <div className="empty-track m-4">
@@ -685,7 +685,7 @@ export default function ProduksiOtContainer() {
                       </p>
                       <p className="truncate text-[11px] text-ink-500 dark:text-ink-300">
                         {ringkas(row.alamat, 60)}
-                        {row.jenis_industri ? ` · ${row.jenis_industri}` : ''}
+                        {row.jenis_industri ? ` \xb7 ${row.jenis_industri}` : ''}
                       </p>
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-[12px] text-ink-700 dark:text-ink-200">
@@ -723,7 +723,7 @@ export default function ProduksiOtContainer() {
         {tabel.total > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-paper-200 px-4 py-3 dark:border-white/10">
             <p className="text-[11px] font-medium text-ink-500 dark:text-ink-300">
-              Halaman {tabel.page} dari {tabel.total_halaman} · {formatAngka(tabel.total)} laporan
+              Halaman {tabel.page} dari {tabel.total_halaman} \xb7 {formatAngka(tabel.total)} laporan
             </p>
             <div className="flex gap-2">
               <button
