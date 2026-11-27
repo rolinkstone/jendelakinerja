@@ -51,6 +51,9 @@ export default withAuth(
           // (peta Kalteng + rekap pemeriksaan sarana). Proxy API-nya juga
           // publik karena backend route /api/publik tidak memakai token.
           '/dashboard',
+          // Dashboard realisasi keuangan PUBLIK: hanya angka agregat.
+          // Rinciannya ada di /data-realisasi yang tetap wajib login.
+          '/realisasi-anggaran',
           // Alamat lama (dialihkan 308 di next.config.mjs) tetap diloloskan
           // supaya redirect-nya dieksekusi Next, bukan ditahan middleware.
           '/jendela-kinerja',
@@ -63,12 +66,13 @@ export default withAuth(
           // /login dan klien menerima HTML, bukan JSON. Otorisasi sesungguhnya
           // ada DI DALAM proxy (utils/authCookies \u2192 ambilToken).
           '/api/narasi',
-          // Menu navbar publik lain \u2014 halaman "segera hadir" selama modulnya
-          // belum selesai. Semuanya di luar SSO, sama seperti Jendela Kinerja.
-          '/prestasi-unit-kerja',
-          '/anggaran-realisasi',
-          '/dokumen-pk-rapk',
-          '/sumber-daya',
+          // ATURAN UMUM: semua route WAJIB login, KECUALI data dashboard publik.
+          // Halaman "segera hadir" (Prestasi Unit Kerja, Dokumen PK-RAPK, Sumber
+          // Daya) sudah TIDAK diloloskan di sini - dulu terbuka karena modulnya
+          // belum selesai, sekarang harus login seperti modul lain.
+          // '/data-realisasi' juga tidak ada di sini: pagu/realisasi internal.
+          //
+          // Yang tetap publik hanya data untuk /dashboard:
           '/api/publik',
           // Proxy Link API ikut dilewatkan: route ini SELALU membalas JSON
           // (401 bila sesi tidak ada). Kalau middleware yang mencegatnya, ia

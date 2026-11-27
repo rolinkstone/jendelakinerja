@@ -62,7 +62,11 @@ export default async function handler(req, res) {
     const opsi = { method: 'GET' };
     if (token?.accessToken) opsi.headers = { authorization: `Bearer ${token.accessToken}` };
 
-    const jawaban = await fetch(url, opsi);
+    // `cache: 'no-store'` WAJIB. Tanpa ini Next menyimpan hasil fetch ke cache
+    // datanya, sehingga setelah pengguna mengimpor berkas baru halaman publik
+    // tetap menampilkan angka LAMA (bahkan angka dari saat impor berjalan) -
+    // gejalanya: curl ke backend sudah benar, tetapi halaman tidak berubah.
+    const jawaban = await fetch(url, { ...opsi, cache: 'no-store' });
     const teks = await jawaban.text();
 
     if (req.method !== 'HEAD' && !teks.trim()) return balasKosong(res, jawaban, url);

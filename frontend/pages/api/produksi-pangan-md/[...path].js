@@ -56,7 +56,7 @@ export default async function handler(req, res) {
       }
     }
 
-    const jawaban = await fetch(url, opsi);
+    const jawaban = await fetch(url, { ...opsi, cache: 'no-store' });
     const teks = await jawaban.text();
 
     if (req.method !== 'HEAD' && !teks.trim()) return balasKosong(res, jawaban, url);

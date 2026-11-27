@@ -18,7 +18,10 @@
  */
 const crypto = require('crypto');
 const express = require('express');
-const db = require('../config/database');
+// Dulu menunjuk '../config/database' yang TIDAK ADA di proyek ini, sehingga
+// router gagal dimuat dan server mati saat router ini dipasang. Proyek ini
+// memakai wrapper pool tunggal di backend/db.js.
+const db = require('../db');
 const { keycloakAuth, getUsername } = require('../middleware/keycloakAuth');
 
 const router = express.Router();

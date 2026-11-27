@@ -27,6 +27,7 @@ const rateLimit = require('express-rate-limit');
 // (gejala: "Token tidak sah atau kedaluwarsa" padahal token Keycloak valid).
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
+const { keycloakAuth } = require('./middleware/keycloakAuth');
 const {
     verifikasiToken,
     penggunaDariPayload,
@@ -144,19 +145,17 @@ const publicRoutes = ['/api/login', '/api/health', '/api/publik',
 // Hanya metode BACA (GET/HEAD) yang dibuka; impor/ubah/hapus tetap wajib token.
 // Kolom pribadi (operator, petugas, verifikator) dibuang oleh
 // lib/saring-publik.js di endpoint detail, jadi yang keluar hanya data teknis.
-const publicBacaRoutes = [
-    '/api/pbf',
-    '/api/ifp',
-    '/api/distribusi-kos',
-    '/api/distribusi-ot',
-    '/api/distribusi-ipk',
-    '/api/distribusi-sk',
-    '/api/distribusi-ifk',
-    '/api/produksi-ot',
-    '/api/produksi-irt',
-    '/api/produksi-pangan-md',
-    '/api/sampel' // mencakup sampel-ot, -sk, -ob, -kos, -pp, -kp
-];
+// SENGAJA KOSONG.
+// Dulu daftar ini membuka BACA untuk pbf/ifp/distribusi/produksi/sampel supaya
+// dashboard publik bisa menampilkannya. Sekarang dashboard publik hanya membaca
+// /api/publik/kinerja/*, sedangkan modul-modul di bawah adalah dashboard internal
+// yang SELALU dipanggil lewat proxy ber-sesi (Authorization: Bearer ...).
+// Membiarkan daftar ini terisi berarti data mentah tiap modul bisa diambil tanpa
+// login - persis yang tidak diinginkan.
+//
+// PERKECUALIAN TUNGGAL: data dashboard publik ada di `publicRoutes`
+// ('/api/publik'), plus '/api/login' dan '/api/health'.
+const publicBacaRoutes = [];
 
 // PREFIX API YANG BENAR-BENAR TERPASANG.
 // Dipakai untuk membedakan dua hal yang sebelumnya tertukar:
@@ -172,6 +171,7 @@ const PREFIKS_API = [
     '/api/produksi-ot', '/api/produksi-irt', '/api/produksi-pangan-md',
     '/api/sampel-ot', '/api/sampel-sk', '/api/sampel-ob', '/api/sampel-kos',
     '/api/sampel-pp', '/api/sampel-kp', '/api/sampel-ok',
+    '/api/anggaran-realisasi',
 ];
 
 const alamatDikenal = (path) => PREFIKS_API.some((p) => path.startsWith(p));
@@ -251,6 +251,23 @@ const authMiddleware = async (req, res, next) => {
 };
 
 app.use(authMiddleware);
+
+// ========== PENJAGA KEYCLOAK GLOBAL ==========
+// authMiddleware di atas hanya memastikan token SAH. Mulai titik ini setiap
+// route yang bukan publik juga wajib punya `req.user` dan melewati
+// middleware/keycloakAuth.js, yang menormalkan peran (extractedRoles, isAdmin,
+// isPPK, isKabalai) supaya route mana pun bisa memakai checkRole() tanpa
+// menebak bentuk payload Keycloak.
+//
+// YANG DIKECUALIKAN hanya:
+//   - alamat tidak dikenal (dibiarkan jatuh ke penangan 404, bukan 401 - temuan 3.8)
+//   - publicRoutes: /api/login, /api/health, /api/publik (data dashboard publik),
+//     dan /api/narasi-presentasi/aktif (naskah yang dibacakan widget dashboard).
+app.use((req, res, next) => {
+    if (!alamatDikenal(req.path)) return next();
+    if (publicRoutes.some((route) => req.path.startsWith(route))) return next();
+    return keycloakAuth(req, res, next);
+});
 
 // ========== HEALTH CHECK ==========
 app.get('/api/health', (req, res) => {
@@ -342,6 +359,12 @@ app.use('/api/produksi-irt', require('./routes/produksi-irt'));
 // kolom (beda dari IRT/OT), jadi memakai mesin lib/distribusi.js dengan
 // pemetaan kolom sendiri.
 app.use('/api/produksi-pangan-md', require('./routes/produksi-pangan-md'));
+
+// Router Anggaran & Realisasi - impor export SAKTI "Realisasi FA berdasarkan SP2D"
+// per tahun anggaran. COA disimpan utuh; kolom `mak` diisi hasil olahan
+// lib/mak.js (3165.BDB.001.051.524111.A). Rekap per MAK dibaca dari
+// view v_anggaran_mak.
+app.use('/api/anggaran-realisasi', require('./routes/anggaran-realisasi'));
 
 // Sampel: impor "REKAP DATA SAMPEL" per tahun (satu baris = satu sampel;
 // baris lanjutan di berkas digabung di backend/lib/sampel.js).

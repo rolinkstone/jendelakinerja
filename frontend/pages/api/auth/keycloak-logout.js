@@ -22,19 +22,25 @@
  * Route ini publik (cookie sesi belum tentu ada) \u2014 middleware.js memang
  * mengecualikan seluruh path /api/auth.
  */
-import { ambilToken } from '../../../utils/authCookies';
+import { ambilToken, AWALAN_COOKIE, PAKAI_COOKIE_AMAN } from '../../../utils/authCookies';
 
 /**
- * Susun daftar Set-Cookie penghapus, nama mengikuti konvensi NextAuth.
+ * Susun daftar Set-Cookie penghapus, nama mengikuti KONFIGURASI APLIKASI.
  *
- * PENTING \u2014 cookie sesi BISA TERPECAH. next-auth memecah nilai cookie sesi
- * yang melebihi \xb14 KB menjadi `next-auth.session-token.0`, `.1`, `.2`, \u2026 dan
- * menyambungnya kembali saat membaca sesi. Sesi Keycloak (id_token +
- * access_token + refresh_token) hampir selalu melewati batas itu, jadi
- * menghapus HANYA `next-auth.session-token` menyisakan potongannya \u2192
- * sesi tetap dianggap sah dan pengguna masih bisa masuk dashboard setelah
- * menekan Logout. Karena itu semua nama berawalan `next-auth.session-token`
- * (dasar + potongan) ikut dihapus.
+ * PENTING — nama cookie di aplikasi ini BUKAN bawaan NextAuth.
+ * `utils/authCookies.js` memberi awalan `jk` supaya sesi tidak bertabrakan
+ * dengan LAURA AI di localhost yang sama (cookie browser dipisah per HOST,
+ * bukan per PORT). Fungsi ini dulu hanya menghapus `next-auth.session-token*`,
+ * sehingga setelah menekan Logout cookie `jk.session-token` TETAP ADA:
+ * sesi masih sah dan halaman internal tetap terbuka. Semua nama di bawah kini
+ * diturunkan dari `AWALAN_COOKIE` + `PAKAI_COOKIE_AMAN` — jangan ditulis ulang
+ * manual, kalau tidak akan melenceng lagi saat nama cookie berubah.
+ *
+ * Cookie sesi BISA TERPECAH. next-auth memecah nilai di atas ±4 KB menjadi
+ * `<nama>.0`, `.1`, `.2`, … dan menyambungnya kembali saat membaca sesi. Sesi
+ * Keycloak (id_token + access_token + refresh_token) hampir selalu melewati
+ * batas itu, jadi menghapus hanya nama dasarnya menyisakan potongan → pengguna
+ * masih bisa masuk dashboard setelah menekan Logout.
  */
 function clearAuthCookies(req, res, useSecureCookies) {
   const prefix = useSecureCookies ? '__Secure-' : '';
@@ -42,20 +48,22 @@ function clearAuthCookies(req, res, useSecureCookies) {
   const secure = useSecureCookies ? '; Secure' : '';
   const kedaluwarsa = 'Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
 
-  // Nama yang benar-benar dikirim browser (potongan .0/.1/\u2026 ikut tertangkap).
+  // Nama yang benar-benar dikirim browser untuk cookie sesi (potongan .0/.1/… ikut).
   const namaSesi = new Set(
-    Object.keys(req.cookies || {}).filter((nama) => nama.startsWith('next-auth.session-token'))
+    Object.keys(req.cookies || {}).filter((nama) =>
+      nama.startsWith(`${AWALAN_COOKIE}.session-token`),
+    ),
   );
-  // Tambahan pengaman bila cookie gagal di-parse: dasar + sejumlah potongan umum.
-  namaSesi.add('next-auth.session-token');
-  for (let i = 0; i < 10; i += 1) namaSesi.add(`next-auth.session-token.${i}`);
+  // Pengaman bila cookie gagal di-parse: dasar + sejumlah potongan umum.
+  namaSesi.add(`${AWALAN_COOKIE}.session-token`);
+  for (let i = 0; i < 10; i += 1) namaSesi.add(`${AWALAN_COOKIE}.session-token.${i}`);
 
   const daftar = [];
   for (const nama of namaSesi) {
     daftar.push(`${prefix}${nama}=; Path=/; HttpOnly${secure}; SameSite=Lax; ${kedaluwarsa}`);
   }
-  daftar.push(`${csrfPrefix}next-auth.csrf-token=; Path=/; HttpOnly${secure}; SameSite=Lax; ${kedaluwarsa}`);
-  daftar.push(`${prefix}next-auth.callback-url=; Path=/; HttpOnly${secure}; SameSite=Lax; ${kedaluwarsa}`);
+  daftar.push(`${csrfPrefix}${AWALAN_COOKIE}.csrf-token=; Path=/; HttpOnly${secure}; SameSite=Lax; ${kedaluwarsa}`);
+  daftar.push(`${prefix}${AWALAN_COOKIE}.callback-url=; Path=/; HttpOnly${secure}; SameSite=Lax; ${kedaluwarsa}`);
 
   res.setHeader('Set-Cookie', daftar);
 }

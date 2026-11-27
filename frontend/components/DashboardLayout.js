@@ -50,6 +50,9 @@ import {
   FaPlug,
   FaFileAudio,
   FaCog,
+  // Ikon grup & sub menu Anggaran (Realisasi Anggaran).
+  FaWallet,
+  FaMoneyBillWave,
 } from 'react-icons/fa';
 import Brand, { BRAND, BrandMark } from './Brand';
 import TombolLinkApi from './beranda/TombolLinkApi';
@@ -100,6 +103,16 @@ const NAV_GROUPS = [
       { label: 'Produk Pangan', href: '/sampel/pp', icon: FaUtensils },
       { label: 'Kemasan Pangan', href: '/sampel/kp', icon: FaFilm },
       { label: 'Obat Kuasi', href: '/sampel/ok', icon: FaBandAid },
+    ],
+  },
+  {
+    // Menu ANGGARAN: data keuangan (pagu, realisasi, sisa) dari export SAKTI.
+    // Ditaruh sebelum Setting karena ini modul data, bukan konfigurasi.
+    label: 'Anggaran',
+    icon: FaWallet,
+    items: [
+      // Rekap per MAK dari "Realisasi FA berdasarkan SP2D".
+      { label: 'Data Realisasi', href: '/data-realisasi', icon: FaMoneyBillWave },
     ],
   },
   {

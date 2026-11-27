@@ -18,17 +18,22 @@ export const MENU_PUBLIK = [
     siap: true,
   },
   {
+    // Dashboard realisasi keuangan publik: agregat pagu/realisasi.
+    // Ditaruh setelah Jendela Kinerja karena keduanya dashboard publik.
+    label: 'Realisasi Anggaran',
+    href: '/realisasi-anggaran',
+    icon: 'FaChartPie',
+    siap: true,
+  },
+  {
     label: 'Prestasi Unit Kerja',
     href: '/prestasi-unit-kerja',
     icon: 'FaAward',
     siap: false,
   },
-  {
-    label: 'Anggaran dan Realisasi',
-    href: '/anggaran-realisasi',
-    icon: 'FaChartPie',
-    siap: false,
-  },
+  // Entri 'Anggaran dan Realisasi' DIHAPUS dari navbar publik: modulnya kini
+  // bernama /data-realisasi dan bersifat internal (wajib login). Menu untuk
+  // pengguna ber-sesi ada di sidebar dashboard (components/DashboardLayout.js).
   {
     label: 'Dokumen PK dan RAPK',
     href: '/dokumen-pk-rapk',

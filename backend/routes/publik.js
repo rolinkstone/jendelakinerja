@@ -27,6 +27,7 @@
  */
 const express = require('express');
 const db = require('../db');
+const { kumulatifBulanan } = require('../lib/adk-bulanan');
 const { BULAN_ID, namaBulan } = require('../lib/kinerja');
 const { daftarLinkApi, daftarModul } = require('../lib/modul-api');
 const linkApi = require('./link-api');
@@ -664,6 +665,167 @@ router.get('/kinerja/api-modul', (req, res) => {
       modul: modul_,
     },
   });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/publik/realisasi?tahun=2026
+// Data dashboard realisasi PUBLIK (/realisasi-anggaran).
+//
+// Hanya ANGKA AGREGAT yang keluar: total, per kode (komponen), dan per jenis
+// MAK (akun). Kode COA dan daftar MAK per baris TIDAK dikirim - itu data
+// internal yang hanya ada di /data-realisasi (wajib login). Aturan proyek:
+// semua route wajib token KECUALI data dashboard publik, dan endpoint ini
+// adalah bagian "data dashboard publik" itu.
+// ---------------------------------------------------------------------------
+router.get('/realisasi', async (req, res) => {
+  const tahunParam = String(req.query.tahun ?? '').trim();
+  if (tahunParam && tahunParam !== 'semua' && !/^\d{4}$/.test(tahunParam)) {
+    return res.status(400).json({ success: false, message: 'Parameter tahun harus 4 digit (mis. 2026)' });
+  }
+
+  try {
+    const [tahunRows] = await db.query(
+      'SELECT tahun FROM anggaran_realisasi GROUP BY tahun ORDER BY tahun DESC',
+    );
+    const daftarTahun = tahunRows.map((r) => r.tahun);
+    // Tanpa parameter -> tahun terbaru, supaya halaman publik tidak kosong.
+    const tahun = tahunParam && tahunParam !== 'semua' ? Number(tahunParam) : daftarTahun[0] || null;
+    if (!tahun) {
+      return res.json({
+        success: true,
+        data: { tahun: null, daftar_tahun: [], total: null, per_akun: [], per_komponen: [], per_unit: [] },
+      });
+    }
+
+    const [ringkas] = await db.query(
+      `SELECT COUNT(*) AS baris,
+              COUNT(DISTINCT mak) AS jumlah_mak,
+              COUNT(DISTINCT SUBSTRING_INDEX(mak, '.', 2)) AS jumlah_komponen,
+              COUNT(DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(mak, '.', 5), '.', -1)) AS jumlah_akun,
+              COALESCE(SUM(pagu), 0) AS pagu,
+              COALESCE(SUM(realisasi), 0) AS realisasi,
+              COALESCE(SUM(sisa), 0) AS sisa
+         FROM anggaran_realisasi WHERE tahun = ?`,
+      [tahun],
+    );
+    const t = ringkas[0] || {};
+    const pagu = Number(t.pagu || 0);
+    const realisasi = Number(t.realisasi || 0);
+
+    // Per JENIS MAK (akun belanja): 6 terbesar menurut pagu.
+    const [perAkun] = await db.query(
+      `SELECT akun, SUM(pagu) AS pagu, SUM(realisasi) AS realisasi
+         FROM v_anggaran_mak WHERE tahun = ? GROUP BY akun ORDER BY pagu DESC LIMIT 6`,
+      [tahun],
+    );
+
+    // Per KODE (komponen MAK).
+    const [perKomponen] = await db.query(
+      `SELECT komponen, SUM(pagu) AS pagu, SUM(realisasi) AS realisasi
+         FROM v_anggaran_mak WHERE tahun = ? GROUP BY komponen ORDER BY pagu DESC`,
+      [tahun],
+    );
+
+    // Per unit kerja (3165 / 6384).
+    const [perUnit] = await db.query(
+      `SELECT unit_kerja, SUM(pagu) AS pagu, SUM(realisasi) AS realisasi
+         FROM v_anggaran_mak WHERE tahun = ? GROUP BY unit_kerja ORDER BY pagu DESC`,
+      [tahun],
+    );
+
+    const persen = (r, p) => (Number(p) > 0 ? Math.round((Number(r) / Number(p)) * 10000) / 100 : 0);
+    const bentuk = (row, kunci) => ({
+      [kunci]: row[kunci],
+      pagu: Number(row.pagu),
+      realisasi: Number(row.realisasi),
+      sisa: Number(row.pagu) - Number(row.realisasi),
+      persen_serapan: persen(row.realisasi, row.pagu),
+    });
+
+    // ---- Perbandingan realisasi per JENIS BELANJA antar tahun ----
+    // Jenis belanja = 2 digit pertama kode akun (segmen ke-5 MAK):
+    //   51 Belanja Pegawai · 52 Belanja Barang · 53 Belanja Modal
+    // Dibandingkan dengan tahun sebelumnya yang tersedia di database, supaya
+    // grafiknya selalu berisi dua batang tanpa perlu tahun ditulis manual.
+    const KELOMPOK_BELANJA = [
+      { kode: '51', label: 'Belanja Pegawai' },
+      { kode: '52', label: 'Belanja Barang' },
+      { kode: '53', label: 'Belanja Modal' },
+    ];
+    // Dua tahun terakhir (urut naik: tahun lama -> tahun baru) untuk pembanding.
+    const tahunBanding = [...new Set([...daftarTahun, tahun])]
+      .filter((t) => t)
+      .sort((a, b) => a - b)
+      .slice(-2);
+
+    const [barisJenis] = await db.query(
+      `SELECT tahun,
+              LEFT(SUBSTRING_INDEX(SUBSTRING_INDEX(mak, '.', 5), '.', -1), 2) AS jenis,
+              SUM(pagu) AS pagu,
+              SUM(realisasi) AS realisasi
+         FROM anggaran_realisasi
+        WHERE tahun IN (?)
+        GROUP BY tahun, jenis`,
+      [tahunBanding.length ? tahunBanding : [tahun]],
+    );
+
+    const petaJenis = new Map(); // "51|2026" -> {pagu, realisasi}
+    barisJenis.forEach((r) => {
+      petaJenis.set(`${r.jenis}|${r.tahun}`, { pagu: Number(r.pagu), realisasi: Number(r.realisasi) });
+    });
+
+    const perJenisBelanja = KELOMPOK_BELANJA.map((k) => ({
+      kode: k.kode,
+      label: k.label,
+      // Selisih dihitung di sini supaya tampilan tidak menghitung sendiri.
+      tahun: tahunBanding.map((t) => {
+        const v = petaJenis.get(`${k.kode}|${t}`) || { pagu: 0, realisasi: 0 };
+        return { tahun: t, pagu: v.pagu, realisasi: v.realisasi, persen_serapan: persen(v.realisasi, v.pagu) };
+      }),
+    }));
+
+    const [meta] = await db.query(
+      'SELECT nama_berkas, diunggah_pada FROM anggaran_import WHERE tahun = ? LIMIT 1',
+      [tahun],
+    );
+
+    res.json({
+      success: true,
+      data: {
+        tahun,
+        daftar_tahun: daftarTahun,
+        total: {
+          baris: Number(t.baris || 0),
+          jumlah_mak: Number(t.jumlah_mak || 0),
+          jumlah_komponen: Number(t.jumlah_komponen || 0),
+          jumlah_akun: Number(t.jumlah_akun || 0),
+          pagu,
+          realisasi,
+          sisa: Number(t.sisa || 0),
+          persen_serapan: persen(realisasi, pagu),
+        },
+        per_akun: perAkun.map((r) => bentuk(r, 'akun')),
+        per_komponen: perKomponen.map((r) => bentuk(r, 'komponen')),
+        per_unit: perUnit.map((r) => bentuk(r, 'unit_kerja')),
+        // Nama berkas tidak ditampilkan utuh di halaman publik; hanya tanggal
+        // pemutakhiran supaya pembaca tahu angkanya kapan.
+        // Pembanding tahun untuk grafik "realisasi belanja per jenis belanja".
+        tahun_banding: tahunBanding,
+        per_jenis_belanja: perJenisBelanja,
+        // Sebaran kumulatif Jan-Des untuk grafik "Realisasi Belanja per Bulan".
+        // Sumbernya berkas ADK (punya TGLPOST), bukan berkas MAK - lihat
+        // lib/adk-bulanan.js. Kalau tahun itu belum diimpor, array tetap 12
+        // baris dengan nilai 0 supaya grafiknya punya sumbu lengkap.
+        per_bulan_belanja: await kumulatifBulanan(tahun),
+        // Pendapatan belum punya sumber data; dikirim null agar frontend bisa
+        // membedakan "belum ada" dari "nol".
+        per_bulan_pendapatan: null,
+        diperbarui: meta[0]?.diunggah_pada || null,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
 });
 
 module.exports = router;
