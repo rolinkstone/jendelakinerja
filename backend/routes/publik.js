@@ -28,7 +28,54 @@
 const express = require('express');
 const db = require('../db');
 const { kumulatifBulanan } = require('../lib/adk-bulanan');
+
+/**
+ * Versi "aman" dari kumulatifBulanan: tidak pernah melempar.
+ * Mengembalikan 12 bulan bernilai 0 bila data belum ada / tabel belum dibuat,
+ * sehingga endpoint tetap 200 dan halaman publik tetap tampil.
+ */
+async function kumulatifBulananAman(tahun) {
+  try {
+    return await kumulatifBulanan(tahun);
+  } catch (err) {
+    console.warn(`[publik] data bulanan tahun ${tahun} tidak terbaca: ${err.message}`);
+    return Array.from({ length: 12 }, (_, i) => ({ bulan: i + 1, nilai: 0, kumulatif: 0 }));
+  }
+}
+/**
+ * Rekap pendapatan publik. DIBUNGKUS try dengan alasan yang sama seperti
+ * kumulatifBulananAman: tabel `pendapatan_bulanan` bisa belum ada di server yang
+ * skemanya belum diperbarui. Kalau fungsi ini melempar, seluruh endpoint
+ * /realisasi jadi 500 dan SEMUA panel kosong - lebih baik panel pendapatan saja
+ * yang kosong dengan keterangan.
+ */
+async function pendapatanAman(tahun) {
+  try {
+    const rekap = await rekapPendapatan(tahun);
+    return {
+      total: rekap.total,
+      per_akun: rekap.perAkun.map((a) => ({
+        akun: a.akun,
+        nama: a.nama || NAMA_AKUN[a.akun] || `Akun ${a.akun}`,
+        total: a.total,
+        bulan: a.bulan,
+      })),
+      per_bulan: rekap.perBulan,
+    };
+  } catch (err) {
+    console.warn(`[publik] data pendapatan tahun ${tahun} tidak terbaca: ${err.message}`);
+    return {
+      total: 0,
+      per_akun: [],
+      per_bulan: Array.from({ length: 12 }, (_, i) => ({ bulan: i + 1, nilai: 0, kumulatif: 0 })),
+    };
+  }
+}
+
 const { BULAN_ID, namaBulan } = require('../lib/kinerja');
+// Rekap pendapatan publik: hanya agregat per akun dan per bulan, tidak ada
+// rincian dokumen. Detail lengkap ada di /pendapatan yang wajib login.
+const { rekapPendapatan, NAMA_AKUN } = require('../lib/pendapatan');
 const { daftarLinkApi, daftarModul } = require('../lib/modul-api');
 const linkApi = require('./link-api');
 
@@ -733,6 +780,9 @@ router.get('/realisasi', async (req, res) => {
       [tahun],
     );
 
+    // Rekap pendapatan diambil SEKALI; dipakai dua kunci (pendapatan & per_bulan_).
+    const pendapatanPublik = await pendapatanAman(tahun);
+
     const persen = (r, p) => (Number(p) > 0 ? Math.round((Number(r) / Number(p)) * 10000) / 100 : 0);
     const bentuk = (row, kunci) => ({
       [kunci]: row[kunci],
@@ -814,12 +864,20 @@ router.get('/realisasi', async (req, res) => {
         per_jenis_belanja: perJenisBelanja,
         // Sebaran kumulatif Jan-Des untuk grafik "Realisasi Belanja per Bulan".
         // Sumbernya berkas ADK (punya TGLPOST), bukan berkas MAK - lihat
-        // lib/adk-bulanan.js. Kalau tahun itu belum diimpor, array tetap 12
-        // baris dengan nilai 0 supaya grafiknya punya sumbu lengkap.
-        per_bulan_belanja: await kumulatifBulanan(tahun),
-        // Pendapatan belum punya sumber data; dikirim null agar frontend bisa
-        // membedakan "belum ada" dari "nol".
-        per_bulan_pendapatan: null,
+        // lib/adk-bulanan.js.
+        //
+        // DIBUNGKUS try: kalau tabel `realisasi_bulanan` belum ada (mis. server
+        // production yang skemanya belum diperbarui), fungsi ini melempar galat
+        // dan SELURUH endpoint /realisasi jadi 500 - akibatnya bukan hanya
+        // grafik bulanan yang hilang, tetapi semua panel di halaman publik ikut
+        // kosong. Lebih baik panel bulanan saja yang kosong dengan keterangan.
+        per_bulan_belanja: await kumulatifBulananAman(tahun),
+        // ---- PENDAPATAN ----
+        // Sumbernya tabel pendapatan_bulanan (ADK Realisasi Pendapatan SAKTI).
+        // Dikirim sebagai agregat: total, per akun (dengan nama panjang), dan
+        // sebaran kumulatif 12 bulan. Rincian dokumen hanya ada di /pendapatan.
+        pendapatan: pendapatanPublik,
+        per_bulan_pendapatan: pendapatanPublik.per_bulan,
         diperbarui: meta[0]?.diunggah_pada || null,
       },
     });

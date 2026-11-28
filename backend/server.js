@@ -171,7 +171,7 @@ const PREFIKS_API = [
     '/api/produksi-ot', '/api/produksi-irt', '/api/produksi-pangan-md',
     '/api/sampel-ot', '/api/sampel-sk', '/api/sampel-ob', '/api/sampel-kos',
     '/api/sampel-pp', '/api/sampel-kp', '/api/sampel-ok',
-    '/api/anggaran-realisasi',
+    '/api/anggaran-realisasi', '/api/pendapatan',
 ];
 
 const alamatDikenal = (path) => PREFIKS_API.some((p) => path.startsWith(p));
@@ -365,6 +365,14 @@ app.use('/api/produksi-pangan-md', require('./routes/produksi-pangan-md'));
 // lib/mak.js (3165.BDB.001.051.524111.A). Rekap per MAK dibaca dari
 // view v_anggaran_mak.
 app.use('/api/anggaran-realisasi', require('./routes/anggaran-realisasi'));
+
+// ---------------------------------------------------------------------------
+// MODUL PENDAPATAN
+// Rekap realisasi pendapatan per bulan dan per akun dari export SAKTI
+// "ADK REALISASI PENDAPATAN (SUMBER DATA : SAKTI) PER SATKER".
+// Otorisasi mengikuti authMiddleware global - tidak ada penjaga lokal.
+// ---------------------------------------------------------------------------
+app.use('/api/pendapatan', require('./routes/pendapatan'));
 
 // Sampel: impor "REKAP DATA SAMPEL" per tahun (satu baris = satu sampel;
 // baris lanjutan di berkas digabung di backend/lib/sampel.js).

@@ -20,8 +20,19 @@ const express = require('express');
 const multer = require('multer');
 const db = require('../db');
 const { ringkas, simpanTahun, tahunDariNama } = require('../lib/anggaran');
+const {
+  simpanBulanan,
+  simpanBulananManual,
+  kumulatifBulanan,
+} = require('../lib/adk-bulanan');
 
 const router = express.Router();
+
+/** Nama bulan untuk pesan balasan (1-12). */
+const NAMA_BULAN = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+];
 
 // Simpan di memori: berkas hanya dibaca sekali lalu dibuang. Batas 16 MB cukup
 // untuk rekap SP2D satu tahun (berkas contoh 62 KB).
@@ -264,6 +275,161 @@ router.post('/import', unggah.single('berkas'), async (req, res) => {
   } catch (e) {
     const pesan = /Berkas|Header|Tahun/.test(e.message) ? e.message : `Impor gagal: ${e.message}`;
     res.status(/Berkas|Header|Tahun/.test(e.message) ? 400 : 500).json({ success: false, message: pesan });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/anggaran-realisasi/bulanan?tahun=2026
+// Status sebaran bulanan: total 12 bulan + tahun yang sudah punya data.
+// ---------------------------------------------------------------------------
+router.get('/bulanan', async (req, res) => {
+  try {
+    const [tahunRows] = await db.query(
+      'SELECT tahun FROM realisasi_bulanan GROUP BY tahun ORDER BY tahun DESC',
+    );
+    const tahun = Number(req.query.tahun) || tahunRows[0]?.tahun || null;
+    const kumulatif = tahun ? await kumulatifBulanan(tahun) : [];
+    const [meta] = tahun
+      ? await db.query('SELECT nama_berkas, diunggah_pada FROM realisasi_bulanan_import WHERE tahun = ? LIMIT 1', [tahun])
+      : [[]];
+    // Bulan mana saja yang sudah punya data - dipakai layar untuk memberi tahu
+    // pengguna mana yang masih perlu diunggah (berkas ADK diunggah per bulan).
+    const [bulanRows] = tahun
+      ? await db.query(
+          'SELECT bulan FROM realisasi_bulanan WHERE tahun = ? AND jenis = ? ORDER BY bulan',
+          [tahun, '00'],
+        )
+      : [[]];
+    res.json({
+      success: true,
+      data: {
+        tahun,
+        daftar_tahun: tahunRows.map((r) => r.tahun),
+        kumulatif,
+        // Seluruh bulan yang tercatat, termasuk yang nilainya 0 (mis. Desember
+        // yang belum punya transaksi). Layar memfilter sendiri bila perlu.
+        bulan_terisi: bulanRows.map((r) => r.bulan),
+        total: kumulatif.length ? kumulatif[kumulatif.length - 1].kumulatif : 0,
+        berkas: meta[0] || null,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PUT /api/anggaran-realisasi/bulanan
+//   body: { tahun: 2026, baris: [{ bulan: 1, pagu: 0, realisasi: 0 }, ...] }
+// Pengisian DIKETIK manual (pagu + realisasi per bulan). Bulan yang kedua
+// nilainya 0 akan dihapus, sehingga kisi 12 bulan jujur menampilkan keadaan.
+// ---------------------------------------------------------------------------
+router.put('/bulanan', async (req, res) => {
+  const { tahun, baris } = req.body || {};
+  try {
+    const hasil = await simpanBulananManual({ tahun: Number(tahun), baris });
+    res.json({
+      success: true,
+      message:
+        `${hasil.tersimpan} bulan tersimpan` +
+        (hasil.dikosongkan ? `, ${hasil.dikosongkan} bulan dikosongkan` : '') +
+        ` (tahun ${hasil.tahun})`,
+      data: {
+        tahun: hasil.tahun,
+        tersimpan: hasil.tersimpan,
+        dikosongkan: hasil.dikosongkan,
+        kumulatif: hasil.kumulatif,
+      },
+    });
+  } catch (e) {
+    res.status(400).json({ success: false, message: e.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/anggaran-realisasi/bulanan?tahun=2026[&bulan=1]
+//   tanpa `bulan` -> menghapus SEMUA bulan tahun itu
+//   dengan `bulan` -> menghapus satu bulan saja (sisanya utuh)
+// Dipakai tombol "Kosongkan" di panel Realisasi Bulanan (/data-realisasi).
+// ---------------------------------------------------------------------------
+router.delete('/bulanan', async (req, res) => {
+  const tahun = Number(req.query.tahun);
+  if (!tahun) return res.status(400).json({ success: false, message: 'Parameter tahun wajib diisi' });
+
+  const adaBulan = req.query.bulan !== undefined && String(req.query.bulan).trim() !== '';
+  const bulan = adaBulan ? Number(req.query.bulan) : null;
+  if (adaBulan && (!Number.isInteger(bulan) || bulan < 1 || bulan > 12)) {
+    return res.status(400).json({ success: false, message: 'Parameter bulan harus 1-12' });
+  }
+
+  try {
+    const [hasil] = bulan
+      ? await db.query('DELETE FROM realisasi_bulanan WHERE tahun = ? AND bulan = ?', [tahun, bulan])
+      : await db.query('DELETE FROM realisasi_bulanan WHERE tahun = ?', [tahun]);
+
+    // Metadata berkas hanya dihapus bila SELURUH tahun dikosongkan; kalau satu
+    // bulan saja, nama berkas terakhir tetap berguna sebagai jejak.
+    if (!bulan) await db.query('DELETE FROM realisasi_bulanan_import WHERE tahun = ?', [tahun]);
+
+    res.json({
+      success: true,
+      message: bulan
+        ? `Data bulanan ${NAMA_BULAN[bulan - 1]} ${tahun} dikosongkan (${hasil.affectedRows} baris)`
+        : `Seluruh data bulanan tahun ${tahun} dikosongkan (${hasil.affectedRows} baris)`,
+      data: {
+        tahun,
+        bulan,
+        baris_dihapus: hasil.affectedRows,
+        kumulatif: await kumulatifBulanan(tahun),
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/anggaran-realisasi/import-bulanan  (multipart: berkas CSV ADK)
+// Berkas: "ADK REALISASI BELANJA SUMBER DATA SAKTI PER SATKER".
+// BUKAN berkas "Realisasi FA berdasarkan SP2D" - berkas itu tidak memuat
+// tanggal, jadi tidak bisa menghasilkan sebaran bulanan.
+// ---------------------------------------------------------------------------
+router.post('/import-bulanan', unggah.single('berkas'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: 'Berkas wajib diunggah (field: berkas)' });
+  // CSV dari SAKTI berupa teks; berkas biner (xlsx) ditolak dengan pesan jelas
+  // supaya tidak dianggap "impor berhasil" padahal isinya tidak terbaca.
+  const nama = String(req.file.originalname || '').toLowerCase();
+  if (!nama.endsWith('.csv') && !nama.endsWith('.txt')) {
+    return res.status(400).json({
+      success: false,
+      message: 'Berkas bulanan harus CSV dari SAKTI (ADK Realisasi Belanja). Berkas SP2D (.xlsx) tidak memuat tanggal.',
+    });
+  }
+  try {
+    const isi = req.file.buffer.toString('utf8');
+    const hasil = await simpanBulanan({
+      isi,
+      namaBerkas: req.file.originalname,
+      diunggahOleh: req.user?.nama || null,
+    });
+    res.json({
+      success: true,
+      message:
+        `Data bulanan ${hasil.tahun} tersimpan (${hasil.barisSah} baris` +
+        `${hasil.bulan?.length ? `, bulan ${hasil.bulan.join(', ')}` : ''}` +
+        `, total ${hasil.total.toLocaleString('id-ID')})`,
+      data: {
+        tahun: hasil.tahun,
+        baris: hasil.barisSah,
+        dilewati: hasil.dilewati,
+        total: hasil.total,
+        bulan: hasil.bulan || [],
+        rentang: hasil.rentang || null,
+        kumulatif: await kumulatifBulanan(hasil.tahun),
+      },
+    });
+  } catch (e) {
+    res.status(400).json({ success: false, message: e.message });
   }
 });
 

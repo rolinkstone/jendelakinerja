@@ -53,6 +53,7 @@ import {
   // Ikon grup & sub menu Anggaran (Realisasi Anggaran).
   FaWallet,
   FaMoneyBillWave,
+  FaPiggyBank,
 } from 'react-icons/fa';
 import Brand, { BRAND, BrandMark } from './Brand';
 import TombolLinkApi from './beranda/TombolLinkApi';
@@ -113,6 +114,9 @@ const NAV_GROUPS = [
     items: [
       // Rekap per MAK dari "Realisasi FA berdasarkan SP2D".
       { label: 'Data Realisasi', href: '/data-realisasi', icon: FaMoneyBillWave },
+      // Rekap realisasi PENDAPATAN per bulan & per akun dari "ADK Realisasi
+      // Pendapatan (SAKTI)". Halaman internal, wajib login seperti di atas.
+      { label: 'Pendapatan', href: '/pendapatan', icon: FaPiggyBank },
     ],
   },
   {

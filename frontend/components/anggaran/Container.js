@@ -25,6 +25,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FaCloudUploadAlt,
+  // Dipakai panel unggah ADK bulanan + judul ringkasan (lihat bagian unggah).
+  FaCalendarAlt,
+  FaEraser,
+  FaPen,
+  FaSave,
+  FaHistory,
   FaFileExcel,
   FaSearch,
   FaSyncAlt,
@@ -55,6 +61,13 @@ import {
 } from './helper';
 
 const LIMIT = 50;
+
+/** Label bulan untuk kisi status 12 bulan (3 huruf) dan tooltip (panjang). */
+const BULAN_PENDEK_SEMPIT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const BULAN_LENGKAP = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+];
 
 /** Ringkasan kosong supaya render pertama tidak perlu null-check panjang. */
 const RINGKASAN_KOSONG = {
@@ -100,6 +113,17 @@ export default function AnggaranRealisasiContainer() {
   const [berkas, setBerkas] = useState(null);
   const [tahunImpor, setTahunImpor] = useState(String(tahunSekarang()));
   const [mengunggah, setMengunggah] = useState(false);
+  // --- unggah ADK bulanan (sumber yang punya tanggal transaksi) ---
+  // Form ketikan realisasi bulanan: nilai mentah (string) per bulan agar
+  // pengguna bisa mengetik bebas, lalu dirapikan saat disimpan.
+  const [ketikBulanan, setKetikBulanan] = useState(() => Array.from({ length: 12 }, () => ({ pagu: '', realisasi: '' })));
+  const [menyimpanBulanan, setMenyimpanBulanan] = useState(false);
+  const [statusBulanan, setStatusBulanan] = useState(null); // { tahun, total, daftar_tahun, kumulatif, bulan_terisi }
+  const [modalBulanan, setModalBulanan] = useState(false);
+  // --- kosongkan realisasi bulanan (semua bulan atau satu bulan) ---
+  const [modalKosong, setModalKosong] = useState(false);
+  const [bulanKosong, setBulanKosong] = useState(''); // '' = semua bulan
+  const [mengosongkan, setMengosongkan] = useState(false);
   const [pesan, setPesan] = useState(null); // { jenis: 'sukses'|'galat'|'info', teks }
   const inputBerkas = useRef(null);
 
@@ -180,6 +204,7 @@ export default function AnggaranRealisasiContainer() {
     if (!tahun) return;
     muatRingkasan(tahun);
     muatTabel(tahun, halaman, cariAktif, kode, jenis);
+    muatBulanan(tahun);
   }, [tahun, halaman, cariAktif, kode, jenis, muatRingkasan, muatTabel]);
 
   /** Kirim pencarian: kembali ke halaman 1 supaya hasil tidak kosong. */
@@ -187,6 +212,123 @@ export default function AnggaranRealisasiContainer() {
     e.preventDefault();
     setHalaman(1);
     setCariAktif(cari.trim());
+  };
+
+  /** Status sebaran bulanan (berapa tahun yang sudah punya data ADK). */
+  const muatBulanan = useCallback(async (th) => {
+    try {
+      const qs = th ? `?tahun=${th}` : '';
+      const r = await fetch(`/api/anggaran-realisasi/bulanan${qs}`);
+      const j = await r.json();
+      if (j.success) setStatusBulanan(j.data);
+    } catch (_) {
+      /* diamkan: panel pendukung */
+    }
+  }, []);
+
+  /**
+   * Simpan realisasi bulanan hasil KETIKAN (pagu + realisasi per bulan).
+   * Bulan yang kedua kolomnya dikosongkan/diisi 0 akan dihapus di backend,
+   * supaya kisi 12 bulan menampilkan keadaan sebenarnya.
+   */
+  const simpanBulananKetik = async (e) => {
+    e?.preventDefault?.();
+    if (!tahun) return;
+
+    // Rapikan angka Indonesia: "1.250.000" / "1,250,000" / "1250000" -> 1250000
+    const angka = (t) => {
+      const bersih = String(t ?? '').replace(/[^\d-]/g, '');
+      return bersih === '' || bersih === '-' ? 0 : Number(bersih);
+    };
+
+    // Hanya kirim bulan yang memang diisi, agar bulan lain tidak tersentuh.
+    const baris = ketikBulanan
+      .map((r, i2) => ({ bulan: i2 + 1, pagu: angka(r.pagu), realisasi: angka(r.realisasi) }))
+      .filter((r) => r.pagu !== 0 || r.realisasi !== 0);
+    const adaKosong = ketikBulanan.some((r, i2) => {
+      const b = baris.find((x) => x.bulan === i2 + 1);
+      return !b && (r.pagu !== '' || r.realisasi !== '');
+    });
+    if (adaKosong) {
+      return setPesan({
+        jenis: 'galat',
+        teks: 'Ada bulan yang diisi 0 - kosongkan kedua kolomnya bila ingin menghapus bulan itu.',
+      });
+    }
+    if (!baris.length) return setPesan({ jenis: 'galat', teks: 'Isi minimal satu bulan.' });
+
+    setMenyimpanBulanan(true);
+    setPesan(null);
+    try {
+      const r = await fetch('/api/anggaran-realisasi/bulanan', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tahun: Number(tahun), baris }),
+      });
+      const j = await r.json();
+      if (!r.ok || !j.success) throw new Error(j.message || `HTTP ${r.status}`);
+
+      setPesan({ jenis: 'sukses', teks: j.message });
+      setModalBulanan(false);
+      setKetikBulanan(Array.from({ length: 12 }, () => ({ pagu: '', realisasi: '' })));
+      setStatusBulanan((lama) => ({
+        ...(lama || {}),
+        tahun: Number(tahun),
+        kumulatif: j.data.kumulatif,
+        total: (j.data.kumulatif || []).at(-1)?.kumulatif || 0,
+        daftar_tahun: [...new Set([Number(tahun), ...(lama?.daftar_tahun || [])])].sort((x, y) => y - x),
+      }));
+    } catch (err) {
+      setPesan({ jenis: 'galat', teks: err.message });
+    } finally {
+      setMenyimpanBulanan(false);
+    }
+  };
+
+  /** Isi form ketikan dari angka yang sudah tersimpan (untuk koreksi). */
+  const isiFormDariTersimpan = () => {
+    const sumber = statusBulanan?.kumulatif || [];
+    setKetikBulanan(
+      Array.from({ length: 12 }, (_, i2) => {
+        const b = sumber[i2] || {};
+        return {
+          pagu: Number(b.pagu) ? String(Number(b.pagu)) : '',
+          realisasi: Number(b.nilai) ? String(Number(b.nilai)) : '',
+        };
+      }),
+    );
+  };
+
+  /**
+   * Kosongkan realisasi bulanan.
+   * `bulanKosong` kosong berarti SELURUH bulan tahun terpilih dihapus; kalau
+   * diisi 1-12 hanya bulan itu yang dihapus dan bulan lain tetap tersimpan.
+   * Keduanya memakai endpoint yang sama, pembedaannya parameter `bulan`.
+   */
+  const kosongkanBulanan = async () => {
+    if (!tahun) return;
+    setMengosongkan(true);
+    setPesan(null);
+    try {
+      const qs = `?tahun=${tahun}${bulanKosong ? `&bulan=${bulanKosong}` : ''}`;
+      const r = await fetch(`/api/anggaran-realisasi/bulanan${qs}`, { method: 'DELETE' });
+      const j = await r.json();
+      if (!r.ok || !j.success) throw new Error(j.message || `HTTP ${r.status}`);
+
+      setPesan({ jenis: 'sukses', teks: j.message });
+      setStatusBulanan((lama) => ({
+        ...(lama || {}),
+        tahun: tahun,
+        kumulatif: j.data.kumulatif,
+        total: (j.data.kumulatif || []).at(-1)?.kumulatif || 0,
+      }));
+      setModalKosong(false);
+      setBulanKosong('');
+    } catch (err) {
+      setPesan({ jenis: 'galat', teks: err.message });
+    } finally {
+      setMengosongkan(false);
+    }
   };
 
   const unggah = async (e) => {
@@ -250,6 +392,12 @@ export default function AnggaranRealisasiContainer() {
   // Angka ditulis PENUH dengan pemisah ribuan (17.000.000), bukan disingkat
   // ("194,7 jt"): nilai anggaran dipakai untuk pencocokan dokumen, jadi angka
   // yang sudah dibulatkan justru menyulitkan pembaca.
+  // Bulan yang benar-benar punya nilai (bukan sekadar tercatat 0). Dipakai
+  // modal impor untuk memberi tahu bulan mana yang sudah masuk.
+  const bulanTerisi = (statusBulanan?.kumulatif || [])
+    .filter((b) => Number(b.nilai) > 0)
+    .map((b) => b.bulan);
+
   const angkaPokok = [
     { label: 'Pagu', nilai: formatAngka(ringkasan.pagu), penuh: 'rupiah', ikon: FaWallet, warna: 'text-accent-600 dark:text-accent-400' },
     { label: 'Realisasi', nilai: formatAngka(ringkasan.realisasi), penuh: 'rupiah', ikon: FaCoins, warna: 'text-emerald-600 dark:text-emerald-400' },
@@ -484,6 +632,258 @@ export default function AnggaranRealisasiContainer() {
           <code className="rounded bg-paper-100 px-1 py-0.5 dark:bg-white/[0.06]">3165.BDB.001.051.524111.A</code>.
         </p>
       </div>
+
+      {/* ================= Data bulanan: status + pemicu modal =================
+          Berkas ADK diunggah PER BULAN (mis. "Tanggal,2026-01-01 s.d 2026-01-31"),
+          jadi panel ini menampilkan bulan mana yang sudah masuk dan membuka
+          modal untuk mengunggah bulan berikutnya. */}
+      <div className="panel">
+        <div className="panel-head flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <FaCalendarAlt className="h-3.5 w-3.5 text-accent-600 dark:text-accent-400" />
+            <h2 className="text-sm font-bold text-slate-800 dark:text-white">Realisasi Bulanan</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {statusBulanan?.total > 0 && (
+              <span className="badge-primary tnum hidden sm:inline-flex">
+                {statusBulanan.tahun} · {formatAngka(statusBulanan.total)}
+              </span>
+            )}
+            <button
+              type="button"
+              className="btn-primary-sm"
+              onClick={() => {
+                // Form langsung terisi angka tersimpan supaya pengguna tinggal
+                // mengoreksi, bukan mengetik ulang dari nol.
+                isiFormDariTersimpan();
+                setPesan(null);
+                setModalBulanan(true);
+              }}
+            >
+              <FaPen className="h-3 w-3" /> Isi bulanan
+            </button>
+            <button
+              type="button"
+              className="btn-danger-sm"
+              onClick={() => {
+                setBulanKosong('');
+                setPesan(null);
+                setModalKosong(true);
+              }}
+              disabled={!statusBulanan?.total}
+              title={!statusBulanan?.total ? 'Belum ada data bulanan untuk dikosongkan' : 'Kosongkan realisasi bulanan'}
+            >
+              <FaEraser className="h-3 w-3" /> Kosongkan
+            </button>
+          </div>
+        </div>
+
+        {/* Peta 12 bulan: hijau = sudah ada datanya, abu = belum. */}
+        <div className="grid grid-cols-6 gap-1.5 px-4 py-3 sm:grid-cols-12">
+          {Array.from({ length: 12 }, (_, i) => i + 1).map((b) => {
+            const terisi = (statusBulanan?.kumulatif?.[b - 1]?.nilai || 0) > 0;
+            const kum = statusBulanan?.kumulatif?.[b - 1]?.kumulatif || 0;
+            return (
+              <div
+                key={b}
+                className={[
+                  'rounded-lg px-1.5 py-1.5 text-center',
+                  terisi
+                    ? 'bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300'
+                    : 'bg-paper-100 text-slate-400 ring-1 ring-paper-200 dark:bg-white/[0.04] dark:text-slate-500 dark:ring-white/10',
+                ].join(' ')}
+                title={terisi ? `${BULAN_LENGKAP[b - 1]}: kumulatif ${formatAngka(kum)}` : `${BULAN_LENGKAP[b - 1]}: belum ada data`}
+              >
+                <p className="text-[9.5px] font-bold uppercase tracking-wide">{BULAN_PENDEK_SEMPIT[b - 1]}</p>
+                <p className="tnum text-[9px] leading-tight">{terisi ? '✓' : '–'}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="border-t border-paper-200 px-4 py-2.5 text-[11px] leading-snug text-slate-400 dark:border-white/[0.08] dark:text-slate-500">
+          Pagu dan realisasi diisi manual per bulan. Mengisi satu bulan TIDAK menghapus bulan lain; mengosongkan kedua
+          kolom sebuah bulan akan menghapus bulan itu.
+        </p>
+      </div>
+
+      {/* ================= Modal isi realisasi bulanan (ketik) =================
+          Pengganti unggah berkas: pagu dan realisasi per bulan diketik langsung.
+          Bulan yang dikosongkan tidak dikirim, jadi angka lama bulan lain utuh. */}
+      {modalBulanan && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-900/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Isi realisasi bulanan"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setModalBulanan(false);
+          }}
+        >
+          <div className="max-h-[90vh] w-full max-w-[640px] overflow-y-auto rounded-2xl bg-white p-5 shadow-xl dark:bg-[#0f172a]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-[15px] font-bold text-slate-800 dark:text-white">Isi Realisasi Bulanan</h3>
+                <p className="mt-0.5 text-[11.5px] text-slate-500 dark:text-slate-400">
+                  Tahun {tahun}. Ketik pagu dan realisasi tiap bulan — bulan yang dibiarkan kosong tidak diubah.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalBulanan(false)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-paper-100 dark:hover:bg-white/10"
+                aria-label="Tutup"
+              >
+                <FaTimes className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Bulan bertanda <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓</span> sudah ada
+                datanya.
+              </p>
+              <button type="button" className="btn-primary-sm" onClick={isiFormDariTersimpan}>
+                <FaHistory className="h-3 w-3" /> Muat angka tersimpan
+              </button>
+            </div>
+
+            <form onSubmit={simpanBulananKetik} className="mt-3">
+              <div className="overflow-hidden rounded-xl ring-1 ring-paper-200 dark:ring-white/10">
+                <table className="w-full text-[12px]">
+                  <thead className="bg-paper-50 text-[10.5px] uppercase tracking-wider text-slate-500 dark:bg-white/[0.05] dark:text-slate-400">
+                    <tr>
+                      <th className="px-2.5 py-2 text-left font-bold">Bulan</th>
+                      <th className="px-2.5 py-2 text-right font-bold">Pagu</th>
+                      <th className="px-2.5 py-2 text-right font-bold">Realisasi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-paper-200 dark:divide-white/[0.07]">
+                    {BULAN_LENGKAP.map((nm, i2) => {
+                      const terisi = bulanTerisi.includes(i2 + 1);
+                      return (
+                        <tr key={nm} className="last:border-0">
+                          <td className="whitespace-nowrap px-2.5 py-1.5 font-semibold text-slate-600 dark:text-slate-300">
+                            {nm}
+                            {terisi && <span className="ml-1 text-[10px] text-emerald-600 dark:text-emerald-400">✓</span>}
+                          </td>
+                          <td className="px-2 py-1">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="0"
+                              value={ketikBulanan[i2]?.pagu ?? ''}
+                              onChange={(e) =>
+                                setKetikBulanan((lama) =>
+                                  lama.map((r, k) => (k === i2 ? { ...r, pagu: e.target.value } : r)),
+                                )
+                              }
+                              className="tnum w-full rounded-lg border border-paper-300 bg-white px-2 py-1.5 text-right text-[12px] text-slate-700 outline-none focus:border-accent-400/70 focus:ring-2 focus:ring-accent-400/25 dark:border-white/10 dark:bg-ink-900 dark:text-slate-100"
+                            />
+                          </td>
+                          <td className="px-2 py-1">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="0"
+                              value={ketikBulanan[i2]?.realisasi ?? ''}
+                              onChange={(e) =>
+                                setKetikBulanan((lama) =>
+                                  lama.map((r, k) => (k === i2 ? { ...r, realisasi: e.target.value } : r)),
+                                )
+                              }
+                              className="tnum w-full rounded-lg border border-paper-300 bg-white px-2 py-1.5 text-right text-[12px] text-slate-700 outline-none focus:border-accent-400/70 focus:ring-2 focus:ring-accent-400/25 dark:border-white/10 dark:bg-ink-900 dark:text-slate-100"
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-3 flex items-center justify-end gap-2">
+                <button type="button" className="btn-primary-sm" onClick={() => setModalBulanan(false)}>
+                  Batal
+                </button>
+                <button type="submit" className="btn-primary h-[34px]" disabled={menyimpanBulanan}>
+                  {menyimpanBulanan ? <FaSpinner className="h-3.5 w-3.5 animate-spin" /> : <FaSave className="h-3.5 w-3.5" />}
+                  {menyimpanBulanan ? 'Menyimpan…' : 'Simpan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= Modal kosongkan realisasi bulanan ================= */}
+      {modalKosong && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-900/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Kosongkan realisasi bulanan"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setModalKosong(false);
+          }}
+        >
+          <div className="w-full max-w-[460px] rounded-2xl bg-white p-5 shadow-xl dark:bg-[#0f172a]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-[15px] font-bold text-slate-800 dark:text-white">Kosongkan Realisasi Bulanan</h3>
+                <p className="mt-0.5 text-[11.5px] text-slate-500 dark:text-slate-400">
+                  Tahun {tahun}. Tindakan ini tidak bisa dibatalkan.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalKosong(false)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-paper-100 dark:hover:bg-white/10"
+                aria-label="Tutup"
+              >
+                <FaTimes className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Cakupan
+                </label>
+                <select
+                  className="input-sm w-full"
+                  value={bulanKosong}
+                  onChange={(e) => setBulanKosong(e.target.value)}
+                >
+                  <option value="">Semua bulan (Januari–Desember)</option>
+                  {BULAN_LENGKAP.map((nm, i) => (
+                    <option key={nm} value={i + 1}>
+                      Bulan {nm}
+                      {bulanTerisi.includes(i + 1) ? ' — ada data' : ' — kosong'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="rounded-xl bg-amber-500/10 px-3 py-2.5 text-[11px] leading-snug text-amber-800 ring-1 ring-amber-500/25 dark:text-amber-200">
+                {bulanKosong
+                  ? `Hanya data bulan ${BULAN_LENGKAP[Number(bulanKosong) - 1]} yang dihapus. Bulan lain tetap tersimpan.`
+                  : 'SELURUH data bulanan tahun ini dihapus. Grafik "Realisasi Belanja per Bulan" menjadi kosong sampai diunggah ulang.'}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <button type="button" className="btn-primary-sm" onClick={() => setModalKosong(false)}>
+                  Batal
+                </button>
+                <button type="button" className="btn-danger-sm h-[34px] px-3" onClick={kosongkanBulanan} disabled={mengosongkan}>
+                  {mengosongkan ? <FaSpinner className="h-3.5 w-3.5 animate-spin" /> : <FaEraser className="h-3.5 w-3.5" />}
+                  {mengosongkan ? 'Menghapus…' : bulanKosong ? `Kosongkan ${BULAN_LENGKAP[Number(bulanKosong) - 1]}` : 'Kosongkan semua'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ================= Angka pokok ================= */}
       <div className="panel">

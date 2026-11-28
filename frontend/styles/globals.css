@@ -179,6 +179,12 @@
     @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-b from-accent-400 to-accent-500 px-3 py-1.5 text-[11.5px] font-bold text-white ring-1 ring-inset ring-accent-600/40 transition-all hover:from-accent-300 hover:to-accent-400 active:translate-y-px;
   }
 
+  /* Tombol hapus/kosongkan versi ringkas. Warna memakai rose (bukan oranye/
+     amber) agar tetap selaras palet biru-hijau aplikasi. */
+  .btn-danger-sm {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white ring-1 ring-inset ring-rose-700/40 transition-all hover:bg-rose-500 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
   /* ===== Kontrol form (select/input) ===== */
   .input {
     @apply w-full rounded-lg border border-paper-300 bg-white px-2.5 py-2 text-[12.5px] font-medium text-slate-700 outline-none transition focus:border-accent-400/70 focus:ring-2 focus:ring-accent-400/25 dark:border-white/10 dark:bg-ink-900 dark:text-slate-100;

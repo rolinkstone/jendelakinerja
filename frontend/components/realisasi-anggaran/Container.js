@@ -38,7 +38,7 @@ import {
   FaMoneyBillWave,
 } from 'react-icons/fa';
 import Navbar from '../navbar/Navbar';
-import { BULAN_PENDEK, formatAngka, formatPersen, formatTanggal } from './helper';
+import { BULAN_PENDEK, formatAngka, formatPersen, formatRingkas, formatTanggal } from './helper';
 
 /** Nilai kosong supaya render pertama tidak perlu null-check panjang. */
 const KOSONG = {
@@ -48,8 +48,18 @@ const KOSONG = {
   per_akun: [],
   per_komponen: [],
   per_unit: [],
+  // Pendapatan: agregat dari modul Pendapatan (ADK Realisasi Pendapatan SAKTI).
+  // Bentuknya { total, per_akun:[{akun,nama,total,bulan[]}], per_bulan:[{bulan,nilai,kumulatif}] }.
+  pendapatan: null,
+  per_bulan_belanja: [],
   diperbarui: null,
 };
+
+/**
+ * Warna segmen donat pendapatan. Diambil dari palet halaman ini sendiri
+ * (navy / hijau / biru / cyan) supaya konsisten dengan empat kartu di atas.
+ */
+const WARNA_DONAT = ['#0b3d78', '#006d30', '#005bac', '#0e7490', '#7c3aed', '#b45309'];
 
 /** Empat kartu angka — gradien diambil dari gambar acuan. */
 const KARTU = [
@@ -66,6 +76,8 @@ export default function RealisasiAnggaranContainer() {
   const [galat, setGalat] = useState('');
   // Bulan yang sedang disorot kursor di grafik bulanan (null = tidak ada).
   const [hoverBulan, setHoverBulan] = useState(null);
+  // Padanan untuk grafik pendapatan per bulan.
+  const [hoverBulanPendapatan, setHoverBulanPendapatan] = useState(null);
 
   const muat = useCallback(async (th) => {
     setMemuat(true);
@@ -131,8 +143,48 @@ export default function RealisasiAnggaranContainer() {
     1,
     ...(data.per_bulan_belanja || []).map((b) => Number(b.kumulatif) || 0),
   );
+  // Tahun tanpa data bulanan (mis. 2025 belum diimpor) harus DIBERI KETERANGAN,
+  // bukan digambar sebagai 12 batang setinggi 1,5% yang praktis tak terlihat -
+  // dulu itulah yang membuat pemilik aplikasi mengira grafiknya "tidak muncul".
+  const adaBulanan = (data.per_bulan_belanja || []).some((b) => Number(b.kumulatif) > 0);
 
   const maksAkun = Math.max(1, ...data.per_akun.map((a) => Number(a.pagu) || 0));
+
+  // ================= PENDAPATAN =================
+  const pendapatan = data.pendapatan || null;
+  // Akun pendapatan diurut menurun dan HANYA yang bernilai > 0 yang digambar;
+  // akun bernilai nol akan tampil sebagai segmen tak terlihat dan membingungkan.
+  const akunPendapatan = (pendapatan?.per_akun || [])
+    .map((a) => ({
+      akun: a.akun,
+      nama: a.nama || `Akun ${a.akun}`,
+      total: Number(a.total) || 0,
+    }))
+    .filter((a) => a.total > 0)
+    .sort((a, b) => b.total - a.total);
+
+  const totalPendapatan = akunPendapatan.reduce((j, a) => j + a.total, 0);
+  const adaPendapatan = totalPendapatan > 0;
+
+  // Segmen donat: tiap akun menempati sebagian keliling. Offset dihitung
+  // kumulatif supaya segmen tersambung tanpa celah.
+  let geser = 0;
+  const segmenDonat = akunPendapatan.map((a, i) => {
+    const bagian = totalPendapatan ? (a.total / totalPendapatan) * 100 : 0;
+    const seg = {
+      ...a,
+      bagian,
+      dari: geser,
+      sampai: geser + bagian,
+      warna: WARNA_DONAT[i % WARNA_DONAT.length],
+    };
+    geser += bagian;
+    return seg;
+  });
+
+  const bulananPendapatan = pendapatan?.per_bulan || [];
+  const maksBulanPendapatan = Math.max(1, ...bulananPendapatan.map((b) => Number(b.kumulatif) || 0));
+  const adaBulananPendapatan = adaPendapatan && bulananPendapatan.some((b) => Number(b.kumulatif) > 0);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#fdfdfe] dark:bg-[#0b1220]">
@@ -323,38 +375,92 @@ export default function RealisasiAnggaranContainer() {
                 </table>
               </div>
 
-              {/* --- Realisasi Pendapatan per Akun (MASIH KOSONG) ---
-                  Dikosongkan dengan sengaja: berkas "Realisasi FA berdasarkan SP2D"
-                  hanya memuat BELANJA (pagu, realisasi, sisa), tidak ada pendapatan.
-                  Data pendapatan ada di ekspor SAKTI terpisah (ADK REALISASI
-                  PENDAPATAN) yang belum diimpor ke aplikasi ini.
-                  Jangan mengisi panel ini dengan angka belanja atau angka karangan -
-                  pendapatan dan belanja adalah dua hal berbeda. Begitu tabel
-                  pendapatan tersedia di backend, ganti placeholder di bawah dengan
-                  daftar akun + nilai realisasinya. */}
+              {/* --- Realisasi Pendapatan per Akun (DONAT) ---
+                  Sumber: tabel pendapatan_bulanan (ADK Realisasi Pendapatan
+                  SAKTI). Rincian per akun digambar sebagai donat karena yang
+                  penting di sini KOMPOSISI, bukan nilai absolut per bulan.
+                  Akun bernilai 0 tidak digambar: segmennya tak terlihat dan
+                  hanya membuat legenda tampak berisi padahal kosong. */}
               <div className="flex flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.03] dark:bg-white/[0.03] dark:ring-white/10">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-[13px] font-bold text-[#0b3d78] dark:text-white">
                     Realisasi Pendapatan per Akun
                   </h2>
-                  <span className="rounded-full bg-[#f1f3f6] px-2.5 py-1 text-[10.5px] font-semibold text-slate-500 dark:bg-white/[0.06] dark:text-slate-400">
-                    Belum tersedia
+                  <span className="rounded-full bg-[#eef4fa] px-2.5 py-1 text-[10.5px] font-semibold text-[#30619c] dark:bg-white/[0.06] dark:text-slate-300">
+                    {adaPendapatan ? `Total ${formatAngka(totalPendapatan)}` : 'Belum tersedia'}
                   </span>
                 </div>
 
-                <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
-                  <FaMoneyBillWave className="h-6 w-6 text-slate-300 dark:text-slate-600" />
-                  <p className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">
-                    Data pendapatan belum diunggah
-                  </p>
-                  <p className="max-w-[240px] text-[11px] leading-snug text-slate-400 dark:text-slate-500">
-                    Panel ini akan menampilkan realisasi pendapatan per akun setelah data SAKTI
-                    pendapatan diimpor.
-                  </p>
-                </div>
+                {!adaPendapatan ? (
+                  <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
+                    <FaMoneyBillWave className="h-6 w-6 text-slate-300 dark:text-slate-600" />
+                    <p className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">
+                      Data pendapatan belum diunggah
+                    </p>
+                    <p className="max-w-[240px] text-[11px] leading-[1.6] text-slate-400 dark:text-slate-500">
+                      Unggah berkas ADK Realisasi Pendapatan SAKTI di menu Anggaran → Pendapatan.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 flex flex-1 flex-col items-center gap-4 sm:flex-row sm:items-start">
+                    {/* Donat CSS: conic-gradient per segmen. Tidak menambah
+                        dependensi chart, dan tetap tajam di layar kecil. */}
+                    <div className="relative shrink-0" style={{ width: 138, height: 138 }}>
+                      <div
+                        className="h-full w-full rounded-full"
+                        style={{
+                          background: `conic-gradient(${segmenDonat
+                            .map((g) => `${g.warna} ${g.dari}% ${g.sampai}%`)
+                            .join(', ')})`,
+                        }}
+                        role="img"
+                        aria-label={`Komposisi pendapatan per akun, total ${formatAngka(totalPendapatan)}`}
+                      />
+                      {/* Lubang tengah: donat, bukan pai penuh, supaya angka
+                          total bisa diletakkan di tengah tanpa menutupi data. */}
+                      <div className="absolute inset-[26%] flex flex-col items-center justify-center rounded-full bg-white text-center dark:bg-[#0b1220]">
+                        <p className="text-[8.5px] font-semibold uppercase leading-[1.5] tracking-wide text-slate-400">
+                          Total
+                        </p>
+                        <p className="tnum mt-0.5 text-[10.5px] font-bold leading-[1.4] text-[#0b3d78] dark:text-white">
+                          {formatRingkas(totalPendapatan)}
+                        </p>
+                      </div>
+                    </div>
 
-                <p className="border-t border-[#eef4fa] pt-2.5 text-[10.5px] leading-snug text-slate-400 dark:border-white/10 dark:text-slate-500">
-                  Sumber berkas: ekspor SAKTI <em>Realisasi Pendapatan</em> (belum tersedia).
+                    {/* Legenda: kode akun + nama panjang + nilai + porsi.
+                        Jarak dan line-height sengaja lebih lega: nama akun
+                        (mis. "Penerimaan Kembali Belanja Barang Tahun Anggaran
+                        Yang Lalu") membungkus 2-3 baris, dan pada leading rapat
+                        barisnya saling menempel sehingga sulit dibaca. */}
+                    <div className="min-w-0 flex-1 space-y-3">
+                      {segmenDonat.map((g) => (
+                        <div key={g.akun} className="flex items-start gap-2.5">
+                          <span
+                            className="mt-[5px] h-2 w-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: g.warna }}
+                            aria-hidden="true"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-semibold leading-[1.6] text-slate-600 dark:text-slate-300">
+                              <span className="tnum font-bold text-[#0b3d78] dark:text-slate-100">{g.akun}</span>{' '}
+                              {g.nama}
+                            </p>
+                            <p className="tnum mt-0.5 text-[10.5px] leading-[1.6] text-slate-500 dark:text-slate-400">
+                              {formatAngka(g.total)}{' '}
+                              <span className="text-slate-400 dark:text-slate-500">
+                                ({formatPersen(g.bagian)})
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="mt-3 border-t border-[#eef4fa] pt-2.5 text-[10.5px] leading-[1.6] text-slate-400 dark:border-white/10 dark:text-slate-500">
+                  Sumber: ADK Realisasi Pendapatan SAKTI. Porsi dihitung terhadap total pendapatan {data.tahun}.
                 </p>
               </div>
             </section>
@@ -366,7 +472,7 @@ export default function RealisasiAnggaranContainer() {
                 KANAN: pendapatan - sengaja kosong, data SAKTI pendapatan belum
                       diimpor. Jangan diisi angka belanja: pendapatan bukan
                       belanja. */}
-            <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <section className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
               {/* ---------- KIRI: belanja per bulan ---------- */}
               <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.03] dark:bg-white/[0.03] dark:ring-white/10">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -384,8 +490,22 @@ export default function RealisasiAnggaranContainer() {
 
                 {/* Grafik batang Jan-Des. Tinggi relatif terhadap nilai kumulatif
                     terbesar (biasanya Desember), bukan terhadap 100%. */}
+                {!adaBulanan && (
+                  <div className="mt-4 flex flex-col items-center justify-center gap-2 rounded-xl bg-[#f7f9fc] py-10 text-center dark:bg-white/[0.04]" style={{ minHeight: 170 }}>
+                    <FaChartBar className="h-5 w-5 text-slate-300 dark:text-slate-600" />
+                    <p className="text-[11.5px] font-semibold text-slate-500 dark:text-slate-400">
+                      Belum ada data bulanan untuk tahun {data.tahun}
+                    </p>
+                    <p className="max-w-[260px] text-[10.5px] leading-[1.6] text-slate-400 dark:text-slate-500">
+                      Butuh ekspor SAKTI <em>ADK Realisasi Belanja</em> tahun tersebut.
+                    </p>
+                  </div>
+                )}
+
                 <div
-                  className="relative mt-4 flex items-end justify-between gap-[3px] border-b border-[#eef4fa] pb-1 dark:border-white/10"
+                  className={`relative mt-4 items-end justify-between gap-[3px] border-b border-[#eef4fa] pb-1 dark:border-white/10 ${
+                    adaBulanan ? 'flex' : 'hidden'
+                  }`}
                   style={{ height: 170 }}
                   onMouseLeave={() => setHoverBulan(null)}
                 >
@@ -437,7 +557,7 @@ export default function RealisasiAnggaranContainer() {
                 </div>
 
                 {/* Label bulan */}
-                <div className="mt-1.5 flex justify-between gap-[3px]">
+                <div className={`mt-1.5 justify-between gap-[3px] ${adaBulanan ? 'flex' : 'hidden'}`}>
                   {BULAN_PENDEK.map((nama, idx) => (
                     <span key={nama} className="flex-1 text-center text-[8.5px] font-semibold uppercase tracking-tight text-slate-400">
                       {nama}
@@ -445,7 +565,7 @@ export default function RealisasiAnggaranContainer() {
                   ))}
                 </div>
 
-                <p className="mt-2 border-t border-[#eef4fa] pt-2 text-[10.5px] leading-snug text-slate-400 dark:border-white/10 dark:text-slate-500">
+                <p className="mt-3 border-t border-[#eef4fa] pt-2.5 text-[10.5px] leading-[1.6] text-slate-400 dark:border-white/10 dark:text-slate-500">
                   Nilai kumulatif Jan s.d. Des — total s.d. Desember{' '}
                   <span className="tnum font-semibold text-[#006d30]">
                     {formatAngka((data.per_bulan_belanja || [])[11]?.kumulatif || 0)}
@@ -455,36 +575,91 @@ export default function RealisasiAnggaranContainer() {
                 </p>
               </div>
 
-              {/* ---------- KANAN: pendapatan per bulan (KOSONG) ---------- */}
+              {/* ---------- KANAN: pendapatan per bulan ----------
+                  Sama seperti panel kiri: batang Jan-Des KUMULATIF. Sumbernya
+                  tabel pendapatan_bulanan (ADK Realisasi Pendapatan SAKTI),
+                  bukan berkas belanja. */}
               <div className="flex flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.03] dark:bg-white/[0.03] dark:ring-white/10">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-[13px] font-bold text-[#0b3d78] dark:text-white">
                     Realisasi Pendapatan per Bulan
                   </h2>
-                  <span className="rounded-full bg-[#f1f3f6] px-2.5 py-1 text-[10.5px] font-semibold text-slate-500 dark:bg-white/[0.06] dark:text-slate-400">
-                    Belum tersedia
+                  <span className="rounded-full bg-[#eef4fa] px-2.5 py-1 text-[10.5px] font-semibold text-[#30619c] dark:bg-white/[0.06] dark:text-slate-300">
+                    {adaBulananPendapatan ? `Kumulatif ${data.tahun}` : 'Belum tersedia'}
                   </span>
                 </div>
 
-                {/* Kerangka grafik kosong dengan sumbu bulan, supaya bentuknya
-                    sudah sama dengan panel kiri saat datanya nanti masuk. */}
-                <div className="relative mt-4 border-b border-[#eef4fa] dark:border-white/10" style={{ height: 170 }}>
-                  <div className="flex h-full items-end justify-between gap-[3px]">
-                    {BULAN_PENDEK.map((nama) => (
-                      <div key={nama} className="flex-1 rounded-t-sm bg-[#eef4fa] dark:bg-white/[0.05]" style={{ height: '6%' }} />
-                    ))}
+                <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">
+                  Arahkan kursor (atau tekan Tab) ke batang untuk melihat angkanya.
+                </p>
+
+                {!adaBulananPendapatan && (
+                  <div
+                    className="mt-4 flex flex-col items-center justify-center gap-2 rounded-xl bg-[#f7f9fc] py-10 text-center dark:bg-white/[0.04]"
+                    style={{ minHeight: 170 }}
+                  >
+                    <FaMoneyBillWave className="h-5 w-5 text-slate-300 dark:text-slate-600" />
+                    <p className="text-[11.5px] font-semibold text-slate-500 dark:text-slate-400">
+                      Belum ada data pendapatan untuk tahun {data.tahun}
+                    </p>
+                    <p className="max-w-[260px] text-[10.5px] leading-[1.6] text-slate-400 dark:text-slate-500">
+                      Unggah ekspor SAKTI <em>ADK Realisasi Pendapatan</em> di menu Anggaran → Pendapatan.
+                    </p>
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <FaMoneyBillWave className="mx-auto h-5 w-5 text-slate-300 dark:text-slate-600" />
-                      <p className="mt-1 text-[11.5px] font-semibold text-slate-500 dark:text-slate-400">
-                        Data pendapatan belum diunggah
-                      </p>
-                    </div>
-                  </div>
+                )}
+
+                <div
+                  className={`relative mt-4 items-end justify-between gap-[3px] border-b border-[#eef4fa] pb-1 dark:border-white/10 ${
+                    adaBulananPendapatan ? 'flex' : 'hidden'
+                  }`}
+                  style={{ height: 170 }}
+                  onMouseLeave={() => setHoverBulanPendapatan(null)}
+                >
+                  {bulananPendapatan.map((b) => {
+                    const tinggi = Math.max(1.5, (Number(b.kumulatif) / maksBulanPendapatan) * 100);
+                    const disorot = hoverBulanPendapatan === b.bulan;
+                    return (
+                      <div
+                        key={b.bulan}
+                        className="group relative flex h-full flex-1 cursor-default items-end"
+                        onMouseEnter={() => setHoverBulanPendapatan(b.bulan)}
+                        tabIndex={0}
+                        onFocus={() => setHoverBulanPendapatan(b.bulan)}
+                        onBlur={() => setHoverBulanPendapatan(null)}
+                        aria-label={`${BULAN_PENDEK[b.bulan - 1]}: kumulatif ${formatAngka(b.kumulatif)}`}
+                      >
+                        {disorot && (
+                          <div
+                            className={[
+                              'pointer-events-none absolute bottom-full z-10 mb-1 w-max rounded-lg bg-[#006d30] px-2 py-1.5 text-center shadow-lg',
+                              // Batang tepi memakai posisi rata kiri/kanan supaya
+                              // balon angkanya tidak keluar layar di ponsel.
+                              b.bulan === 1 ? 'left-0' : b.bulan === 12 ? 'right-0' : 'left-1/2 -translate-x-1/2',
+                            ].join(' ')}
+                          >
+                            <p className="text-[9.5px] font-semibold uppercase tracking-wider text-white/70">
+                              {BULAN_PENDEK[b.bulan - 1]} {data.tahun}
+                            </p>
+                            <p className="tnum text-[11.5px] font-bold leading-tight text-white">
+                              {formatAngka(b.kumulatif)}
+                            </p>
+                            <p className="tnum text-[9.5px] leading-tight text-white/70">
+                              bulan ini {formatAngka(b.nilai)}
+                            </p>
+                          </div>
+                        )}
+                        <div
+                          className={`w-full rounded-t-sm transition-colors ${
+                            disorot ? 'bg-[#0b3d78]' : 'bg-[#005bac]'
+                          }`}
+                          style={{ height: `${tinggi}%` }}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="mt-1.5 flex justify-between gap-[3px]">
+                <div className={`mt-1.5 justify-between gap-[3px] ${adaBulananPendapatan ? 'flex' : 'hidden'}`}>
                   {BULAN_PENDEK.map((nama) => (
                     <span key={nama} className="flex-1 text-center text-[8.5px] font-semibold uppercase tracking-tight text-slate-400">
                       {nama}
@@ -492,8 +667,10 @@ export default function RealisasiAnggaranContainer() {
                   ))}
                 </div>
 
-                <p className="mt-2 border-t border-[#eef4fa] pt-2 text-[10.5px] leading-snug text-slate-400 dark:border-white/10 dark:text-slate-500">
-                  Sumber berkas: ekspor SAKTI <em>ADK Realisasi Pendapatan</em> (belum diimpor).
+                <p className="mt-2 border-t border-[#eef4fa] pt-2 text-[10.5px] leading-[1.6] text-slate-400 dark:border-white/10 dark:text-slate-500">
+                  Nilai kumulatif Jan s.d. Des — total s.d. Desember{' '}
+                  <span className="tnum font-semibold text-[#005bac]">{formatAngka(totalPendapatan)}</span>.
+                  Sumber: ADK Realisasi Pendapatan SAKTI.
                 </p>
               </div>
             </section>
