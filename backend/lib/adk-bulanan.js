@@ -296,10 +296,83 @@ async function simpanBulananManual({ tahun, baris }) {
     return { tahun, tersimpan, dikosongkan, kumulatif: await kumulatifBulanan(tahun) };
   } catch (e) {
     await conn.rollback();
+    // Kesalahan skema di production mudah dikenali dan diberi jalan keluar:
+    // kolom `pagu` ditambahkan belakangan, jadi server lama bisa belum punya.
+    if (e.code === 'ER_BAD_FIELD_ERROR' || /Unknown column/i.test(e.message)) {
+      throw new Error(
+        'Skema database belum diperbarui: kolom `pagu` belum ada di tabel ' +
+        'realisasi_bulanan. Jalankan `node scripts/cek-skema-bulanan.js --perbaiki` ' +
+        'lalu ulangi.',
+      );
+    }
     throw new Error(`Gagal menyimpan: ${e.message}`);
   } finally {
     conn.release();
   }
 }
 
-module.exports = { bacaAdk, simpanBulanan, simpanBulananManual, bacaBerkas, kumulatifBulanan, keAngka };
+/**
+ * Memastikan tabel realisasi_bulanan punya kolom `pagu` dan indeks unik
+ * `uq_bulanan`. Dipanggil sekali saat server start.
+ *
+ * KENAPA: `CREATE TABLE IF NOT EXISTS` (dipakai apply-schema.js) TIDAK menambah
+ * kolom pada tabel yang sudah ada. Instalasi production yang tabelnya dibuat
+ * dari versi lama tetap tanpa `pagu`, sehingga form "Isi Realisasi Bulanan"
+ * gagal hanya di production sementara lokal jalan. Menjalankan pemeriksaan di
+ * sini membuat server memperbaiki dirinya sendiri - tidak bergantung pada
+ * operator mengingat menjalankan skrip migrasi.
+ *
+ * Aman diulang: setiap langkah memeriksa information_schema dulu.
+ * Tidak pernah melempar - kegagalan hanya dicatat, server tetap hidup.
+ */
+async function pastikanPunyaSkema() {
+  const catatan = [];
+  try {
+    const [t] = await db.query(
+      `SELECT COUNT(*) n FROM information_schema.tables
+        WHERE table_schema = DATABASE() AND table_name = 'realisasi_bulanan'`,
+    );
+    if (Number(t[0].n) !== 1) {
+      catatan.push('tabel realisasi_bulanan BELUM ADA (jalankan scripts/apply-schema.js)');
+      return catatan;
+    }
+
+    const [c] = await db.query(
+      `SELECT COUNT(*) n FROM information_schema.columns
+        WHERE table_schema = DATABASE() AND table_name = 'realisasi_bulanan'
+          AND column_name = 'pagu'`,
+    );
+    if (Number(c[0].n) === 0) {
+      await db.query(
+        'ALTER TABLE `realisasi_bulanan` ADD COLUMN `pagu` DECIMAL(18,2) NOT NULL DEFAULT 0 AFTER `nilai`',
+      );
+      catatan.push('kolom realisasi_bulanan.pagu DITAMBAHKAN otomatis');
+    }
+
+    const [i] = await db.query(
+      `SELECT COUNT(*) n FROM information_schema.statistics
+        WHERE table_schema = DATABASE() AND table_name = 'realisasi_bulanan'
+          AND index_name = 'uq_bulanan'`,
+    );
+    if (Number(i[0].n) === 0) {
+      // Hanya bisa dibuat bila tidak ada baris ganda (tahun, bulan, jenis).
+      const [dup] = await db.query(
+        `SELECT tahun, bulan, jenis, COUNT(*) n FROM realisasi_bulanan
+          GROUP BY tahun, bulan, jenis HAVING n > 1 LIMIT 1`,
+      );
+      if (dup.length) {
+        catatan.push('indeks uq_bulanan TIDAK dibuat: ada baris ganda (tahun/bulan/jenis)');
+      } else {
+        await db.query(
+          'ALTER TABLE `realisasi_bulanan` ADD UNIQUE KEY `uq_bulanan` (`tahun`, `bulan`, `jenis`)',
+        );
+        catatan.push('indeks realisasi_bulanan.uq_bulanan DITAMBAHKAN otomatis');
+      }
+    }
+  } catch (e) {
+    catatan.push(`pemeriksaan skema bulanan gagal: ${e.code || ''} ${e.message}`);
+  }
+  return catatan;
+}
+
+module.exports = { pastikanPunyaSkema,  bacaAdk, simpanBulanan, simpanBulananManual, bacaBerkas, kumulatifBulanan, keAngka };

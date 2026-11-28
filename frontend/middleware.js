@@ -79,7 +79,13 @@ export default withAuth(
           // membalas redirect ke halaman login berisi HTML \u2014 fetch() di
           // browser lalu melempar "Unexpected token '<'". Penjagaan sesi
           // tetap ada, tapi di dalam proxy (lihat pages/api/link-api/[...path].js).
-          '/api/link-api'
+          '/api/link-api',
+          // Proxy pengaturan token Talawang. Alasan sama: proxy SELALU membalas
+          // JSON (401 bila sesi tidak ada), dan penjagaan sesungguhnya ada di
+          // dalam proxy + keycloakAuth di backend. Halaman /setting/talawang
+          // sendiri TIDAK diloloskan (tidak ada di daftar ini) - tetap wajib login.
+          '/api/talawang',
+          '/uji-talawang'
         ];
         
         // Akar aplikasi "/" SELALU publik: halaman itu hanya mengalihkan

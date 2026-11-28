@@ -49,6 +49,7 @@ import {
   FaUtensils,
   FaPlug,
   FaFileAudio,
+  FaKey,
   FaCog,
   // Ikon grup & sub menu Anggaran (Realisasi Anggaran).
   FaWallet,
@@ -130,6 +131,10 @@ const NAV_GROUPS = [
       { label: 'Laura AI', href: '/setting/laura-ai', icon: FaPlug },
       // Koreksi naskah presentasi yang dibacakan widget LAURA di halaman publik.
       { label: 'Narasi Presentasi', href: '/setting/narasi-presentasi', icon: FaFileAudio },
+      // Token akses data realisasi untuk aplikasi Talawang (Sistem Perjalanan
+      // Dinas). Cakupannya DIBATASI pada akun 524xxx (belanja perjalanan dinas) dan
+      // ditegakkan di backend, bukan sekadar pengaturan di halaman ini.
+      { label: 'Talawang', href: '/setting/talawang', icon: FaKey },
     ],
   },
 ];

@@ -139,7 +139,13 @@ const publicRoutes = ['/api/login', '/api/health', '/api/publik',
     // Koreksi naskah presentasi 1 menit dibaca widget publik /jendela-kinerja.
     // Hanya GET /aktif yang dibuka (lihat routes/narasi-presentasi.js);
     // menyimpan/menghapus koreksi tetap wajib token.
-    '/api/narasi-presentasi/aktif'];
+    '/api/narasi-presentasi/aktif',
+    // KONSUMSI TOKEN TALAWANG. Talawang tidak punya sesi SSO JK, jadi dua
+    // endpoint ini dibuka dari penjaga SSO - TETAPI punya penjaganya sendiri:
+    // wajib token talawang yang sah (routes/talawang.js -> periksaToken).
+    // Sengaja ditulis sebagai alamat LENGKAP, bukan '/api/talawang', supaya
+    // /api/talawang/token (mengembalikan token asli!) tetap wajib login.
+    '/api/talawang/realisasi', '/api/talawang/tahun'];
 
 // BACA PUBLIK — modul yang datanya memang publik (rekap sarana, sampel, PBF).
 // Hanya metode BACA (GET/HEAD) yang dibuka; impor/ubah/hapus tetap wajib token.
@@ -172,6 +178,7 @@ const PREFIKS_API = [
     '/api/sampel-ot', '/api/sampel-sk', '/api/sampel-ob', '/api/sampel-kos',
     '/api/sampel-pp', '/api/sampel-kp', '/api/sampel-ok',
     '/api/anggaran-realisasi', '/api/pendapatan',
+    '/api/talawang',
 ];
 
 const alamatDikenal = (path) => PREFIKS_API.some((p) => path.startsWith(p));
@@ -374,6 +381,11 @@ app.use('/api/anggaran-realisasi', require('./routes/anggaran-realisasi'));
 // ---------------------------------------------------------------------------
 app.use('/api/pendapatan', require('./routes/pendapatan'));
 
+// Akses API untuk Talawang (Sistem Perjalanan Dinas) - HANYA belanja perjalanan dinas
+// (akun 524xxx). Route konsumsi (/realisasi, /tahun) memakai token sendiri;
+// route pengaturan (/token, /info) wajib login SSO.
+app.use('/api/talawang', require('./routes/talawang'));
+
 // Sampel: impor "REKAP DATA SAMPEL" per tahun (satu baris = satu sampel;
 // baris lanjutan di berkas digabung di backend/lib/sampel.js).
 // Satu komoditi = satu prefix + satu pasang tabel, tapi engine-nya sama.
@@ -423,6 +435,19 @@ app.use((err, req, res, next) => {
 });
 
 // ========== START SERVER ==========
+// Perbaikan skema mandiri: instalasi lama bisa belum punya kolom `pagu` /
+// indeks unik (CREATE TABLE IF NOT EXISTS tidak menambah kolom). Dijalankan
+// sebelum menerima permintaan supaya fitur "Isi Realisasi Bulanan" tidak gagal
+// di production tanpa penjelasan.
+const { pastikanPunyaSkema } = require('./lib/adk-bulanan');
+pastikanPunyaSkema()
+    .then((catatan) => {
+        if (catatan.length) {
+            console.log('PERINGATAN skema bulanan:', catatan.join('; '));
+        }
+    })
+    .catch((e) => console.error('Skema bulanan:', e.message));
+
 app.listen(PORT, HOST, () => {
     const info = ringkasanAuth();
     console.log(`

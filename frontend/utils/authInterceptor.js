@@ -63,6 +63,12 @@ const shouldSkipAuthRedirect = (requestUrl = '') => {
   // Permintaan internal Next.js (data route, asset, dll.)
   if (url.includes('/_next') || url.includes('__next')) return true;
 
+  // PRATINJAU/UJI TOKEN di halaman Setting. Endpoint ini memang membalas 401
+  // untuk token yang tidak sah, dan itu HASIL UJI yang ingin ditampilkan —
+  // bukan tanda sesi pengguna berakhir. Tanpa pengecualian ini, menekan tombol
+  // "Uji" pada token kedaluwarsa melempar operator ke /login.
+  if (url.includes('/api/talawang/realisasi') || url.includes('/api/talawang/tahun')) return true;
+
   // Sudah berada di halaman login -> hindari loop redirect
   const path = window.location.pathname || '';
   if (path.startsWith('/login')) return true;
