@@ -25,7 +25,7 @@
  *   pada akun 524 oleh lib/talawang-api.js.
  */
 const express = require('express');
-const { keycloakAuth, getUsername } = require('../middleware/keycloakAuth');
+const { keycloakAuth, hanyaAdmin, getUsername } = require('../middleware/keycloakAuth');
 const { originPermintaan } = require('../lib/base-publik');
 const {
   terbitkanToken,
@@ -130,7 +130,7 @@ const baseApi = (req) => {
   return `${originPermintaan(req)}/api/talawang`;
 };
 
-router.get('/info', keycloakAuth, (req, res) => {
+router.get('/info', keycloakAuth, hanyaAdmin, (req, res) => {
   const dasar = baseApi(req);
   return res.json({
     success: true,
@@ -149,7 +149,7 @@ router.get('/info', keycloakAuth, (req, res) => {
   });
 });
 
-router.get('/token', keycloakAuth, async (req, res) => {
+router.get('/token', keycloakAuth, hanyaAdmin, async (req, res) => {
   try {
     return res.json({ success: true, data: await daftarToken() });
   } catch (e) {
@@ -158,7 +158,7 @@ router.get('/token', keycloakAuth, async (req, res) => {
   }
 });
 
-router.post('/token', keycloakAuth, async (req, res) => {
+router.post('/token', keycloakAuth, hanyaAdmin, async (req, res) => {
   try {
     const hasil = await terbitkanToken({
       nama: req.body?.nama,
@@ -176,7 +176,7 @@ router.post('/token', keycloakAuth, async (req, res) => {
   }
 });
 
-router.delete('/token/:id', keycloakAuth, async (req, res) => {
+router.delete('/token/:id', keycloakAuth, hanyaAdmin, async (req, res) => {
   try {
     const berhasil = await cabutToken(req.params.id);
     if (!berhasil) {

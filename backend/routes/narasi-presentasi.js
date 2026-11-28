@@ -23,6 +23,7 @@
  * ============================================================================
  */
 const express = require('express');
+const { keycloakAuth, hanyaAdmin } = require('../middleware/keycloakAuth');
 const db = require('../db');
 const { rapikan, kunciFilter, labelFilter } = require('../lib/narasi');
 
@@ -99,7 +100,7 @@ router.get('/', async (req, res, next) => {
  * Body: { filter: {...}, naskah, catatan? }
  * Upsert by kunci: satu filter = satu naskah berlaku.
  */
-router.post('/', async (req, res, next) => {
+router.post('/', keycloakAuth, hanyaAdmin, async (req, res, next) => {
   try {
     const { filter = {}, naskah = '', catatan = null } = req.body || {};
     const teks = String(naskah).replace(/\s+/g, ' ').trim();
@@ -150,7 +151,7 @@ router.post('/', async (req, res, next) => {
 });
 
 /** DELETE /api/narasi-presentasi/:id — hapus koreksi, naskah otomatis dipakai lagi. */
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', keycloakAuth, hanyaAdmin, async (req, res, next) => {
   try {
     const [rows] = await db.query('SELECT * FROM narasi_presentasi WHERE id = ?', [req.params.id]);
     if (!rows.length) {

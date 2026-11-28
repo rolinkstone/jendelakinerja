@@ -23,6 +23,7 @@
  * seluruhnya, tahun lain tidak disentuh (2025 dan 2026 bisa berdampingan).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAksesPenuh } from '../../utils/peran';
 import {
   FaCloudUploadAlt,
   // Dipakai panel unggah ADK bulanan + judul ringkasan (lihat bagian unggah).
@@ -48,6 +49,7 @@ import {
   FaLayerGroup,
   FaFilter,
   FaTimes,
+  FaLock,
 } from 'react-icons/fa';
 import {
   formatAngka,
@@ -91,6 +93,8 @@ function warnaBatang(persen) {
 }
 
 export default function AnggaranRealisasiContainer() {
+  // Hanya admin & admin_jendela_kinerja yang boleh mengubah data.
+  const aksesPenuh = useAksesPenuh();
   // --- data ---
   const [ringkasan, setRingkasan] = useState(RINGKASAN_KOSONG);
   const [tabel, setTabel] = useState({ rows: [], total: 0, page: 1, total_halaman: 1 });
@@ -571,7 +575,21 @@ export default function AnggaranRealisasiContainer() {
         </div>
       </div>
 
-      {/* ================= Unggah berkas ================= */}
+      {/* ================= Unggah berkas =================
+          Hanya untuk admin & admin_jendela_kinerja. Peran lain (mis. `user`)
+          tetap membaca seluruh angka; backend juga menolak impor/hapus. */}
+      {!aksesPenuh && (
+        <div className="panel flex items-start gap-2.5 px-3 py-2.5">
+          <FaLock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-300" />
+          <p className="text-[12px] leading-snug text-slate-600 dark:text-slate-300">
+            <strong className="font-bold text-slate-800 dark:text-white">Mode baca saja.</strong>{' '}
+            Anda dapat membuka dan membaca semua modul, tetapi tidak dapat mengunggah, mengimpor,
+            mengubah realisasi bulanan, atau menghapus data.
+          </p>
+        </div>
+      )}
+
+      {aksesPenuh && (
       <div className="panel">
         <div className="panel-head">
           <div className="flex items-center gap-2">
@@ -632,6 +650,7 @@ export default function AnggaranRealisasiContainer() {
           <code className="rounded bg-paper-100 px-1 py-0.5 dark:bg-white/[0.06]">3165.BDB.001.051.524111.A</code>.
         </p>
       </div>
+      )}
 
       {/* ================= Data bulanan: status + pemicu modal =================
           Berkas ADK diunggah PER BULAN (mis. "Tanggal,2026-01-01 s.d 2026-01-31"),
@@ -649,6 +668,8 @@ export default function AnggaranRealisasiContainer() {
                 {statusBulanan.tahun} · {formatAngka(statusBulanan.total)}
               </span>
             )}
+            {aksesPenuh && (
+            <>
             <button
               type="button"
               className="btn-primary-sm"
@@ -675,6 +696,8 @@ export default function AnggaranRealisasiContainer() {
             >
               <FaEraser className="h-3 w-3" /> Kosongkan
             </button>
+            </>
+            )}
           </div>
         </div>
 
@@ -899,7 +922,7 @@ export default function AnggaranRealisasiContainer() {
               <FaLayerGroup className="h-3 w-3" />
               {formatAngka(ringkasan.jumlah_mak)} MAK · {ringkasan.jumlah_komponen} komponen · {ringkasan.jumlah_akun} akun
             </span>
-            {tahun && (
+            {tahun && aksesPenuh && (
               <button type="button" className="btn-primary-sm !text-rose-600 dark:!text-rose-400" onClick={hapusTahun} title={`Hapus data tahun ${tahun}`}>
                 <FaTrashAlt className="h-3 w-3" /> Kosongkan
               </button>

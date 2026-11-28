@@ -22,7 +22,7 @@ const express = require('express');
 // router gagal dimuat dan server mati saat router ini dipasang. Proyek ini
 // memakai wrapper pool tunggal di backend/db.js.
 const db = require('../db');
-const { keycloakAuth, getUsername } = require('../middleware/keycloakAuth');
+const { keycloakAuth, hanyaAdmin, getUsername } = require('../middleware/keycloakAuth');
 
 const router = express.Router();
 
@@ -59,7 +59,7 @@ const basePublic = (req) => originPublik(req);
 // ---------------------------------------------------------------------------
 // POST /api/api-link — terbitkan link API untuk satu modul
 // ---------------------------------------------------------------------------
-router.post('/', keycloakAuth, async (req, res) => {
+router.post('/', keycloakAuth, hanyaAdmin, async (req, res) => {
   const modul = batasi(req.body?.modul, 30);
   const masaBerlaku = Math.min(Math.max(Number(req.body?.masa_berlaku_hari) || 30, 1), 3650);
 
@@ -131,7 +131,7 @@ router.get('/', keycloakAuth, async (req, res) => {
 // ---------------------------------------------------------------------------
 // DELETE /api/api-link/:id — cabut link
 // ---------------------------------------------------------------------------
-router.delete('/:id', keycloakAuth, async (req, res) => {
+router.delete('/:id', keycloakAuth, hanyaAdmin, async (req, res) => {
   try {
     const [hasil] = await db.query(
       'UPDATE api_link SET dicabut_pada = NOW() WHERE id = ? AND dicabut_pada IS NULL',

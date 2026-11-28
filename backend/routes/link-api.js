@@ -30,7 +30,7 @@
 const crypto = require('crypto');
 const express = require('express');
 const db = require('../db');
-const { keycloakAuth, getUsername } = require('../middleware/keycloakAuth');
+const { keycloakAuth, hanyaAdmin, getUsername } = require('../middleware/keycloakAuth');
 const { daftarModul, katalogField, validasiKolom, MODUL } = require('../lib/katalog-modul');
 const { segel, bukaSegel, siap: segelSiap } = require('../lib/crypto-link');
 
@@ -114,7 +114,7 @@ router.get('/modul/:kode', keycloakAuth, (req, res) => {
 // POST /api/api-link — terbitkan link dari FIELD PILIHAN operator
 // Body: { modul, kolom: [...], filter?: {}, label?, masa_berlaku_hari? }
 // ---------------------------------------------------------------------------
-router.post('/', keycloakAuth, async (req, res) => {
+router.post('/', keycloakAuth, hanyaAdmin, async (req, res) => {
   const modul = batasi(req.body?.modul, 40);
   const masaBerlaku = Math.min(Math.max(Number(req.body?.masa_berlaku_hari) || 30, 1), 3650);
 
@@ -301,7 +301,7 @@ router.patch('/:id', keycloakAuth, async (req, res) => {
 //   ?permanen=1 → baris dibuang (token_hash hilang, link langsung mati)
 //   tanpa itu   → dicabut (tetap tersimpan untuk jejak audit, tak tampil lagi)
 // ---------------------------------------------------------------------------
-router.delete('/:id', keycloakAuth, async (req, res) => {
+router.delete('/:id', keycloakAuth, hanyaAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
     return res.status(400).json({ success: false, message: 'ID link tidak valid' });

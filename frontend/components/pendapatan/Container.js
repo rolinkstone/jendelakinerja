@@ -20,6 +20,7 @@
  * disingkat ("565,6 jt"), supaya bisa dicocokkan langsung dengan dokumen.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAksesPenuh } from '../../utils/peran';
 import {
   FaCloudUploadAlt,
   FaCoins,
@@ -34,6 +35,7 @@ import {
   FaChartBar,
   FaChartPie,
   FaTable,
+  FaLock,
 } from 'react-icons/fa';
 import {
   BULAN_PENDEK,
@@ -76,6 +78,8 @@ function validasiBerkas(berkas) {
 }
 
 export default function PendapatanContainer() {
+  // Hanya admin & admin_jendela_kinerja yang boleh mengubah data.
+  const aksesPenuh = useAksesPenuh();
   // --- data ---
   const [ringkasan, setRingkasan] = useState(RINGKASAN_KOSONG);
   const [tahun, setTahun] = useState(null);
@@ -196,9 +200,13 @@ export default function PendapatanContainer() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-[1180px] px-3 py-4 sm:px-5 sm:py-6">
+    // LEBAR PENUH. Dulu dibatasi max-w-[1180px] + padding sendiri, sehingga
+    // halaman ini terlihat menyempit dibanding modul lain (yang isinya langsung
+    // mengisi <main> DashboardLayout). Padding di sini dibuang karena <main>
+    // sudah memberi p-4/sm:p-6/lg:p-8.
+    <div className="space-y-4">
       {/* ================= Judul + filter ================= */}
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[17px] font-bold tracking-tight text-slate-800 dark:text-white sm:text-[19px]">
             Realisasi Pendapatan
@@ -255,7 +263,7 @@ export default function PendapatanContainer() {
       {pesan && (
         <div
           className={[
-            'mb-4 flex items-start gap-2 rounded-xl px-3 py-2.5 text-[12px] ring-1',
+            'flex items-start gap-2 rounded-xl px-3 py-2.5 text-[12px] ring-1',
             pesan.jenis === 'sukses'
               ? 'bg-emerald-500/10 text-emerald-800 ring-emerald-500/25 dark:text-emerald-200'
               : 'bg-rose-500/10 text-rose-800 ring-rose-500/25 dark:text-rose-200',
@@ -272,14 +280,28 @@ export default function PendapatanContainer() {
       )}
 
       {galat && (
-        <div className="mb-4 flex items-start gap-2 rounded-xl bg-rose-500/10 px-3 py-2.5 text-[12px] text-rose-800 ring-1 ring-rose-500/25 dark:text-rose-200">
+        <div className="flex items-start gap-2 rounded-xl bg-rose-500/10 px-3 py-2.5 text-[12px] text-rose-800 ring-1 ring-rose-500/25 dark:text-rose-200">
           <FaExclamationTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span className="leading-snug">{galat}</span>
         </div>
       )}
 
-      {/* ================= Unggah berkas ================= */}
-      <div className="panel mb-4">
+      {/* ================= Unggah berkas =================
+          Hanya untuk admin & admin_jendela_kinerja. Peran lain tetap bisa
+          membaca seluruh angka di bawah; backend juga menolak impor/hapus. */}
+      {!aksesPenuh && (
+        <div className="panel flex items-start gap-2.5 px-3 py-2.5">
+          <FaLock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-300" />
+          <p className="text-[12px] leading-snug text-slate-600 dark:text-slate-300">
+            <strong className="font-bold text-slate-800 dark:text-white">Mode baca saja.</strong>{' '}
+            Anda dapat membuka dan membaca semua modul, tetapi tidak dapat mengunggah, mengimpor,
+            atau menghapus data.
+          </p>
+        </div>
+      )}
+
+      {aksesPenuh && (
+      <div className="panel">
         <div className="panel-head">
           <div className="flex items-center gap-2">
             <FaCloudUploadAlt className="h-3.5 w-3.5 text-accent-600 dark:text-accent-400" />
@@ -333,9 +355,10 @@ export default function PendapatanContainer() {
           di berkas yang diganti; bulan lain tidak terhapus.
         </p>
       </div>
+      )}
 
       {/* ================= Angka pokok ================= */}
-      <div className="mb-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {kartu.map((k) => {
           const Ikon = k.ikon;
           return (
@@ -354,7 +377,7 @@ export default function PendapatanContainer() {
 
       {/* ================= Status kosong ================= */}
       {!adaData && !memuat && (
-        <div className="panel mb-4 px-4 py-10 text-center">
+        <div className="panel px-4 py-10 text-center">
           <FaInfoCircle className="mx-auto h-6 w-6 text-slate-300 dark:text-slate-600" />
           <p className="mt-2 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
             Belum ada data pendapatan{tahun ? ` untuk tahun ${tahun}` : ''}
@@ -368,7 +391,7 @@ export default function PendapatanContainer() {
       {adaData && (
         <>
           {/* ================= Rekap per akun ================= */}
-          <div className="panel mb-4">
+          <div className="panel">
             <div className="panel-head">
               <h2 className="text-sm font-bold text-slate-800 dark:text-white">Realisasi per Akun Pendapatan</h2>
               <span className="badge-primary tnum">{formatAngka(total)}</span>

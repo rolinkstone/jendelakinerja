@@ -26,8 +26,11 @@
  *   AUTH_AUDIENCE=<daftar dipisah koma> (bawaan: kosong = tidak diperiksa,
  *                                    karena token akses Keycloak sering tidak
  *                                    memuat client id di `aud`)
- *   PERAN_TULIS=<daftar dipisah koma> (bawaan: admin,superadmin) — peran yang
- *                                    boleh melakukan operasi tulis.
+ *   PERAN_TULIS=<daftar dipisah koma> — peran yang boleh melakukan operasi
+ *                                    tulis (impor/ubah/hapus). Bawaannya HANYA
+ *                                    `admin` dan `admin_jendela_kinerja`; peran
+ *                                    lain (termasuk `superadmin` dan `user`)
+ *                                    hanya boleh membaca.
  */
 
 const jwt = require('jsonwebtoken');
@@ -65,8 +68,15 @@ const AUDIENCE = String(process.env.AUTH_AUDIENCE || '')
   .map((s) => s.trim())
   .filter(Boolean);
 
+/**
+ * DUA peran yang punya akses penuh: `admin` dan `admin_jendela_kinerja`.
+ * Selain keduanya HANYA BOLEH MEMBACA — termasuk mengunggah berkas, menghapus
+ * data, dan membuka menu Setting (yang darinya token aplikasi lain bisa diambil).
+ */
+const PERAN_ADMIN = ['admin', 'admin_jendela_kinerja'];
+
 /** Peran yang boleh menulis data. Lihat catatan di kepala berkas. */
-const PERAN_TULIS = String(process.env.PERAN_TULIS || 'admin,superadmin,admin_*')
+const PERAN_TULIS = String(process.env.PERAN_TULIS || PERAN_ADMIN.join(','))
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
@@ -161,10 +171,21 @@ const ringkasan = () => ({
   peranTulis: PERAN_TULIS.join(', '),
 });
 
+/**
+ * Apakah pengguna punya salah satu peran ADMIN penuh.
+ * Dipakai rute yang menyentuh konfigurasi/token, bukan sekadar data.
+ */
+const apakahAdmin = (user) => {
+  if (!Array.isArray(user?.roles)) return false;
+  return user.roles.some((peran) => PERAN_ADMIN.includes(peran));
+};
+
 module.exports = {
   verifikasiToken,
   penggunaDariPayload,
   bolehMenulis,
+  apakahAdmin,
+  PERAN_ADMIN,
   ringkasan,
   PERAN_TULIS,
   VERIFIKASI_AKTIF,

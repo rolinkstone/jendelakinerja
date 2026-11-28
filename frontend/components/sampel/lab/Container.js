@@ -34,6 +34,7 @@
  * token Keycloak tidak pernah menyentuh browser.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAksesPenuh } from '../../../utils/peran';
 import {
   FaCloudUploadAlt,
   FaFileExcel,
@@ -49,6 +50,7 @@ import {
   FaListAlt,
   FaCalendarAlt,
   FaFlask,
+  FaLock,
 } from 'react-icons/fa';
 import { DetailSampelModal } from './Modal';
 import { konfig } from './config';
@@ -100,6 +102,8 @@ function kelasChipTahun(aktif) {
 }
 
 export default function SampelContainer({ jenis = 'ot' }) {
+  // Hanya admin & admin_jendela_kinerja yang boleh mengubah data.
+  const aksesPenuh = useAksesPenuh();
   /** Perbedaan antar komoditi: prefix API + judul halaman. */
   const konf = konfig(jenis);
   const API = konf.api;
@@ -143,7 +147,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
     const r = await fetch(`${API}/summary${q}`, { headers: { accept: 'application/json' } });
     const j = await r.json();
     if (!r.ok) throw new Error(j.message || 'Gagal memuat ringkasan');
-    setRingkasan(j.data);
+    setRingkasan({ ...RINGKASAN_KOSONG, ...(j.data || {}) });
   }, [API]);
 
   const muatTabel = useCallback(async (halamanTujuan = 1, kataKunci = '', tahunPilih = null, kesimpulanPilih = '') => {
@@ -157,7 +161,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
     const r = await fetch(`${API}/sampel?${q.toString()}`, { headers: { accept: 'application/json' } });
     const j = await r.json();
     if (!r.ok) throw new Error(j.message || 'Gagal memuat daftar sampel');
-    setTabel(j.data);
+    setTabel({ rows: [], total: 0, page: 1, total_halaman: 1, ...(j.data || {}) });
   }, [API]);
 
   const muatSemua = useCallback(async (
@@ -340,7 +344,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
               {formatAngka(
                 tahun === null
                   ? ringkasan.total?.total_sampel
-                  : ringkasan.daftar_tahun.reduce((t, d) => t + Number(d.jumlah_sampel || 0), 0),
+                  : (ringkasan.daftar_tahun || []).reduce((t, d) => t + Number(d.jumlah_sampel || 0), 0),
               )}
             </span>
           </button>
@@ -367,7 +371,27 @@ export default function SampelContainer({ jenis = 'ot' }) {
         </p>
       </section>
 
+      {/* Pengguna tanpa akses penuh (mis. peran `user`) tetap bisa membaca
+          seluruh data modul, tetapi berkas tidak boleh diubah: panel unggah,
+          impor, dan tombol kosongkan disembunyikan. Backend juga menolak
+          (403) bila ada yang mencoba memanggil API tulis langsung. */}
+      {!aksesPenuh && (
+        <section className="panel flex items-start gap-2.5 p-3.5">
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-300">
+            <FaLock size={13} />
+          </span>
+          <div>
+            <p className="text-[12px] font-bold text-ink-900 dark:text-ink-50">Mode baca saja</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-ink-500 dark:text-ink-300">
+              Peran Anda dapat membuka dan membaca semua modul, tetapi tidak dapat mengunggah,
+              mengimpor, atau menghapus data. Hubungi administrator bila data perlu diperbarui.
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* ============ UNGGAH BERKAS ============ */}
+      {aksesPenuh && (
       <section className="panel animate-rise p-4 sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
           {/* Dropzone */}
@@ -461,7 +485,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
                 <p className="mt-1.5 text-[11px] font-medium text-ink-500 dark:text-ink-300">
                   {tahunImpor === TAHUN_OTOMATIS
                     ? `Tersimpan sekarang: ${formatAngka(
-                        ringkasan.daftar_tahun.reduce((t, d) => t + Number(d.jumlah_sampel || 0), 0),
+                        (ringkasan.daftar_tahun || []).reduce((t, d) => t + Number(d.jumlah_sampel || 0), 0),
                       )} sampel dari ${totalTahunTersedia} tahun.`
                     : isiTahunDipilih
                       ? `Tahun ${tahunImpor} saat ini berisi ${formatAngka(isiTahunDipilih.jumlah_sampel)} sampel.`
@@ -558,6 +582,7 @@ export default function SampelContainer({ jenis = 'ot' }) {
           </div>
         )}
       </section>
+      )}
 
       {/* ============ STATISTIK ============ */}
       <section className="space-y-2">

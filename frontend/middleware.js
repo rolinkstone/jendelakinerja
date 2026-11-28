@@ -13,7 +13,15 @@ export default withAuth(
 
     if (token) {
       // You can add role-based access control here
-      if (path.startsWith('/admin') && !PERAN_ADMIN.includes(token.role)) {
+      // Menu Setting (Laura AI, Narasi Presentasi, Talawang) hanya untuk
+      // administrator. Dari sini token aplikasi lain diterbitkan, jadi
+      // menyembunyikan menunya saja tidak cukup — URL langsung juga ditolak.
+      // Peran diambil dari klaim `roles` (realm_access Keycloak); `role` tunggal
+      // dipakai sebagai cadangan untuk token lama.
+      const peranToken = Array.isArray(token.roles) ? token.roles : [token.role].filter(Boolean);
+      const punyaPeranAdmin = peranToken.some((r) => PERAN_ADMIN.includes(String(r).toLowerCase()));
+
+      if ((path.startsWith('/admin') || path.startsWith('/setting')) && !punyaPeranAdmin) {
         const url = new URL('/unauthorized', req.url);
         return NextResponse.redirect(url);
       }

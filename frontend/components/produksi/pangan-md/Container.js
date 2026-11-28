@@ -23,6 +23,7 @@
  * Keycloak tidak pernah menyentuh browser.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAksesPenuh } from '../../../utils/peran';
 import {
   FaCloudUploadAlt,
   FaFileExcel,
@@ -37,6 +38,7 @@ import {
   FaChevronRight,
   FaListAlt,
   FaCalendarAlt,
+  FaLock,
 } from 'react-icons/fa';
 import { DetailLaporanModal } from './Modal';
 import {
@@ -76,6 +78,8 @@ function kelasChipTahun(aktif) {
 }
 
 export default function DistribusiPbfContainer() {
+  // Hanya admin & admin_jendela_kinerja yang boleh mengubah data.
+  const aksesPenuh = useAksesPenuh();
   // --- data ---
   const [ringkasan, setRingkasan] = useState(RINGKASAN_KOSONG);
   const [tabel, setTabel] = useState({ rows: [], total: 0, page: 1, total_halaman: 1 });
@@ -114,7 +118,7 @@ export default function DistribusiPbfContainer() {
     const r = await fetch(`/api/produksi-pangan-md/summary${q}`, { headers: { accept: 'application/json' } });
     const j = await r.json();
     if (!r.ok) throw new Error(j.message || 'Gagal memuat ringkasan');
-    setRingkasan(j.data);
+    setRingkasan({ ...RINGKASAN_KOSONG, ...(j.data || {}) });
   }, []);
 
   const muatTabel = useCallback(async (halamanTujuan = 1, kataKunci = '', tahunPilih = null) => {
@@ -127,7 +131,7 @@ export default function DistribusiPbfContainer() {
     const r = await fetch(`/api/produksi-pangan-md/laporan?${q.toString()}`, { headers: { accept: 'application/json' } });
     const j = await r.json();
     if (!r.ok) throw new Error(j.message || 'Gagal memuat daftar laporan');
-    setTabel(j.data);
+    setTabel({ rows: [], total: 0, page: 1, total_halaman: 1, ...(j.data || {}) });
   }, []);
 
   const muatSemua = useCallback(async (
@@ -296,7 +300,7 @@ export default function DistribusiPbfContainer() {
           <button type="button" onClick={() => gantiTahun(null)} className={kelasChipTahun(tahun === null)}>
             Semua tahun
             <span className="tnum text-[11px] font-bold opacity-70">
-              {formatAngka(tahun === null ? ringkasan.total?.total_laporan : ringkasan.daftar_tahun.reduce((t, d) => t + Number(d.jumlah_laporan || 0), 0))}
+              {formatAngka(tahun === null ? ringkasan.total?.total_laporan : (ringkasan.daftar_tahun || []).reduce((t, d) => t + Number(d.jumlah_laporan || 0), 0))}
             </span>
           </button>
           {(ringkasan.daftar_tahun || []).map((d) => (
@@ -322,7 +326,27 @@ export default function DistribusiPbfContainer() {
         </p>
       </section>
 
+      {/* Pengguna tanpa akses penuh (mis. peran `user`) tetap bisa membaca
+          seluruh data modul, tetapi berkas tidak boleh diubah: panel unggah,
+          impor, dan tombol kosongkan disembunyikan. Backend juga menolak
+          (403) bila ada yang mencoba memanggil API tulis langsung. */}
+      {!aksesPenuh && (
+        <section className="panel flex items-start gap-2.5 p-3.5">
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-300">
+            <FaLock size={13} />
+          </span>
+          <div>
+            <p className="text-[12px] font-bold text-ink-900 dark:text-ink-50">Mode baca saja</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-ink-500 dark:text-ink-300">
+              Peran Anda dapat membuka dan membaca semua modul, tetapi tidak dapat mengunggah,
+              mengimpor, atau menghapus data. Hubungi administrator bila data perlu diperbarui.
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* ============ UNGGAH BERKAS ============ */}
+      {aksesPenuh && (
       <section className="panel animate-rise p-4 sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
           {/* Dropzone */}
@@ -512,6 +536,7 @@ export default function DistribusiPbfContainer() {
           </div>
         )}
       </section>
+      )}
 
       {/* ============ STATISTIK ============ */}
       <section className="space-y-2">

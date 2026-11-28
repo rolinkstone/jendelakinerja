@@ -57,7 +57,14 @@ import {
   FaPiggyBank,
 } from 'react-icons/fa';
 import Brand, { BRAND, BrandMark } from './Brand';
-import TombolLinkApi from './beranda/TombolLinkApi';
+
+// Peran yang punya AKSES PENUH. Harus sama dengan PERAN_ADMIN di backend
+// (middleware/keycloakAuth.js) — peran lain hanya boleh membaca data.
+export const PERAN_ADMIN = ['admin', 'admin_jendela_kinerja'];
+
+/** Apakah daftar peran memuat peran administrator penuh. */
+export const punyaAksesPenuh = (roles) =>
+  Array.isArray(roles) && roles.some((r) => PERAN_ADMIN.includes(String(r).toLowerCase()));
 
 const NAV_GROUPS = [
   // PENTING: href-nya '/beranda', BUKAN '/'. Akar '/' sudah dipakai halaman
@@ -124,6 +131,8 @@ const NAV_GROUPS = [
     // Menu PENGATURAN: konfigurasi yang tidak menyajikan data pengawasan.
     // Dulu dua entri ini berdiri sendiri di bawah Beranda sehingga menyamar
     // sebagai modul data; sekarang dikelompokkan supaya jelas ini setting.
+    // `khususAdmin` → hanya admin & admin_jendela_kinerja yang melihat menu ini.
+    khususAdmin: true,
     label: 'Setting',
     icon: FaCog,
     items: [
@@ -201,6 +210,10 @@ export default function DashboardLayout({ children, pageTitle = 'Beranda' }) {
 
   // ==== Data user ====
   const user = session?.user || {};
+  // Peran efektif: `roles` dari token NextAuth (diisi dari realm_access
+  // Keycloak). Dipakai untuk menyembunyikan menu Setting dan tombol tulis.
+  const peranSaya = Array.isArray(user.roles) ? user.roles : [];
+  const aksesPenuh = punyaAksesPenuh(peranSaya);
   const displayName =
     user.name ||
     user.username ||
@@ -298,7 +311,7 @@ export default function DashboardLayout({ children, pageTitle = 'Beranda' }) {
           )}
 
           <div className="space-y-1">
-            {NAV_GROUPS.map((grup) => {
+            {NAV_GROUPS.filter((grup) => !grup.khususAdmin || punyaAksesPenuh(peranSaya)).map((grup) => {
               const Icon = grup.icon;
 
               // --- Item tunggal (Beranda) ---
@@ -525,9 +538,6 @@ export default function DashboardLayout({ children, pageTitle = 'Beranda' }) {
           </div>
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-            {/* Tombol Link API modul aktif \u2014 untuk integrasi knowledge LAURA AI */}
-            <TombolLinkApi />
-
             {/* Tanggal */}
             <span className="chip tnum hidden text-slate-500 dark:text-slate-400 lg:inline-flex">
               <span className="h-1.5 w-1.5 rounded-full bg-accent-500" />

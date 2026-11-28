@@ -290,11 +290,13 @@ export default function Home() {
       </Head>
 
       <DashboardLayout pageTitle="Beranda">
-        <div className="mx-auto max-w-7xl space-y-5">
+        {/* Lebar penuh: dulu dibatasi max-w-7xl sehingga beranda terlihat
+            menyempit dibanding modul lain. */}
+        <div className="space-y-5">
 
           {/* ===== Identitas pengguna + periode berjalan ===== */}
           <section className="panel animate-rise overflow-hidden">
-            <div className="grid lg:grid-cols-[1.55fr_1fr]">
+            <div className="grid min-w-0 lg:grid-cols-[1.55fr_1fr]">
               <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-ink-900 text-base font-extrabold text-accent-400 ring-1 ring-inset ring-accent-500/30">
                   {initials}
@@ -345,7 +347,7 @@ export default function Home() {
               <span className="chip text-slate-400 dark:text-slate-500">Menunggu data modul</span>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {KPI_SLOTS.map((slot) => {
                 const Icon = slot.icon;
                 return (
@@ -375,9 +377,9 @@ export default function Home() {
           </section>
 
           {/* ===== Capaian + modul ===== */}
-          <section className="grid gap-4 lg:grid-cols-3">
+          <section className="grid min-w-0 gap-4 lg:grid-cols-3">
             {/* Capaian per unit (masih kosong) */}
-            <div className="panel lg:col-span-2">
+            <div className="panel min-w-0 lg:col-span-2">
               <div className="panel-head">
                 <div className="flex items-center gap-2">
                   <FaChartLine className="h-3.5 w-3.5 text-accent-600 dark:text-accent-400" />
@@ -398,13 +400,13 @@ export default function Home() {
                   Modul baru mengikuti konvensi struktur aplikasi:
                 </p>
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5">
-                  <code className="rounded border border-paper-300 bg-paper-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+                  <code className="max-w-full break-all rounded border border-paper-300 bg-paper-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
                     pages/&lt;modul&gt;/index.js
                   </code>
-                  <code className="rounded border border-paper-300 bg-paper-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+                  <code className="max-w-full break-all rounded border border-paper-300 bg-paper-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
                     components/&lt;modul&gt;/Container.js
                   </code>
-                  <code className="rounded border border-paper-300 bg-paper-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+                  <code className="max-w-full break-all rounded border border-paper-300 bg-paper-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
                     backend/routes/&lt;modul&gt;.js
                   </code>
                 </div>
@@ -412,7 +414,7 @@ export default function Home() {
             </div>
 
             {/* Kolom kanan */}
-            <div className="space-y-4">
+            <div className="min-w-0 space-y-4">
               {/* Modul terpasang */}
               <div className="panel overflow-hidden">
                 <div className="panel-head">
