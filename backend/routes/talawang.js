@@ -26,6 +26,7 @@
  */
 const express = require('express');
 const { keycloakAuth, getUsername } = require('../middleware/keycloakAuth');
+const { originPermintaan } = require('../lib/base-publik');
 const {
   terbitkanToken,
   daftarToken,
@@ -109,12 +110,24 @@ router.get('/tahun', async (req, res) => {
 // ===========================================================================
 
 /** Base URL untuk merakit contoh URL yang ditempel ke Talawang. */
+/**
+ * Alamat API Talawang untuk ditempel di konfigurasi Talawang.
+ *
+ * MEMAKAI DOMAIN PERMINTAAN, BUKAN PUBLIC_BASE_URL.
+ * PUBLIC_BASE_URL mengarah ke domain API terpisah (data-lets...), yang bisa
+ * tertinggal versi atau belum dirutekan. Kalau operator menyalin tautan itu,
+ * hasilnya gagal dibuka meski pratinjau di halaman berhasil — persis keluhan
+ * "pratinjau muncul, URL tidak". Dengan domain yang sama dengan halaman,
+ * tautan selalu hidup karena melewati proxy /api/talawang (yang meneruskan
+ * rute realisasi/tahun tanpa sesi) dan backend yang sama.
+ *
+ * Bila operator memang ingin menunjuk domain API terpisah, set
+ * TALAWANG_BASE_URL — nilai itu yang dipakai apa adanya.
+ */
 const baseApi = (req) => {
-  const dariEnv = process.env.PUBLIC_BASE_URL || process.env.JK_PUBLIC_URL;
-  const dasar = dariEnv
-    ? dariEnv.replace(/\/+$/, '')
-    : `${(req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim()}://${req.get('host')}`;
-  return `${dasar}/api/talawang`;
+  const khusus = String(process.env.TALAWANG_BASE_URL || '').trim().replace(/\/+$/, '');
+  if (khusus) return `${khusus.replace(/\/api$/i, '')}/api/talawang`;
+  return `${originPermintaan(req)}/api/talawang`;
 };
 
 router.get('/info', keycloakAuth, (req, res) => {

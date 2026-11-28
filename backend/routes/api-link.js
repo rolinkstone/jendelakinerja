@@ -47,13 +47,14 @@ const MODUL = {
 
 const batasi = (v, maks) => String(v ?? '').slice(0, maks);
 
-/** Base URL publik JK — dipakai saat merakit link yang ditempel ke aplikasi lain. */
-const basePublic = (req) => {
-  const dariEnv = process.env.PUBLIC_BASE_URL || process.env.JK_PUBLIC_URL;
-  if (dariEnv) return dariEnv.replace(/\/+$/, '');
-  const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
-  return `${proto}://${req.get('host')}`;
-};
+/**
+ * Origin publik JK — dipakai saat merakit link yang ditempel ke aplikasi lain.
+ * Memakai lib/base-publik.js supaya PUBLIC_BASE_URL yang berakhiran `/api`
+ * tidak menghasilkan tautan dobel (`.../api/api/publik/link/...`). Domain kanonik
+ * (env) sengaja didahulukan: tautan ini dikonsumsi aplikasi LAIN lewat domain
+ * API publik, bukan lewat domain halaman yang sedang dibuka operator.
+ */
+const basePublic = (req) => originPublik(req);
 
 // ---------------------------------------------------------------------------
 // POST /api/api-link — terbitkan link API untuk satu modul

@@ -24,21 +24,44 @@ const bacaBody = async (req) => {
 };
 
 export default async function handler(req, res) {
-  const token = await ambilToken(req);
+  const bagian = [].concat(req.query.path || []).join('/');
 
-  if (!token || !token.accessToken) {
+  /**
+   * RUTE KONSUMSI TALAWANG — lolos TANPA SESI.
+   *
+   * Talawang (aplikasi lain) tidak punya sesi Keycloak JK; penjaganya adalah
+   * token API yang dikirim di query/header. Kalau proxy ini menuntut sesi,
+   * URL yang dibagikan operator selalu gagal saat dibuka di browser — persis
+   * keluhan "pratinjau muncul tapi URL tidak".
+   *
+   * Keamanan tidak berkurang: backend tetap memeriksa token lewat
+   * periksaToken() (routes/talawang.js) dan mengunci datanya pada akun 524.
+   * Yang TIDAK boleh lolos adalah /token dan /info — keduanya tetap butuh sesi
+   * karena mengembalikan token asli dan mengubah konfigurasi.
+   */
+  const konsumsi = bagian === 'realisasi' || bagian === 'tahun';
+  const token = konsumsi ? null : await ambilToken(req);
+
+  if (!konsumsi && (!token || !token.accessToken)) {
     return res.status(401).json({ success: false, message: 'Sesi tidak ditemukan. Silakan login ulang.' });
   }
 
-  const bagian = [].concat(req.query.path || []).join('/');
   const indeksQuery = req.url.indexOf('?');
   const query = indeksQuery >= 0 ? req.url.slice(indeksQuery) : '';
   const url = `${BACKEND}/talawang/${bagian}${query}`;
 
   try {
+    // Teruskan host publik ke backend. Tanpa ini, /info merakit tautan dari
+    // req.get('host') di sisi backend, yaitu alamat internal container
+    // (mis. host.docker.internal:5006) - tautan yang disalin operator lalu
+    // tidak bisa dibuka di browser. Reverse proxy luar sudah mengirim
+    // x-forwarded-host asli; kalau tidak ada, pakai Host permintaan ini.
+    const hostPublik = (req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+    const protoPublik = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+
     const opsi = {
       method: req.method,
-      headers: { authorization: `Bearer ${token.accessToken}` },
+      headers: {},
     };
 
     if (!['GET', 'HEAD'].includes(req.method)) {
@@ -48,6 +71,12 @@ export default async function handler(req, res) {
         if (req.headers['content-type']) opsi.headers['content-type'] = req.headers['content-type'];
       }
     }
+
+    if (token?.accessToken) opsi.headers.authorization = `Bearer ${token.accessToken}`;
+    else delete opsi.headers.authorization;
+
+    if (hostPublik) opsi.headers['x-forwarded-host'] = hostPublik;
+    opsi.headers['x-forwarded-proto'] = protoPublik;
 
     const jawaban = await fetch(url, { ...opsi, cache: 'no-store' });
     const teks = await jawaban.text();

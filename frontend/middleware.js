@@ -84,8 +84,7 @@ export default withAuth(
           // JSON (401 bila sesi tidak ada), dan penjagaan sesungguhnya ada di
           // dalam proxy + keycloakAuth di backend. Halaman /setting/talawang
           // sendiri TIDAK diloloskan (tidak ada di daftar ini) - tetap wajib login.
-          '/api/talawang',
-          '/uji-talawang'
+          '/api/talawang'
         ];
         
         // Akar aplikasi "/" SELALU publik: halaman itu hanya mengalihkan
